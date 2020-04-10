@@ -42,10 +42,11 @@ struct GameEngine {
   SDL_DisplayMode displayMode;
   int tileSize;
   const int spriteSize;
-  std::array<std::array<Tile, 500>, 500> map;
+  int zLevel;
+  std::array<std::array<std::array<Tile, 4>, 250>, 250> map;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false) {}
+  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0) {}
   int init()
   {
     std::srand(std::time(nullptr));
@@ -159,19 +160,30 @@ struct GameEngine {
     // Create default tilemap
     for (auto i = 0; i < map.size(); i++) {
       for (auto j = 0; j < map.size(); j++) {
-        Tile t { i, j, "Tile 64x0" };
-        int n = std::rand() % 100;
-        if (n > 80) {
-          t.type = "Tile 64x64";
+        Tile top { i, j, "Tile 64x0" };
+        Tile middle { i, j, "Tile 64x64" };
+        Tile bottom { i, j, "Tile 64x128" };
+        int n = std::rand() % 150;
+        if (n > 80)
+        {
+          top.type = "Tile 64x64";
         }
-        if (n > 98) {
-          t.type = "Tile 64x128";
+        if (n > 98)
+        {
+          top.type = "Tile 64x128";
+          middle.type = "Tile 64x128";
         }
-        map.at(i).at(j) = t;
+        if (n > 99)
+        {
+          bottom.type = "Tile 64x64";
+        }
+        map.at(i).at(j).at(0) = top;
+        map.at(i).at(j).at(1) = middle;
+        map.at(i).at(j).at(2) = bottom;
       }
     }
     SDL_Log("Tilemap of %lu tiles created.",
-      map.size()*map.size()
+      map.size()*map.size()*map.at(0).at(0).size()
     );
     return 0;
   }
@@ -216,11 +228,11 @@ struct GameEngine {
         Tile t;
         try
         {
-          t = map.at(i).at(j);
+          t = map.at(i).at(j).at(zLevel);
         }
         catch (std::exception &e)
         {
-          t = {i, j, "Tile 0x0"};
+          t = {i, j, "Tile 64x128"};
         }
         if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
         {
@@ -273,10 +285,10 @@ struct GameEngine {
         case SDLK_RIGHT:
           camera.x = camera.x + 1;
           break;
-        case SDLK_DOWN:
+        case SDLK_UP:
           if (camera.y > 0) camera.y = camera.y - 1;
           break;
-        case SDLK_UP:
+        case SDLK_DOWN:
           camera.y = camera.y + 1;
           break;
         case SDLK_SPACE:
@@ -286,6 +298,18 @@ struct GameEngine {
             camera.w,
             camera.h
           );
+          break;
+        case SDLK_w:
+          if (zLevel > 0)
+          {
+            zLevel--;
+          }
+          break;
+        case SDLK_q:
+          SDL_Log("You are at level %d", zLevel);
+          if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
+            zLevel++;
+          }
           break;
         case SDLK_p:
           paused = !paused;
