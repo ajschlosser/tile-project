@@ -68,7 +68,9 @@ struct GameEngine {
     } else SDL_Log("Loaded spritesheet is %dx%dpx sheet of %dx%dpx tiles.", surface->w, surface->h, spriteSize, spriteSize);
     SDL_GetCurrentDisplayMode(0, &displayMode);
     SDL_Log("Current display is %dx%dpx.", displayMode.w, displayMode.h);
-    camera = { 15, 15, displayMode.w/tileSize, displayMode.h/tileSize };
+    auto windowSize = getWindowSize();
+    SDL_Log("Current window is %dx%dpx.", windowSize.first, windowSize.second);
+    camera = { 15, 15, windowSize.first/tileSize, windowSize.first/tileSize };
     SDL_Log("Camera created with %dx%d tile dimensions.", displayMode.w/tileSize, displayMode.h/tileSize);
     if (SDL_CreateWindowAndRenderer(displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE, &appWindow, &appRenderer)) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
@@ -210,8 +212,6 @@ struct GameEngine {
             appEvent.window.data1,
             appEvent.window.data2
           );
-          // camera.w = appEvent.window.data1*2/tileSize;
-          // camera.h = appEvent.window.data2*2/tileSize;
       }
     }
   }
