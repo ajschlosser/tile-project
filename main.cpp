@@ -1,8 +1,8 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
+#include <array>
 #include <string>
 #include <vector>
-#include <iostream>
 
 struct Image {
   SDL_Surface* surface;
@@ -13,6 +13,13 @@ struct Tile {
   int tileMapX;
   int tileMapY;
   std::string tileName;
+};
+
+struct T {
+  int x;
+  int y;
+  std::string type;
+  SDL_Rect rect;
 };
 
 struct GameEngine {
@@ -26,6 +33,7 @@ struct GameEngine {
   SDL_DisplayMode displayMode;
   const int tileSize;
   std::vector<Tile> tiles;
+  std::array<std::array<T*, 100>, 100> map;
   GameEngine() : tileSize(64), running(true) {}
   int init()
   {
@@ -63,16 +71,47 @@ struct GameEngine {
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created tile: %s", name.c_str());
       }
     }
+    for (auto i = 0; i < map.size(); i += tileSize) {
+      for (auto j = 0; j < map.size(); j += tileSize) {
+        T *t;
+        createTileFromBrush(t, "Tile 64x64", i, j);
+        map.at(i).at(j) = t;
+      }
+    }
     return 0;
+  }
+  void createTileFromBrush(T *t, std::string brushName, int x, int y)
+  {
+    t->x = x;
+    t->y = y;
+    t->type = "Unknown";
+    for (auto tile : tiles) {
+      if (tile.tileName == brushName) {
+        SDL_Rect r {tile.tileMapX, tile.tileMapY, tileSize, tileSize};
+        t->rect = r;
+        t->type = tile.tileName;
+      }
+    }
   }
   int quit()
   {
     return 0;
   }
-  void renderCopyImage(SDL_Renderer* renderer, Image* i, int x, int y)
+  int renderCopyImage(SDL_Renderer* renderer, Image* i, int x, int y)
   {
+    if (!i->texture || !i->surface) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "renderCopyImage() failed: texture or surface was null");
+      return 3;
+    }
     SDL_Rect dest {x, y, i->surface->w, i->surface->h};
     SDL_RenderCopy(renderer, i->texture, NULL, &dest);
+    return 0;
+  }
+  int renderCopyTile(T* t) {
+    SDL_Rect dest {t->x, t->y, tileSize, tileSize};
+
+    SDL_RenderCopy(appRenderer, tilemapImage.texture, &t->rect, &dest);
+    return 0;
   }
   int run()
   {
@@ -92,8 +131,9 @@ struct GameEngine {
       SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
       SDL_RenderClear(appRenderer);
       renderCopyImage(appRenderer, &tilemapImage, 300, 300);
-      Image test {gameSurface}
-      renderCopyImage(appREnderer, &test, 10, 10);
+      T *tt = map.at(10).at(10);
+      SDL_Log("%s", tt->type.c_str());
+      renderCopyTile(tt);
       SDL_RenderPresent(appRenderer);
     }
     return 1;
