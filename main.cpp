@@ -49,51 +49,117 @@ struct GameEngine {
   int init()
   {
     std::srand(std::time(nullptr));
-    if (!tileSize) {
+    if (!tileSize)
+    {
       tileSize = spriteSize;
     }
+
+    // Initialize SDL
     SDL_Log("Initializing SDL libraries...");
-    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not initialize SDL: %s", SDL_GetError());
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO))
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not initialize SDL: %s",
+        SDL_GetError()
+      );
       return 3;
-    } else SDL_Log("SDL initialized.");
-    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not initialize SDL_image: %s", IMG_GetError());
+    }
+    else SDL_Log("SDL initialized.");
+    if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not initialize SDL_image: %s",
+        IMG_GetError()
+      );
       return 3;
-    } else SDL_Log("SDL_image initialized.");
+    }
+    else SDL_Log("SDL_image initialized.");
+
+    // Get current display mode information
+    SDL_GetCurrentDisplayMode(0, &displayMode);
+    SDL_Log("Current display is %dx%dpx.",
+      displayMode.w,
+      displayMode.h
+    );
+
+    // Create camera
+    auto windowSize = getWindowSize();
+    SDL_Log("Current window is %dx%dpx.",
+      windowSize.first,
+      windowSize.second
+    );
+    camera = { 15, 15, windowSize.first/tileSize, windowSize.first/tileSize };
+    SDL_Log("Camera created with %dx%d tile dimensions.",
+      displayMode.w/tileSize,
+      displayMode.h/tileSize
+    );
+
+    // Create app window and renderer
+    if (SDL_CreateWindowAndRenderer(displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE, &appWindow, &appRenderer))
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Couldn't create window and renderer: %s",
+        SDL_GetError()
+      );
+      return 3;
+    }
+    else
+    {
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        "Window created."
+      );
+    }
+
+    // Load spritesheet
     SDL_Surface *surface = IMG_Load("tilemap.png");
-    if (!surface) {
+    if (!surface)
+    {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "IMG_Load error: %s", IMG_GetError());
       return 3;
-    } else SDL_Log("Loaded spritesheet is %dx%dpx sheet of %dx%dpx tiles.", surface->w, surface->h, spriteSize, spriteSize);
-    SDL_GetCurrentDisplayMode(0, &displayMode);
-    SDL_Log("Current display is %dx%dpx.", displayMode.w, displayMode.h);
-    auto windowSize = getWindowSize();
-    SDL_Log("Current window is %dx%dpx.", windowSize.first, windowSize.second);
-    camera = { 15, 15, windowSize.first/tileSize, windowSize.first/tileSize };
-    SDL_Log("Camera created with %dx%d tile dimensions.", displayMode.w/tileSize, displayMode.h/tileSize);
-    if (SDL_CreateWindowAndRenderer(displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE, &appWindow, &appRenderer)) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create window and renderer: %s", SDL_GetError());
-      return 3;
-    } else SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Window created.");
+    }
+    else
+    {
+      SDL_Log("Loaded spritesheet is %dx%dpx sheet of %dx%dpx tiles.",
+        surface->w,
+        surface->h,
+        spriteSize,
+        spriteSize
+      );
+    }
+
+    // Create sprites from spritesheet
     SDL_Texture *texture = SDL_CreateTextureFromSurface(appRenderer, surface);
     if (!texture) {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture from surface: %s", SDL_GetError());
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Couldn't create texture from surface: %s",
+        SDL_GetError()
+      );
       return 3;
-    } else SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Tilemap loaded.");
-    tilemapImage = {surface, texture};
+    }
+    else
+    {
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        "Tilemap loaded."
+      );
+    }
+    tilemapImage = { surface, texture };
     for (auto i = 0; i < surface->w; i += spriteSize) {
       for (auto j = 0; j < surface->h; j += spriteSize) {
         std::string name = "Tile " + std::to_string(i) + "x" + std::to_string(j);
-        Sprite s{i,j,name};
+        Sprite s { i, j, name };
         sprites[name] = s;
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created tile: %s", name.c_str());
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+          "Created tile: %s",
+          name.c_str()
+        );
       }
     }
     SDL_Log("Spritesheet processed.");
+
+    // Create default tilemap
     for (auto i = 0; i < map.size(); i++) {
       for (auto j = 0; j < map.size(); j++) {
-        Tile t {i, j, "Tile 64x0"};
+        Tile t { i, j, "Tile 64x0" };
         int n = std::rand() % 100;
         if (n > 80) {
           t.type = "Tile 64x64";
@@ -104,7 +170,9 @@ struct GameEngine {
         map.at(i).at(j) = t;
       }
     }
-    SDL_Log("Tilemap of %lu tiles created.", map.size());
+    SDL_Log("Tilemap of %lu tiles created.",
+      map.size()*map.size()
+    );
     return 0;
   }
   int quit()
@@ -121,7 +189,8 @@ struct GameEngine {
   }
   int renderCopyImage(Image* i, int x, int y)
   {
-    if (!i->texture || !i->surface) {
+    if (!i->texture || !i->surface)
+    {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "renderCopyImage() failed: texture or surface was null");
       return 3;
     }
@@ -136,11 +205,9 @@ struct GameEngine {
     SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
   }
-  void renderClearAndPresent()
+  void renderCopyTiles()
   {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "renderClearAndPresent() called");
-    SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
-    SDL_RenderClear(appRenderer);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "renderCopyTiles() called");
     auto windowSize = getWindowSize();
     int x = 0;
     int y = 0;
@@ -151,10 +218,12 @@ struct GameEngine {
         {
           t = map.at(i).at(j);
         }
-        catch (std::exception &e) {
+        catch (std::exception &e)
+        {
           t = {i, j, "Tile 0x0"};
         }
-        if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2)) {
+        if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
+        {
           t = {i, j, "Tile 64x256"};
         }
         renderCopyTile(&t, x, y);
@@ -163,9 +232,28 @@ struct GameEngine {
       y = 0;
       x++;
     }
-    SDL_RenderPresent(appRenderer);
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "renderClearAndPresent() completed. Screen refreshed.");
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+      "renderCopyTiles() completed. Screen refreshed."
+    );
     refreshed = true;
+  }
+  void renderUi()
+  {
+    SDL_SetRenderDrawColor(appRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+    auto windowSize = getWindowSize();
+    SDL_Rect bottom {
+      0,
+      windowSize.second*tileSize - tileSize*3,
+      static_cast<int>(std::round(windowSize.first*tileSize)),
+      static_cast<int>(std::round(windowSize.second*tileSize))
+    };
+    SDL_RenderFillRect(appRenderer, &bottom);
+    bottom.x += 5;
+    bottom.y += 5;
+    bottom.w -= 5;
+    bottom.h -= 5;
+    SDL_SetRenderDrawColor(appRenderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
+    SDL_RenderFillRect(appRenderer, &bottom);
   }
   void handleEvents()
   {
@@ -219,7 +307,14 @@ struct GameEngine {
   {
     while (running) {
       handleEvents();
-      if (!paused && !refreshed) renderClearAndPresent();
+      if (!refreshed) {
+        SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
+        SDL_RenderClear(appRenderer);
+        renderCopyTiles();
+        renderUi();
+        refreshed = true;
+        SDL_RenderPresent(appRenderer);        
+      }
     }
     return 1;
   }
