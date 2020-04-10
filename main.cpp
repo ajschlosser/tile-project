@@ -3,6 +3,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <map>
 
 struct Image {
   SDL_Surface* surface;
@@ -32,8 +33,8 @@ struct GameEngine {
   SDL_DisplayMode displayMode;
   const int tileSize;
   std::vector<Tile> tiles;
-  std::array<std::array<Tile, 100>, 100> sprites;
-  std::array<std::array<T*, 100>, 100> map;
+  std::array<std::array<T, 100>, 100> map;
+  std::map<std::string, Tile> sprites;
   GameEngine() : tileSize(64), running(true) {}
   int init()
   {
@@ -68,13 +69,14 @@ struct GameEngine {
         std::string name = "Tile " + std::to_string(i) + "x" + std::to_string(j);
         Tile t{i,j,name};
         tiles.push_back(t);
-        sprites.at(i).at(j) = t;
+        sprites[name] = t;
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created tile: %s", name.c_str());
       }
     }
-    for (auto i = 0; i < map.size(); i += tileSize) {
-      for (auto j = 0; j < map.size(); j += tileSize) {
-        T *t;
+    for (auto i = 0; i < map.size(); i++) {
+      for (auto j = 0; j < map.size(); j++) {
+        T t{i*tileSize, j*tileSize, "Tile 64x0"};
+        if (i == 3 && j < 20) t.type = "Tile 64x64";
         map.at(i).at(j) = t;
       }
     }
@@ -95,9 +97,10 @@ struct GameEngine {
     return 0;
   }
   int renderCopyTile(T* t) {
+    Tile sprite = sprites[t->type];
+    SDL_Rect src {sprite.tileMapX, sprite.tileMapY, tileSize, tileSize};
     SDL_Rect dest {t->x, t->y, tileSize, tileSize};
-
-    SDL_RenderCopy(appRenderer, tilemapImage.texture, &t->rect, &dest);
+    SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
   }
   int run()
@@ -117,10 +120,14 @@ struct GameEngine {
       }
       SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
       SDL_RenderClear(appRenderer);
-      renderCopyImage(appRenderer, &tilemapImage, 300, 300);
-      T *tt = map.at(10).at(10);
-      SDL_Log("%s", tt->type.c_str());
-      renderCopyTile(tt);
+      //renderCopyImage(appRenderer, &tilemapImage, 300, 300);
+      // T tt = map.at(0).at(1);
+      // renderCopyTile(&tt);
+      for (auto i = 0; i < map.size(); i++) {
+        for (auto j = 0; j < map.size(); j++) {
+          renderCopyTile(&map.at(i).at(j));
+        }
+      }
       SDL_RenderPresent(appRenderer);
     }
     return 1;
