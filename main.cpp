@@ -92,6 +92,8 @@ struct GameEngine {
       SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
       SDL_RenderClear(appRenderer);
       renderCopyImage(appRenderer, &tilemapImage, 300, 300);
+      Image test {gameSurface}
+      renderCopyImage(appREnderer, &test, 10, 10);
       SDL_RenderPresent(appRenderer);
     }
     return 1;
