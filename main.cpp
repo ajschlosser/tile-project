@@ -2,7 +2,6 @@
 #include "SDL2/SDL_image.h"
 #include <array>
 #include <string>
-#include <vector>
 #include <map>
 
 struct Image {
@@ -10,13 +9,13 @@ struct Image {
   SDL_Texture* texture;
 };
 
-struct Tile {
+struct Sprite {
   int tileMapX;
   int tileMapY;
   std::string tileName;
 };
 
-struct T {
+struct Tile {
   int x;
   int y;
   std::string type;
@@ -25,16 +24,13 @@ struct T {
 struct GameEngine {
   bool running;
   SDL_Window* appWindow;
-  SDL_Surface* gameSurface;
-  SDL_Surface* uiSurface;
   SDL_Renderer* appRenderer;
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
   const int tileSize;
-  std::vector<Tile> tiles;
-  std::array<std::array<T, 100>, 100> map;
-  std::map<std::string, Tile> sprites;
+  std::array<std::array<Tile, 100>, 100> map;
+  std::map<std::string, Sprite> sprites;
   GameEngine() : tileSize(64), running(true) {}
   int init()
   {
@@ -67,15 +63,14 @@ struct GameEngine {
     for (auto i = 0; i < surface->w; i += tileSize) {
       for (auto j = 0; j < surface->h; j += tileSize) {
         std::string name = "Tile " + std::to_string(i) + "x" + std::to_string(j);
-        Tile t{i,j,name};
-        tiles.push_back(t);
-        sprites[name] = t;
+        Sprite s{i,j,name};
+        sprites[name] = s;
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created tile: %s", name.c_str());
       }
     }
     for (auto i = 0; i < map.size(); i++) {
       for (auto j = 0; j < map.size(); j++) {
-        T t{i*tileSize, j*tileSize, "Tile 64x0"};
+        Tile t{i*tileSize, j*tileSize, "Tile 64x0"};
         if (i == 3 && j < 20) t.type = "Tile 64x64";
         map.at(i).at(j) = t;
       }
@@ -96,9 +91,9 @@ struct GameEngine {
     SDL_RenderCopy(renderer, i->texture, NULL, &dest);
     return 0;
   }
-  int renderCopyTile(T* t) {
-    Tile sprite = sprites[t->type];
-    SDL_Rect src {sprite.tileMapX, sprite.tileMapY, tileSize, tileSize};
+  int renderCopyTile(Tile* t) {
+    Sprite s = sprites[t->type];
+    SDL_Rect src {s.tileMapX, s.tileMapY, tileSize, tileSize};
     SDL_Rect dest {t->x, t->y, tileSize, tileSize};
     SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
