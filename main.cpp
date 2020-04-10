@@ -19,7 +19,6 @@ struct T {
   int x;
   int y;
   std::string type;
-  SDL_Rect rect;
 };
 
 struct GameEngine {
@@ -33,6 +32,7 @@ struct GameEngine {
   SDL_DisplayMode displayMode;
   const int tileSize;
   std::vector<Tile> tiles;
+  std::array<std::array<Tile, 100>, 100> sprites;
   std::array<std::array<T*, 100>, 100> map;
   GameEngine() : tileSize(64), running(true) {}
   int init()
@@ -68,30 +68,17 @@ struct GameEngine {
         std::string name = "Tile " + std::to_string(i) + "x" + std::to_string(j);
         Tile t{i,j,name};
         tiles.push_back(t);
+        sprites.at(i).at(j) = t;
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created tile: %s", name.c_str());
       }
     }
     for (auto i = 0; i < map.size(); i += tileSize) {
       for (auto j = 0; j < map.size(); j += tileSize) {
         T *t;
-        createTileFromBrush(t, "Tile 64x64", i, j);
         map.at(i).at(j) = t;
       }
     }
     return 0;
-  }
-  void createTileFromBrush(T *t, std::string brushName, int x, int y)
-  {
-    t->x = x;
-    t->y = y;
-    t->type = "Unknown";
-    for (auto tile : tiles) {
-      if (tile.tileName == brushName) {
-        SDL_Rect r {tile.tileMapX, tile.tileMapY, tileSize, tileSize};
-        t->rect = r;
-        t->type = tile.tileName;
-      }
-    }
   }
   int quit()
   {
