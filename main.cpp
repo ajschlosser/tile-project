@@ -43,7 +43,7 @@ struct GameEngine {
   int tileSize;
   const int spriteSize;
   int zLevel;
-  std::array<std::array<std::array<Tile, 4>, 250>, 250> map;
+  std::array<std::array<std::array<Tile, 4>, 350>, 250> map;
   std::map<std::string, Sprite> sprites;
   Camera camera;
   GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0) {}
