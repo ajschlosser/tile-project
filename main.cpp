@@ -43,7 +43,8 @@ struct GameEngine {
   int tileSize;
   const int spriteSize;
   int zLevel;
-  std::array<std::array<std::array<Tile, 4>, 350>, 250> map;
+  std::array<std::array<std::array<Tile, 4>, 250>, 250> map;
+  std::map<std::pair<int, int>, Tile*> grid;
   std::map<std::string, Sprite> sprites;
   Camera camera;
   GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0) {}
@@ -229,6 +230,7 @@ struct GameEngine {
         try
         {
           t = map.at(i).at(j).at(zLevel);
+          grid[{x, y}] = &map.at(i).at(j).at(zLevel);
         }
         catch (std::exception &e)
         {
@@ -316,8 +318,25 @@ struct GameEngine {
           break;
       }
     }
-    else if (appEvent.type == SDL_WINDOWEVENT) {
-      switch (appEvent.window.event) {
+    else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
+    {
+      if (appEvent.button.clicks > 1) {
+        int x = appEvent.button.x/tileSize;
+        int y = appEvent.button.y/tileSize;
+        Tile *t = grid[{x, y}];
+        SDL_Log("Double click detected at window %dx%d, window grid %dx%d, tile type %s",
+          appEvent.button.x,
+          appEvent.button.y,
+          x,
+          y,
+          t->type.c_str()
+        );
+      }
+    }
+    else if (appEvent.type == SDL_WINDOWEVENT)
+    {
+      switch (appEvent.window.event)
+      {
         case SDL_WINDOWEVENT_SIZE_CHANGED:
           SDL_Log("Window %d size changed to %dx%d",
             appEvent.window.windowID,
