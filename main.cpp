@@ -304,31 +304,46 @@ struct GameEngine {
     SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
   }
+  void animate(std::string direction)
+  {
+    bool done = false;
+    Timer animator;
+    animator.start();
+    while (animator.elapsed() < 250)
+    {
+      SDL_RenderClear(appRenderer);
+      renderCopyTiles();
+      refreshed = false;
+      SDL_RenderPresent(appRenderer);
+      //SDL_Delay(300);
+      done = true;
+    }
+
+  }
   void renderCopyTiles()
   {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
       "renderCopyTiles() called"
     );
     auto windowSize = getWindowSize();
-    int x = 0;
-    int y = 0;
-    for (auto i = camera.x - windowSize.first/2; i < camera.x + windowSize.first/2; i++) {
-      for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2; j++) {
+    int x = -3;
+    int y = -3;
+    for (auto i = camera.x - windowSize.first/2 - 3; i < camera.x + windowSize.first/2 + 3; i++) {
+      for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++) {
         Tile t;
         try
         {
           t = map.at(i).at(j).at(zLevel);
-          //grid[{x, y}][{i, j}] = &map.at(i).at(j).at(zLevel);
           
         }
         catch (std::exception &e)
         {
           t = {i, j, "Sprite 64x128"};
         }
-        // if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
-        // {
-        //   t = {i, j, "Sprite 64x256"};
-        // }
+        if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
+        {
+          t = {i, j, "Sprite 64x256"};
+        }
         renderCopySprite<Tile>(&t, x, y);
         y++;
       }
@@ -340,7 +355,21 @@ struct GameEngine {
     );
     refreshed = true;
   }
-  //void renderCopyWorldObject(WorldObject* w)
+  void renderCopyWorldObjects()
+  {
+    for (auto const& [coordinates, object] : objects.at(zLevel))
+    {
+      auto windowSize = getWindowSize();
+      int x = coordinates.first;
+      int y = coordinates.second;
+      WorldObject o = objects.at(zLevel)[coordinates];
+      SDL_Log("There is a '%s' at tile (%d, %d) and at (%d, %d) in the window", o.type.c_str(), x, y, o.x, o.y);
+      if (x > camera.x - 15 && x < camera.x + 15 && y > camera.y - 15 && y < camera.y + 15)
+      {
+        renderCopySprite<WorldObject>(&o, o.x, o.y);
+      }
+    }
+  }
   void renderUi()
   {
     SDL_SetRenderDrawColor(appRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -365,7 +394,7 @@ struct GameEngine {
     if (appEvent.type == SDL_QUIT) {
       running = false;
     }
-    else if (appEvent.type == SDL_KEYDOWN && !appEvent.key.repeat) {
+    else if (appEvent.type == SDL_KEYDOWN) {
       refreshed = false;
       switch(appEvent.key.keysym.sym) {
         case SDLK_ESCAPE:
@@ -380,6 +409,7 @@ struct GameEngine {
         case SDLK_RIGHT:
           if (camera.x < map.size())
           {
+            animate("right");
             camera.x += 1;
           }
           break;
@@ -461,20 +491,7 @@ struct GameEngine {
         SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
         SDL_RenderClear(appRenderer);
         renderCopyTiles();
-
-        for (auto const& [coordinates, object] : objects.at(zLevel))
-        {
-          auto windowSize = getWindowSize();
-          int x = coordinates.first;
-          int y = coordinates.second;
-          WorldObject o = objects.at(zLevel)[coordinates];
-          SDL_Log("There is a '%s' at tile (%d, %d) and at (%d, %d) in the window", o.type.c_str(), x, y, o.x, o.y);
-          if (x > camera.x - 15 && x < camera.x + 15 && y > camera.y - 15 && y < camera.y + 15)
-          {
-            renderCopySprite<WorldObject>(&o, o.x, o.y);
-          }
-        }
-
+        //renderCopyWorldObjects();
         renderUi();
         refreshed = true;
         SDL_RenderPresent(appRenderer);
