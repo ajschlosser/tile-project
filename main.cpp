@@ -287,7 +287,9 @@ struct GameEngine {
   {
     if (!i->texture || !i->surface)
     {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "renderCopyImage() failed: texture or surface was null");
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "renderCopyImage() failed: texture or surface was null"
+      );
       return 3;
     }
     SDL_Rect dest {x, y, i->surface->w, i->surface->h};
@@ -304,7 +306,9 @@ struct GameEngine {
   }
   void renderCopyTiles()
   {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "renderCopyTiles() called");
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+      "renderCopyTiles() called"
+    );
     auto windowSize = getWindowSize();
     int x = 0;
     int y = 0;
@@ -321,10 +325,10 @@ struct GameEngine {
         {
           t = {i, j, "Sprite 64x128"};
         }
-        if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
-        {
-          t = {i, j, "Sprite 64x256"};
-        }
+        // if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
+        // {
+        //   t = {i, j, "Sprite 64x256"};
+        // }
         renderCopySprite<Tile>(&t, x, y);
         y++;
       }
