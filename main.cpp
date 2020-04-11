@@ -162,7 +162,7 @@ struct GameEngine {
     );
 
     // Create app window and renderer
-    appWindow = SDL_CreateWindow("tile-project", 0, 0, displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE);
+    appWindow = SDL_CreateWindow("tile-project", 0, 0, displayMode.w/2, displayMode.h/2, SDL_WINDOW_RESIZABLE);
     if (appWindow == NULL)
     {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -178,10 +178,10 @@ struct GameEngine {
       );
     }
     appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
-    if (SDL_CreateWindowAndRenderer(displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE, &appWindow, &appRenderer))
+    if (appRenderer == NULL)
     {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-        "Couldn't create window and renderer: %s",
+        "Couldn't create a enderer: %s",
         SDL_GetError()
       );
       return 3;
@@ -189,7 +189,7 @@ struct GameEngine {
     else
     {
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-        "Window created."
+        "Renderer created."
       );
     }
 
@@ -306,19 +306,48 @@ struct GameEngine {
   }
   void animate(std::string direction)
   {
-    bool done = false;
     Timer animator;
     animator.start();
+    auto gridSize = getWindowSize();
+    int _w = gridSize.first*tileSize;
+    int _h = gridSize.second*tileSize;
+    SDL_Log("Current window is %dx%dpx.", _w, _h);
+    SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
+    SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
+    //SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
+    //SDL_RenderClear(appRenderer);
+    // if (SDL_SetRenderTarget(appRenderer, screen) < 0)
+    // {
+    //   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+    //     "Could not set render target: %s",
+    //     SDL_GetError()
+    //   );
+    // }
+    // else
+    // {
+    //   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Animation screen texture created and set as rendering target.");
+    // }
     while (animator.elapsed() < 250)
     {
-      SDL_RenderClear(appRenderer);
-      renderCopyTiles();
-      refreshed = false;
+      //SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
+      //SDL_RenderClear(appRenderer);
+      //renderCopyTiles();
+      SDL_Rect dest {0, 0, _w, _h};
+      SDL_Texture *screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface); //SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, _w, _h);
+      if (direction == "right") {
+        dest.x -= animator.elapsed() / 4;
+      }
+      SDL_Log("animating %d", dest.x);
+      SDL_RenderCopy(appRenderer, screenTexture, NULL, &dest);
       SDL_RenderPresent(appRenderer);
-      //SDL_Delay(300);
-      done = true;
+      //SDL_Delay(25);
     }
-
+    if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not reset render target: %s",
+        SDL_GetError()
+      );
+    }
   }
   void renderCopyTiles()
   {
@@ -350,10 +379,9 @@ struct GameEngine {
       y = 0;
       x++;
     }
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
       "renderCopyTiles() completed. Screen refreshed."
     );
-    refreshed = true;
   }
   void renderCopyWorldObjects()
   {
@@ -395,7 +423,6 @@ struct GameEngine {
       running = false;
     }
     else if (appEvent.type == SDL_KEYDOWN) {
-      refreshed = false;
       switch(appEvent.key.keysym.sym) {
         case SDLK_ESCAPE:
           running = false;
@@ -487,13 +514,12 @@ struct GameEngine {
   {
     while (running) {
       handleEvents();
-      if (!refreshed) {
+      if (1) {
         SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
         SDL_RenderClear(appRenderer);
         renderCopyTiles();
         //renderCopyWorldObjects();
-        renderUi();
-        refreshed = true;
+        //renderUi();
         SDL_RenderPresent(appRenderer);
       }
     }
