@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
 struct Image {
   SDL_Surface* surface;
@@ -16,6 +17,12 @@ struct Sprite {
   int tileMapX;
   int tileMapY;
   std::string tileName;
+};
+
+struct WorldObject {
+  int x;
+  int y;
+  std::string type;
 };
 
 struct Tile {
@@ -31,6 +38,61 @@ struct Camera {
   int h;
 };
 
+struct Timer {
+  int last;
+  int current;
+  bool paused;
+  bool started;
+  void start()
+  {
+    started = true;
+    paused = false;
+    current = 0;
+    last = SDL_GetTicks();
+  }
+  void stop()
+  {
+    started = false;
+    paused = false;
+    last = 0;
+    current = 0;
+  }
+  void pause()
+  {
+    if (started && !paused)
+    {
+      paused = true;
+      current = SDL_GetTicks() - last;
+      last = 0;
+    }
+  }
+  void unpause()
+  {
+    if (started && paused) {
+      paused = false;
+      last = SDL_GetTicks() - current;
+      current = 0;
+    }
+  }
+  int elapsed()
+  {
+    auto time = 0;
+    if (started)
+    {
+      if (paused)
+      {
+        time = current;
+      }
+      else
+      {
+        time = SDL_GetTicks() - last;
+      }
+    }
+    return time;
+  }
+  Timer () : last(0), current(0), paused(false), started(false) {}
+};
+
 struct GameEngine {
   bool running;
   bool paused;
@@ -40,16 +102,19 @@ struct GameEngine {
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
+  Timer fpsTimer;
   int tileSize;
   const int spriteSize;
   int zLevel;
   std::array<std::array<std::array<Tile, 4>, 250>, 250> map;
-  std::map<std::pair<int, int>, Tile*> grid;
+  std::map<int, std::map<std::pair<int, int>, std::map<std::pair<int, int>, Tile*>>> grid;
   std::map<std::string, Sprite> sprites;
+  std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
   Camera camera;
   GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0) {}
   int init()
   {
+    fpsTimer.start();
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
@@ -97,6 +162,22 @@ struct GameEngine {
     );
 
     // Create app window and renderer
+    appWindow = SDL_CreateWindow("tile-project", 0, 0, displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE);
+    if (appWindow == NULL)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not create app window: %s",
+        SDL_GetError()
+      );
+      return 3;
+    }
+    else
+    {
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        "Window created."
+      );
+    }
+    appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
     if (SDL_CreateWindowAndRenderer(displayMode.w, displayMode.h, SDL_WINDOW_RESIZABLE, &appWindow, &appRenderer))
     {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -147,7 +228,7 @@ struct GameEngine {
     tilemapImage = { surface, texture };
     for (auto i = 0; i < surface->w; i += spriteSize) {
       for (auto j = 0; j < surface->h; j += spriteSize) {
-        std::string name = "Tile " + std::to_string(i) + "x" + std::to_string(j);
+        std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
         Sprite s { i, j, name };
         sprites[name] = s;
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
@@ -161,28 +242,30 @@ struct GameEngine {
     // Create default tilemap
     for (auto i = 0; i < map.size(); i++) {
       for (auto j = 0; j < map.size(); j++) {
-        Tile top { i, j, "Tile 64x0" };
-        Tile middle { i, j, "Tile 64x64" };
-        Tile bottom { i, j, "Tile 64x128" };
+        Tile top { i, j, "Sprite 64x0" };
+        Tile middle { i, j, "Sprite 64x64" };
+        Tile bottom { i, j, "Sprite 64x128" };
         int n = std::rand() % 150;
         if (n > 80)
         {
-          top.type = "Tile 64x64";
+          top.type = "Sprite 64x64";
         }
         if (n > 98)
         {
-          top.type = "Tile 64x128";
-          middle.type = "Tile 64x128";
+          top.type = "Sprite 64x128";
+          middle.type = "Sprite 64x128";
         }
         if (n > 99)
         {
-          bottom.type = "Tile 64x64";
+          bottom.type = "Sprite 64x64";
         }
         map.at(i).at(j).at(0) = top;
         map.at(i).at(j).at(1) = middle;
         map.at(i).at(j).at(2) = bottom;
+        map.at(i).at(j).at(3) = Tile {i,j,"Sprite 64x64"};
       }
     }
+    objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
     SDL_Log("Tilemap of %lu tiles created.",
       map.size()*map.size()*map.at(0).at(0).size()
     );
@@ -211,7 +294,8 @@ struct GameEngine {
     SDL_RenderCopy(appRenderer, i->texture, NULL, &dest);
     return 0;
   }
-  int renderCopyTile(Tile* t, int x, int y) {
+  template <class T>
+  int renderCopySprite(T* t, int x, int y) {
     Sprite s = sprites[t->type];
     SDL_Rect src {s.tileMapX, s.tileMapY, spriteSize, spriteSize};
     SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
@@ -230,17 +314,18 @@ struct GameEngine {
         try
         {
           t = map.at(i).at(j).at(zLevel);
-          grid[{x, y}] = &map.at(i).at(j).at(zLevel);
+          //grid[{x, y}][{i, j}] = &map.at(i).at(j).at(zLevel);
+          
         }
         catch (std::exception &e)
         {
-          t = {i, j, "Tile 64x128"};
+          t = {i, j, "Sprite 64x128"};
         }
         if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
         {
-          t = {i, j, "Tile 64x256"};
+          t = {i, j, "Sprite 64x256"};
         }
-        renderCopyTile(&t, x, y);
+        renderCopySprite<Tile>(&t, x, y);
         y++;
       }
       y = 0;
@@ -251,6 +336,7 @@ struct GameEngine {
     );
     refreshed = true;
   }
+  //void renderCopyWorldObject(WorldObject* w)
   void renderUi()
   {
     SDL_SetRenderDrawColor(appRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
@@ -275,23 +361,35 @@ struct GameEngine {
     if (appEvent.type == SDL_QUIT) {
       running = false;
     }
-    else if (appEvent.type == SDL_KEYDOWN) {
+    else if (appEvent.type == SDL_KEYDOWN && !appEvent.key.repeat) {
       refreshed = false;
       switch(appEvent.key.keysym.sym) {
         case SDLK_ESCAPE:
           running = false;
           break;
         case SDLK_LEFT:
-          if (camera.x > 0) camera.x = camera.x - 1;
+          if (camera.x > 0)
+          {
+            camera.x -= 1;
+          }
           break;
         case SDLK_RIGHT:
-          camera.x = camera.x + 1;
+          if (camera.x < map.size())
+          {
+            camera.x += 1;
+          }
           break;
         case SDLK_UP:
-          if (camera.y > 0) camera.y = camera.y - 1;
+          if (camera.y > 0)
+          {
+            camera.y -= 1;
+          }
           break;
         case SDLK_DOWN:
-          camera.y = camera.y + 1;
+          if (camera.y < map.size())
+          {
+            camera.y += + 1;
+          }
           break;
         case SDLK_SPACE:
           SDL_Log("Camera: %dx%dx%dx%d",
@@ -320,17 +418,22 @@ struct GameEngine {
     }
     else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
     {
-      if (appEvent.button.clicks > 1) {
-        int x = appEvent.button.x/tileSize;
-        int y = appEvent.button.y/tileSize;
-        Tile *t = grid[{x, y}];
-        SDL_Log("Double click detected at window %dx%d, window grid %dx%d, tile type %s",
-          appEvent.button.x,
-          appEvent.button.y,
-          x,
-          y,
-          t->type.c_str()
-        );
+      if (appEvent.button.button == SDL_BUTTON_LEFT) {
+        // int x = appEvent.button.x/tileSize;
+        // int y = appEvent.button.y/tileSize;
+        // auto gridTile = grid[{x, y}];
+        // for (auto const& [coordinates, object] : gridTile)
+        // {
+        //   SDL_Log("%s at (%d, %d) (grid[{%d, %d}][%d, %d])",
+        //     object->type.c_str(),
+        //     coordinates.first,
+        //     coordinates.second,
+        //     x,
+        //     y,
+        //     coordinates.first,
+        //     coordinates.second
+        //   );
+        // }
       }
     }
     else if (appEvent.type == SDL_WINDOWEVENT)
@@ -354,9 +457,23 @@ struct GameEngine {
         SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
         SDL_RenderClear(appRenderer);
         renderCopyTiles();
+
+        for (auto const& [coordinates, object] : objects.at(zLevel))
+        {
+          auto windowSize = getWindowSize();
+          int x = coordinates.first;
+          int y = coordinates.second;
+          WorldObject o = objects.at(zLevel)[coordinates];
+          SDL_Log("There is a '%s' at tile (%d, %d) and at (%d, %d) in the window", o.type.c_str(), x, y, o.x, o.y);
+          if (x > camera.x - 15 && x < camera.x + 15 && y > camera.y - 15 && y < camera.y + 15)
+          {
+            renderCopySprite<WorldObject>(&o, o.x, o.y);
+          }
+        }
+
         renderUi();
         refreshed = true;
-        SDL_RenderPresent(appRenderer);        
+        SDL_RenderPresent(appRenderer);
       }
     }
     return 1;
