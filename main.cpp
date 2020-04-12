@@ -306,41 +306,56 @@ struct GameEngine {
   }
   void animate(std::string direction)
   {
-    Timer animator;
-    animator.start();
     auto gridSize = getWindowSize();
     int _w = gridSize.first*tileSize;
     int _h = gridSize.second*tileSize;
     SDL_Log("Current window is %dx%dpx.", _w, _h);
     SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
-    SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
-    //SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
-    //SDL_RenderClear(appRenderer);
-    // if (SDL_SetRenderTarget(appRenderer, screen) < 0)
-    // {
-    //   SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-    //     "Could not set render target: %s",
-    //     SDL_GetError()
-    //   );
-    // }
-    // else
-    // {
-    //   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Animation screen texture created and set as rendering target.");
-    // }
-    while (animator.elapsed() < 250)
+    // SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
+    SDL_Texture *screenTexture;
+    SDL_Rect dest {0, 0, _w, _h};
+    std::pair<int, int> offset;
+    if (direction == "right")
     {
+      offset = {(0 - tileSize), 0};
+    }
+    if (direction == "left")
+    {
+      offset = {tileSize, 0};
+    }
+    if (direction == "up")
+    {
+      offset = {0, tileSize};
+    }
+    if (direction == "down")
+    {
+      offset = {0, (0 - tileSize)};
+    }
+    SDL_Log("offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
+    while (dest.x != offset.first || dest.y != offset.second)
+    {
+      SDL_Log("animating: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
       //SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
-      //SDL_RenderClear(appRenderer);
-      //renderCopyTiles();
-      SDL_Rect dest {0, 0, _w, _h};
-      SDL_Texture *screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface); //SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, _w, _h);
+      SDL_RenderClear(appRenderer);
+      renderCopyTiles();
+      //SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
+      SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
+      screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface); //SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, _w, _h);
       if (direction == "right") {
-        dest.x -= animator.elapsed() / 4;
+        dest.x -= 2;
       }
-      SDL_Log("animating %d", dest.x);
+      if (direction == "left") {
+        dest.x += 2;
+      }
+      if (direction == "up") {
+        dest.y += 2;
+      }
+      if (direction == "down") {
+        dest.y -= 2;
+      }
       SDL_RenderCopy(appRenderer, screenTexture, NULL, &dest);
       SDL_RenderPresent(appRenderer);
-      //SDL_Delay(25);
+      SDL_Delay(25);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -355,8 +370,8 @@ struct GameEngine {
       "renderCopyTiles() called"
     );
     auto windowSize = getWindowSize();
-    int x = -3;
-    int y = -3;
+    int x = 0;
+    int y = 0;
     for (auto i = camera.x - windowSize.first/2 - 3; i < camera.x + windowSize.first/2 + 3; i++) {
       for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++) {
         Tile t;
@@ -369,17 +384,17 @@ struct GameEngine {
         {
           t = {i, j, "Sprite 64x128"};
         }
-        if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
-        {
-          t = {i, j, "Sprite 64x256"};
-        }
+        // if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
+        // {
+        //   t = {i, j, "Sprite 64x256"};
+        // }
         renderCopySprite<Tile>(&t, x, y);
         y++;
       }
       y = 0;
       x++;
     }
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
       "renderCopyTiles() completed. Screen refreshed."
     );
   }
@@ -436,8 +451,16 @@ struct GameEngine {
         case SDLK_RIGHT:
           if (camera.x < map.size())
           {
-            animate("right");
-            camera.x += 1;
+            const Uint8 *state = SDL_GetKeyboardState(NULL);
+            while(state[SDL_SCANCODE_RIGHT]) {
+              animate("right");
+              SDL_RenderClear(appRenderer);
+              renderCopyTiles();
+              state = SDL_GetKeyboardState(NULL);
+              camera.x += 1;
+              SDL_PumpEvents();
+            }
+            //camera.x += 1;
           }
           break;
         case SDLK_UP:
