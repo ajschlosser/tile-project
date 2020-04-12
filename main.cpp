@@ -8,6 +8,13 @@
 #include <utility>
 #include <vector>
 
+enum direction {
+  LEFT    = 0x01,
+  RIGHT     = 0x02,
+  UP   = 0x04,
+  DOWN  = 0x08
+};
+
 struct Image {
   SDL_Surface* surface;
   SDL_Texture* texture;
@@ -304,7 +311,7 @@ struct GameEngine {
     SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
   }
-  void animate(std::string direction)
+  void animate(int directions)
   {
     auto gridSize = getWindowSize();
     int _w = gridSize.first*tileSize;
@@ -314,22 +321,26 @@ struct GameEngine {
     // SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
     SDL_Texture *screenTexture;
     SDL_Rect dest {0, 0, _w, _h};
-    std::pair<int, int> offset;
-    if (direction == "right")
+    std::pair<int, int> offset = {0, 0};
+    if (directions & RIGHT)
     {
-      offset = {(0 - tileSize), 0};
+      //offset = {(0 - tileSize), 0};
+      offset.first = (0 - tileSize);
     }
-    if (direction == "left")
+    if (directions & LEFT)
     {
-      offset = {tileSize, 0};
+      //offset = {tileSize, 0};
+      offset.first = tileSize;
     }
-    if (direction == "up")
+    if (directions & UP)
     {
-      offset = {0, tileSize};
+      //offset = {0, tileSize};
+      offset.second = tileSize;
     }
-    if (direction == "down")
+    if (directions & DOWN)
     {
-      offset = {0, (0 - tileSize)};
+      //offset = {0, (0 - tileSize)};
+      offset.second = (0 - tileSize);
     }
     SDL_Log("offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
     while (dest.x != offset.first || dest.y != offset.second)
@@ -341,21 +352,21 @@ struct GameEngine {
       //SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
       SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
       screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface); //SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, _w, _h);
-      if (direction == "right") {
-        dest.x -= 2;
+      if (directions & RIGHT) {
+        dest.x -= 4;
       }
-      if (direction == "left") {
-        dest.x += 2;
+      if (directions & LEFT) {
+        dest.x += 4;
       }
-      if (direction == "up") {
-        dest.y += 2;
+      if (directions & UP) {
+        dest.y += 4;
       }
-      if (direction == "down") {
-        dest.y -= 2;
+      if (directions & DOWN) {
+        dest.y -= 4;
       }
       SDL_RenderCopy(appRenderer, screenTexture, NULL, &dest);
       SDL_RenderPresent(appRenderer);
-      SDL_Delay(25);
+      //SDL_Delay(1);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -431,75 +442,132 @@ struct GameEngine {
     SDL_SetRenderDrawColor(appRenderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
     SDL_RenderFillRect(appRenderer, &bottom);
   }
+  void scrollCamera(int directions) {
+    animate(directions);
+    if (directions & LEFT) {
+      //animate(directions);
+      camera.x -= 1;
+    }
+    if (directions & RIGHT) {
+      //animate(directions);
+      camera.x += 1;
+    }
+    if (directions & DOWN) {
+      //animate(directions);
+      camera.y += 1;
+    }
+    if (directions & UP) {
+      //animate(directions);
+      camera.y -= 1;
+    }
+    SDL_RenderClear(appRenderer);
+    renderCopyTiles();
+    SDL_PumpEvents();
+  }
   void handleEvents()
   {
+    SDL_PumpEvents();
+    auto *keyboardState = SDL_GetKeyboardState(NULL);
+    while(keyboardState[SDL_SCANCODE_LEFT]
+        || keyboardState[SDL_SCANCODE_RIGHT]
+        || keyboardState[SDL_SCANCODE_UP]
+        || keyboardState[SDL_SCANCODE_DOWN]
+      )
+    {
+      int directions = 0x00;
+      if (keyboardState[SDL_SCANCODE_LEFT])
+      {
+        directions += LEFT;
+      }
+      if (keyboardState[SDL_SCANCODE_RIGHT])
+      {
+        directions += RIGHT;
+      }
+      if (keyboardState[SDL_SCANCODE_UP])
+      {
+        directions += UP;
+      }
+      if (keyboardState[SDL_SCANCODE_DOWN])
+      {
+        directions += DOWN;
+      }
+      scrollCamera(directions);
+      SDL_PumpEvents();
+    }
     SDL_PollEvent(&appEvent);
     if (appEvent.type == SDL_QUIT) {
       running = false;
     }
-    else if (appEvent.type == SDL_KEYDOWN) {
-      switch(appEvent.key.keysym.sym) {
-        case SDLK_ESCAPE:
-          running = false;
-          break;
-        case SDLK_LEFT:
-          if (camera.x > 0)
-          {
-            camera.x -= 1;
-          }
-          break;
-        case SDLK_RIGHT:
-          if (camera.x < map.size())
-          {
-            const Uint8 *state = SDL_GetKeyboardState(NULL);
-            while(state[SDL_SCANCODE_RIGHT]) {
-              animate("right");
-              SDL_RenderClear(appRenderer);
-              renderCopyTiles();
-              state = SDL_GetKeyboardState(NULL);
-              camera.x += 1;
-              SDL_PumpEvents();
-            }
-            //camera.x += 1;
-          }
-          break;
-        case SDLK_UP:
-          if (camera.y > 0)
-          {
-            camera.y -= 1;
-          }
-          break;
-        case SDLK_DOWN:
-          if (camera.y < map.size())
-          {
-            camera.y += + 1;
-          }
-          break;
-        case SDLK_SPACE:
-          SDL_Log("Camera: %dx%dx%dx%d",
-            camera.x,
-            camera.y,
-            camera.w,
-            camera.h
-          );
-          break;
-        case SDLK_w:
-          if (zLevel > 0)
-          {
-            zLevel--;
-          }
-          break;
-        case SDLK_q:
-          SDL_Log("You are at level %d", zLevel);
-          if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
-            zLevel++;
-          }
-          break;
-        case SDLK_p:
-          paused = !paused;
-          break;
-      }
-    }
+    // else if (appEvent.type == SDL_KEYDOWN) {
+    //   switch(appEvent.key.keysym.sym) {
+    //     case SDLK_ESCAPE:
+    //       running = false;
+    //       break;
+    //     case SDLK_LEFT:
+    //       if (camera.x > 0)
+    //       {
+    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
+    //         while(state[SDL_SCANCODE_LEFT]) {
+    //           scrollCamera(LEFT);
+    //           state = SDL_GetKeyboardState(NULL);
+    //         }
+    //       }
+    //       break;
+    //     case SDLK_RIGHT:
+    //       if (camera.x < map.size())
+    //       {
+    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
+    //         while(state[SDL_SCANCODE_RIGHT]) {
+    //           animate("right");
+    //           SDL_RenderClear(appRenderer);
+    //           renderCopyTiles();
+    //           state = SDL_GetKeyboardState(NULL);
+    //           camera.x += 1;
+    //           SDL_PumpEvents();
+    //         }
+    //       }
+    //       break;
+    //     case SDLK_UP:
+    //       if (camera.y > 0)
+    //       {
+    //         camera.y -= 1;
+    //       }
+    //       break;
+    //     case SDLK_DOWN:
+    //       if (camera.y < map.size())
+    //       {
+    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
+    //         while(state[SDL_SCANCODE_DOWN]) {
+    //           scrollCamera(DOWN);
+    //           state = SDL_GetKeyboardState(NULL);
+    //         }
+    //       }
+    //       break;
+    //     case SDLK_SPACE:
+    //       SDL_Log("Camera: %dx%dx%dx%d",
+    //         camera.x,
+    //         camera.y,
+    //         camera.w,
+    //         camera.h
+    //       );
+    //       break;
+    //     case SDLK_w:
+    //       if (zLevel > 0)
+    //       {
+    //         zLevel--;
+    //       }
+    //       break;
+    //     case SDLK_q:
+    //       SDL_Log("You are at level %d", zLevel);
+    //       if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
+    //         zLevel++;
+    //       }
+    //       break;
+    //     case SDLK_p:
+    //       paused = !paused;
+    //       break;
+    //   }
+    // }
     else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
     {
       if (appEvent.button.button == SDL_BUTTON_LEFT) {
