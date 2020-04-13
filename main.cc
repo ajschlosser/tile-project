@@ -62,13 +62,19 @@ struct GameEngine {
   const int spriteSize;
   int zLevel;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
-  std::map<int, std::map<std::pair<int, int>, std::map<std::pair<int, int>, Tile*>>> grid;
+  std::array<std::vector<WorldObject>, 4> objects;
   std::map<std::string, Sprite> sprites;
-  std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
   Camera camera;
   GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(32), gameSize(100) {}
   int init()
   {
+    int n = 1000;
+    while (n > 0)
+    {
+      WorldObject o = {std::rand() % gameSize/2, std::rand() % gameSize/2, "Sprite 64x256"};
+      objects.at(0).push_back(o);
+      n--;
+    }
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
@@ -229,7 +235,7 @@ struct GameEngine {
         tileMap[3][{i, j}] = Tile {i,j,"Sprite 64x64"};
       }
     }
-    objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
+    //objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
     SDL_Log("Tilemap of %d tiles created.",
       gameSize*gameSize*4
     );
@@ -376,6 +382,11 @@ struct GameEngine {
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
+  template <class T>
+  std::pair<int, int> getCameraOffset(T* t)
+  {
+    return {0, 0};
+  }
   void renderCopyTiles()
   {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
@@ -518,6 +529,16 @@ struct GameEngine {
       handleEvents();
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
+      // for(auto const& o: objects.at(0))
+      // {
+      //   //renderCopySprite<WorldObject>(o, o.x, o.y);
+      //   SDL_Log("%s", o.type.c_str());
+      // }
+      for (auto o : objects.at(0))
+      {
+        renderCopySprite<WorldObject>(&o, o.x, o.y);
+        SDL_Log("%s", o.type.c_str());
+      }
       applyUi();
       SDL_RenderPresent(appRenderer);
     }
