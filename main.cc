@@ -10,9 +10,9 @@
 
 enum direction {
   LEFT    = 0x01,
-  RIGHT     = 0x02,
-  UP   = 0x04,
-  DOWN  = 0x08
+  RIGHT   = 0x02,
+  UP      = 0x04,
+  DOWN    = 0x08
 };
 
 struct Image {
@@ -45,65 +45,11 @@ struct Camera {
   int h;
 };
 
-struct Timer {
-  int last;
-  int current;
-  bool paused;
-  bool started;
-  void start()
-  {
-    started = true;
-    paused = false;
-    current = 0;
-    last = SDL_GetTicks();
-  }
-  void stop()
-  {
-    started = false;
-    paused = false;
-    last = 0;
-    current = 0;
-  }
-  void pause()
-  {
-    if (started && !paused)
-    {
-      paused = true;
-      current = SDL_GetTicks() - last;
-      last = 0;
-    }
-  }
-  void unpause()
-  {
-    if (started && paused) {
-      paused = false;
-      last = SDL_GetTicks() - current;
-      current = 0;
-    }
-  }
-  int elapsed()
-  {
-    auto time = 0;
-    if (started)
-    {
-      if (paused)
-      {
-        time = current;
-      }
-      else
-      {
-        time = SDL_GetTicks() - last;
-      }
-    }
-    return time;
-  }
-  Timer () : last(0), current(0), paused(false), started(false) {}
-};
-
 struct GameEngine {
   bool running;
   bool paused;
   bool refreshed;
+  int movementSpeed;
   SDL_Window* appWindow;
   SDL_Renderer* appRenderer;
   SDL_Surface* gameSurface;
@@ -111,19 +57,17 @@ struct GameEngine {
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
-  Timer fpsTimer;
   int tileSize;
   const int spriteSize;
   int zLevel;
-  std::array<std::array<std::array<Tile, 4>, 250>, 250> map;
+  std::array<std::array<std::array<Tile, 4>, 200>, 200> map;
   std::map<int, std::map<std::pair<int, int>, std::map<std::pair<int, int>, Tile*>>> grid;
   std::map<std::string, Sprite> sprites;
   std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0) {}
+  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4) {}
   int init()
   {
-    fpsTimer.start();
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
@@ -311,19 +255,19 @@ struct GameEngine {
     std::pair<int, int> offset = {0, 0};
     if (directions & RIGHT)
     {
-      offset.first = (0 - tileSize);
+      offset.first -= tileSize;
     }
     if (directions & LEFT)
     {
-      offset.first = tileSize;
+      offset.first += tileSize;
     }
     if (directions & UP)
     {
-      offset.second = tileSize;
+      offset.second += tileSize;
     }
     if (directions & DOWN)
     {
-      offset.second = (0 - tileSize);
+      offset.second -= tileSize;
     }
     SDL_Log("offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
     while (dest.x != offset.first || dest.y != offset.second)
@@ -334,19 +278,19 @@ struct GameEngine {
       SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, gameSurface->pixels, gameSurface->pitch);
       gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
       if (directions & RIGHT) {
-        dest.x -= 4;
+        dest.x -= movementSpeed;
       }
       if (directions & LEFT) {
-        dest.x += 4;
+        dest.x += movementSpeed;
       }
       if (directions & UP) {
-        dest.y += 4;
+        dest.y += movementSpeed;
       }
       if (directions & DOWN) {
-        dest.y -= 4;
+        dest.y -= movementSpeed;
       }
       SDL_Rect src {tileSize, tileSize, _w-tileSize, _h-tileSize};
-      SDL_RenderCopy(appRenderer, gameTexture, &src, &dest);
+      SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
       SDL_RenderPresent(appRenderer);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
@@ -403,27 +347,35 @@ struct GameEngine {
   }
   void handleEvents()
   {
-    auto *keyboardState = SDL_GetKeyboardState(NULL);
-    while(keyboardState[SDL_SCANCODE_LEFT]
-        || keyboardState[SDL_SCANCODE_RIGHT]
-        || keyboardState[SDL_SCANCODE_UP]
-        || keyboardState[SDL_SCANCODE_DOWN]
+    SDL_PumpEvents();
+    auto *ks = SDL_GetKeyboardState(NULL);
+    while(ks[SDL_SCANCODE_LEFT]
+        || ks[SDL_SCANCODE_RIGHT]
+        || ks[SDL_SCANCODE_UP]
+        || ks[SDL_SCANCODE_DOWN]
       )
     {
+      if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
+          || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
+        )
+      {
+        break;
+      }
+
       int directions = 0x00;
-      if (keyboardState[SDL_SCANCODE_LEFT])
+      if (ks[SDL_SCANCODE_LEFT])
       {
         directions += LEFT;
       }
-      if (keyboardState[SDL_SCANCODE_RIGHT])
+      if (ks[SDL_SCANCODE_RIGHT])
       {
         directions += RIGHT;
       }
-      if (keyboardState[SDL_SCANCODE_UP])
+      if (ks[SDL_SCANCODE_UP])
       {
         directions += UP;
       }
-      if (keyboardState[SDL_SCANCODE_DOWN])
+      if (ks[SDL_SCANCODE_DOWN])
       {
         directions += DOWN;
       }
