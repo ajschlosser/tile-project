@@ -30,6 +30,10 @@ struct WorldObject {
   int x;
   int y;
   std::string type;
+  bool exists ()
+  {
+    return type.length() > 0;
+  }
 };
 
 struct Tile {
@@ -62,6 +66,7 @@ struct GameEngine {
   const int spriteSize;
   int zLevel;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
+  std::map<int, std::map<std::pair<int, int>, WorldObject>> objectMap;
   std::array<std::vector<WorldObject>, 4> objects;
   std::map<std::string, Sprite> sprites;
   Camera camera;
@@ -71,8 +76,9 @@ struct GameEngine {
     int n = 1000;
     while (n > 0)
     {
-      WorldObject o = {std::rand() % gameSize/2, std::rand() % gameSize/2, "Sprite 64x256"};
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
       objects.at(0).push_back(o);
+      objectMap[0][{o.x, o.y}] = o;
       n--;
     }
     std::srand(std::time(nullptr));
@@ -204,14 +210,18 @@ struct GameEngine {
     SDL_Log("Spritesheet processed.");
     SDL_Log("Generating default tilemap...");
     // Create default tilemap
-    for (auto i = 0; i < gameSize; i++) { // map.size()
-      if (i == std::floor(gameSize / 2)) {
+    for (auto i = 0; i < gameSize; i++)
+    {
+      if (i == std::floor(gameSize / 2))
+      {
         SDL_Log("Still generating default tilemap...");
       }
-      if (i == std::floor(gameSize / 4)) {
+      if (i == std::floor(gameSize / 4))
+      {
         SDL_Log("Still generating default tilemap...");
       }
-      for (auto j = 0; j < gameSize; j++) {
+      for (auto j = 0; j < gameSize; j++)
+      {
         Tile top { i, j, "Sprite 64x0" };
         Tile middle { i, j, "Sprite 64x64" };
         Tile bottom { i, j, "Sprite 64x128" };
@@ -382,11 +392,6 @@ struct GameEngine {
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
-  template <class T>
-  std::pair<int, int> getCameraOffset(T* t)
-  {
-    return {0, 0};
-  }
   void renderCopyTiles()
   {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
@@ -395,19 +400,25 @@ struct GameEngine {
     auto windowSize = getWindowSize();
     int x = 0;
     int y = 0;
-    for (auto i = camera.x - windowSize.first/2 - 3; i < camera.x + windowSize.first/2 + 3; i++) {
-      for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++) {
+    for (auto i = camera.x - windowSize.first/2 - 3; i < camera.x + windowSize.first/2 + 3; i++)
+    {
+      for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
+      {
         Tile t;
+        WorldObject o;
         try
         {
           t = tileMap[zLevel][{i, j}];
-          
+          o = objectMap[zLevel][{i, j}];
         }
         catch (std::exception &e)
         {
           t = {i, j, "Sprite 64x128"};
         }
         renderCopySprite<Tile>(&t, x, y);
+        if (o.exists()) {
+          renderCopySprite<WorldObject>(&o, x, y);
+        }
         y++;
       }
       y = 0;
@@ -417,18 +428,23 @@ struct GameEngine {
       "renderCopyTiles() completed. Screen refreshed."
     );
   }
-  void scrollCamera(int directions) {
+  void scrollCamera(int directions)
+  {
     scrollGameSurface(directions);
-    if (directions & LEFT) {
+    if (directions & LEFT)
+    {
       camera.x -= 1;
     }
-    if (directions & RIGHT) {
+    if (directions & RIGHT)
+    {
       camera.x += 1;
     }
-    if (directions & DOWN) {
+    if (directions & DOWN)
+    {
       camera.y += 1;
     }
-    if (directions & UP) {
+    if (directions & UP)
+    {
       camera.y -= 1;
     }
   }
@@ -470,11 +486,14 @@ struct GameEngine {
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
-    if (appEvent.type == SDL_QUIT) {
+    if (appEvent.type == SDL_QUIT)
+    {
       running = false;
     }
-    else if (appEvent.type == SDL_KEYDOWN) {
-      switch(appEvent.key.keysym.sym) {
+    else if (appEvent.type == SDL_KEYDOWN)
+    {
+      switch(appEvent.key.keysym.sym)
+      {
         case SDLK_ESCAPE:
           running = false;
           break;
@@ -506,7 +525,8 @@ struct GameEngine {
     }
     else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
     {
-      if (appEvent.button.button == SDL_BUTTON_LEFT) {
+      if (appEvent.button.button == SDL_BUTTON_LEFT)
+      {
 
       }
     }
@@ -525,19 +545,15 @@ struct GameEngine {
   }
   int run()
   {
-    while (running) {
+    while (running)
+    {
       handleEvents();
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
-      // for(auto const& o: objects.at(0))
-      // {
-      //   //renderCopySprite<WorldObject>(o, o.x, o.y);
-      //   SDL_Log("%s", o.type.c_str());
-      // }
       for (auto o : objects.at(0))
       {
-        renderCopySprite<WorldObject>(&o, o.x, o.y);
-        SDL_Log("%s", o.type.c_str());
+        //renderCopySprite<WorldObject>(&o, o.x, o.y);
+        //SDL_Log("%s", o.type.c_str());
       }
       applyUi();
       SDL_RenderPresent(appRenderer);
@@ -546,9 +562,10 @@ struct GameEngine {
   }
 };
 
-int main() {
+int main()
+{
   GameEngine engine;
-  engine.tileSize = 16;
+  engine.tileSize = 32;
   engine.init();
   engine.run();
   return 0;
