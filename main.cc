@@ -60,7 +60,8 @@ struct GameEngine {
   int tileSize;
   const int spriteSize;
   int zLevel;
-  std::array<std::array<std::array<Tile, 4>, 200>, 200> map;
+  std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
+  // std::array<std::array<std::array<Tile, 4>, 200>, 200> map;
   std::map<int, std::map<std::pair<int, int>, std::map<std::pair<int, int>, Tile*>>> grid;
   std::map<std::string, Sprite> sprites;
   std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
@@ -193,8 +194,8 @@ struct GameEngine {
     SDL_Log("Spritesheet processed.");
 
     // Create default tilemap
-    for (auto i = 0; i < map.size(); i++) {
-      for (auto j = 0; j < map.size(); j++) {
+    for (auto i = 0; i < 100; i++) { // map.size()
+      for (auto j = 0; j < 100; j++) {
         Tile top { i, j, "Sprite 64x0" };
         Tile middle { i, j, "Sprite 64x64" };
         Tile bottom { i, j, "Sprite 64x128" };
@@ -212,15 +213,22 @@ struct GameEngine {
         {
           bottom.type = "Sprite 64x64";
         }
-        map.at(i).at(j).at(0) = top;
-        map.at(i).at(j).at(1) = middle;
-        map.at(i).at(j).at(2) = bottom;
-        map.at(i).at(j).at(3) = Tile {i,j,"Sprite 64x64"};
+
+        tileMap[0][{i, j}] = top;
+        tileMap[1][{i, j}] = middle;
+        tileMap[2][{i, j}] = bottom;
+        tileMap[3][{i, j}] = Tile {i,j,"Sprite 64x64"};
+
+        // map.at(i).at(j).at(0) = top;
+        // map.at(i).at(j).at(1) = middle;
+        // map.at(i).at(j).at(2) = bottom;
+        // map.at(i).at(j).at(3) = Tile {i,j,"Sprite 64x64"};
       }
     }
     objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
     SDL_Log("Tilemap of %lu tiles created.",
-      map.size()*map.size()*map.at(0).at(0).size()
+      tileMap.size()*tileMap[0].size()
+      //map.size()*map.size()*map.at(0).at(0).size()
     );
     return 0;
   }
@@ -250,7 +258,19 @@ struct GameEngine {
     int _w = gridSize.first*tileSize;
     int _h = gridSize.second*tileSize;
     SDL_Log("Current window is %dx%dpx.", _w, _h);
-    gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+    Uint32 rmask, gmask, bmask, amask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    rmask = 0xff000000;
+    gmask = 0x00ff0000;
+    bmask = 0x0000ff00;
+    amask = 0x000000ff;
+#else
+    rmask = 0x000000ff;
+    gmask = 0x0000ff00;
+    bmask = 0x00ff0000;
+    amask = 0xff000000;
+#endif
+    gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
     SDL_Rect dest {0, 0, _w, _h};
     std::pair<int, int> offset = {0, 0};
     if (directions & RIGHT)
@@ -275,7 +295,14 @@ struct GameEngine {
       SDL_Log("animating: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
-      SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, gameSurface->pixels, gameSurface->pitch);
+      if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, gameSurface->pixels, gameSurface->pitch) < 0)
+      {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+          "Could not read pixels from renderer: %s",
+          SDL_GetError()
+        );
+        break;
+      }
       gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
       if (directions & RIGHT) {
         dest.x -= movementSpeed;
@@ -313,7 +340,7 @@ struct GameEngine {
         Tile t;
         try
         {
-          t = map.at(i).at(j).at(zLevel);
+          t = tileMap[zLevel][{i, j}]; //map.at(i).at(j).at(zLevel);
           
         }
         catch (std::exception &e)
@@ -407,7 +434,8 @@ struct GameEngine {
           break;
         case SDLK_q:
           SDL_Log("You are at level %d", zLevel);
-          if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
+          if (std::abs(zLevel) < static_cast <int>(tileMap.size()))
+          {     //map.at(0).at(0).size())) {
             zLevel++;
           }
           break;
