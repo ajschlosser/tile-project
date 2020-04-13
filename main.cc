@@ -66,13 +66,17 @@ struct GameEngine {
   std::map<std::string, Sprite> sprites;
   std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4), gameSize(1000) {}
+  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(32), gameSize(100) {}
   int init()
   {
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
       tileSize = spriteSize;
+    }
+    if (movementSpeed > tileSize)
+    {
+      movementSpeed = tileSize;
     }
 
     // Initialize SDL
@@ -226,8 +230,8 @@ struct GameEngine {
       }
     }
     objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
-    SDL_Log("Tilemap of %lu tiles created.",
-      tileMap.size()*tileMap[0].size()
+    SDL_Log("Tilemap of %d tiles created.",
+      gameSize*gameSize*4
     );
     return 0;
   }
@@ -523,6 +527,7 @@ struct GameEngine {
 
 int main() {
   GameEngine engine;
+  engine.tileSize = 16;
   engine.init();
   engine.run();
   return 0;
