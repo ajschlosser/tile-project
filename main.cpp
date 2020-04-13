@@ -106,6 +106,8 @@ struct GameEngine {
   bool refreshed;
   SDL_Window* appWindow;
   SDL_Renderer* appRenderer;
+  SDL_Surface* gameSurface;
+  SDL_Texture* gameTexture;
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
@@ -290,19 +292,6 @@ struct GameEngine {
     int height = static_cast <int> (std::floor(_h/tileSize));
     return {width, height};
   }
-  int renderCopyImage(Image* i, int x, int y)
-  {
-    if (!i->texture || !i->surface)
-    {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-        "renderCopyImage() failed: texture or surface was null"
-      );
-      return 3;
-    }
-    SDL_Rect dest {x, y, i->surface->w, i->surface->h};
-    SDL_RenderCopy(appRenderer, i->texture, NULL, &dest);
-    return 0;
-  }
   template <class T>
   int renderCopySprite(T* t, int x, int y) {
     Sprite s = sprites[t->type];
@@ -317,8 +306,7 @@ struct GameEngine {
     int _w = gridSize.first*tileSize;
     int _h = gridSize.second*tileSize;
     SDL_Log("Current window is %dx%dpx.", _w, _h);
-    SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
-    SDL_Texture *screenTexture;
+    gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
     SDL_Rect dest {0, 0, _w, _h};
     std::pair<int, int> offset = {0, 0};
     if (directions & RIGHT)
@@ -343,8 +331,8 @@ struct GameEngine {
       SDL_Log("animating: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
-      SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
-      screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface);
+      SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, gameSurface->pixels, gameSurface->pitch);
+      gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
       if (directions & RIGHT) {
         dest.x -= 4;
       }
@@ -358,7 +346,7 @@ struct GameEngine {
         dest.y -= 4;
       }
       SDL_Rect src {tileSize, tileSize, _w-tileSize, _h-tileSize};
-      SDL_RenderCopy(appRenderer, screenTexture, &src, &dest);
+      SDL_RenderCopy(appRenderer, gameTexture, &src, &dest);
       SDL_RenderPresent(appRenderer);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
@@ -398,64 +386,23 @@ struct GameEngine {
       "renderCopyTiles() completed. Screen refreshed."
     );
   }
-  void renderCopyWorldObjects()
-  {
-    for (auto const& [coordinates, object] : objects.at(zLevel))
-    {
-      auto windowSize = getWindowSize();
-      int x = coordinates.first;
-      int y = coordinates.second;
-      WorldObject o = objects.at(zLevel)[coordinates];
-      SDL_Log("There is a '%s' at tile (%d, %d) and at (%d, %d) in the window", o.type.c_str(), x, y, o.x, o.y);
-      if (x > camera.x - 15 && x < camera.x + 15 && y > camera.y - 15 && y < camera.y + 15)
-      {
-        renderCopySprite<WorldObject>(&o, o.x, o.y);
-      }
-    }
-  }
-  void renderUi()
-  {
-    SDL_SetRenderDrawColor(appRenderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-    auto windowSize = getWindowSize();
-    SDL_Rect bottom {
-      0,
-      windowSize.second*tileSize - tileSize*3,
-      static_cast<int>(std::round(windowSize.first*tileSize)),
-      static_cast<int>(std::round(windowSize.second*tileSize))
-    };
-    SDL_RenderFillRect(appRenderer, &bottom);
-    bottom.x += 5;
-    bottom.y += 5;
-    bottom.w -= 5;
-    bottom.h -= 5;
-    SDL_SetRenderDrawColor(appRenderer, 50, 50, 50, SDL_ALPHA_OPAQUE);
-    SDL_RenderFillRect(appRenderer, &bottom);
-  }
   void scrollCamera(int directions) {
     animate(directions);
     if (directions & LEFT) {
-      //animate(directions);
       camera.x -= 1;
     }
     if (directions & RIGHT) {
-      //animate(directions);
       camera.x += 1;
     }
     if (directions & DOWN) {
-      //animate(directions);
       camera.y += 1;
     }
     if (directions & UP) {
-      //animate(directions);
       camera.y -= 1;
     }
-    SDL_RenderClear(appRenderer);
-    renderCopyTiles();
-    SDL_PumpEvents();
   }
   void handleEvents()
   {
-    SDL_PumpEvents();
     auto *keyboardState = SDL_GetKeyboardState(NULL);
     while(keyboardState[SDL_SCANCODE_LEFT]
         || keyboardState[SDL_SCANCODE_RIGHT]
@@ -487,94 +434,40 @@ struct GameEngine {
     if (appEvent.type == SDL_QUIT) {
       running = false;
     }
-    // else if (appEvent.type == SDL_KEYDOWN) {
-    //   switch(appEvent.key.keysym.sym) {
-    //     case SDLK_ESCAPE:
-    //       running = false;
-    //       break;
-    //     case SDLK_LEFT:
-    //       if (camera.x > 0)
-    //       {
-    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
-    //         while(state[SDL_SCANCODE_LEFT]) {
-    //           scrollCamera(LEFT);
-    //           state = SDL_GetKeyboardState(NULL);
-    //         }
-    //       }
-    //       break;
-    //     case SDLK_RIGHT:
-    //       if (camera.x < map.size())
-    //       {
-    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
-    //         while(state[SDL_SCANCODE_RIGHT]) {
-    //           animate("right");
-    //           SDL_RenderClear(appRenderer);
-    //           renderCopyTiles();
-    //           state = SDL_GetKeyboardState(NULL);
-    //           camera.x += 1;
-    //           SDL_PumpEvents();
-    //         }
-    //       }
-    //       break;
-    //     case SDLK_UP:
-    //       if (camera.y > 0)
-    //       {
-    //         camera.y -= 1;
-    //       }
-    //       break;
-    //     case SDLK_DOWN:
-    //       if (camera.y < map.size())
-    //       {
-    //         const Uint8 *state = SDL_GetKeyboardState(NULL);
-    //         while(state[SDL_SCANCODE_DOWN]) {
-    //           scrollCamera(DOWN);
-    //           state = SDL_GetKeyboardState(NULL);
-    //         }
-    //       }
-    //       break;
-    //     case SDLK_SPACE:
-    //       SDL_Log("Camera: %dx%dx%dx%d",
-    //         camera.x,
-    //         camera.y,
-    //         camera.w,
-    //         camera.h
-    //       );
-    //       break;
-    //     case SDLK_w:
-    //       if (zLevel > 0)
-    //       {
-    //         zLevel--;
-    //       }
-    //       break;
-    //     case SDLK_q:
-    //       SDL_Log("You are at level %d", zLevel);
-    //       if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
-    //         zLevel++;
-    //       }
-    //       break;
-    //     case SDLK_p:
-    //       paused = !paused;
-    //       break;
-    //   }
-    // }
+    else if (appEvent.type == SDL_KEYDOWN) {
+      switch(appEvent.key.keysym.sym) {
+        case SDLK_ESCAPE:
+          running = false;
+          break;
+        case SDLK_SPACE:
+          SDL_Log("Camera: %dx%dx%dx%d",
+            camera.x,
+            camera.y,
+            camera.w,
+            camera.h
+          );
+          break;
+        case SDLK_w:
+          if (zLevel > 0)
+          {
+            zLevel--;
+          }
+          break;
+        case SDLK_q:
+          SDL_Log("You are at level %d", zLevel);
+          if (std::abs(zLevel) < static_cast <int>(map.at(0).at(0).size())) {
+            zLevel++;
+          }
+          break;
+        case SDLK_p:
+          paused = !paused;
+          break;
+      }
+    }
     else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
     {
       if (appEvent.button.button == SDL_BUTTON_LEFT) {
-        // int x = appEvent.button.x/tileSize;
-        // int y = appEvent.button.y/tileSize;
-        // auto gridTile = grid[{x, y}];
-        // for (auto const& [coordinates, object] : gridTile)
-        // {
-        //   SDL_Log("%s at (%d, %d) (grid[{%d, %d}][%d, %d])",
-        //     object->type.c_str(),
-        //     coordinates.first,
-        //     coordinates.second,
-        //     x,
-        //     y,
-        //     coordinates.first,
-        //     coordinates.second
-        //   );
-        // }
+
       }
     }
     else if (appEvent.type == SDL_WINDOWEVENT)
@@ -594,14 +487,9 @@ struct GameEngine {
   {
     while (running) {
       handleEvents();
-      if (1) {
-        SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
-        SDL_RenderClear(appRenderer);
-        renderCopyTiles();
-        //renderCopyWorldObjects();
-        //renderUi();
-        SDL_RenderPresent(appRenderer);
-      }
+      SDL_RenderClear(appRenderer);
+      renderCopyTiles();
+      SDL_RenderPresent(appRenderer);
     }
     return 1;
   }
