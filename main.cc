@@ -36,6 +36,10 @@ struct WorldObject {
   }
 };
 
+struct Player : WorldObject {
+  int hp;
+};
+
 struct Tile {
   int x;
   int y;
@@ -61,6 +65,7 @@ struct GameEngine {
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
+  Player player;
   int tileSize;
   int gameSize;
   const int spriteSize;
@@ -69,9 +74,10 @@ struct GameEngine {
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(32), gameSize(100) {}
+  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4), gameSize(100) {}
   int init()
   {
+    player = {15, 15, "Sprite 192x192", 100};
     int n = 1000;
     while (n > 0)
     {
@@ -79,7 +85,7 @@ struct GameEngine {
       objectMap[0][0][{o.x, o.y}] = o;
       n--;
     }
-    n = 1000;
+    n = 10000;
     while (n > 0)
     {
       WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x192"};
@@ -90,7 +96,7 @@ struct GameEngine {
     while (n > 0)
     {
       WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
-      objectMap[1][0][{o.x, o.y}] = o;
+      objectMap[1][2][{o.x, o.y}] = o;
       n--;
     }
     std::srand(std::time(nullptr));
@@ -279,12 +285,18 @@ struct GameEngine {
     Sprite s = sprites[t->type];
     SDL_Rect src {s.tileMapX, s.tileMapY, spriteSize, spriteSize};
     SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
-    SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
+    if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Couldn't copy sprite to renderer: %s",
+        SDL_GetError()
+      );
+      return 3;
+    }
     return 0;
   }
   void scrollGameSurface(int directions)
   {
-    auto gridSize = getWindowSize();
     SDL_Rect viewportRect;
     SDL_RenderGetViewport(appRenderer, &viewportRect);
     int _w = viewportRect.w;
@@ -379,6 +391,7 @@ struct GameEngine {
         dest.y -= movementSpeed;
       }
       SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
+      renderCopyPlayer();
       applyUi();
       SDL_RenderPresent(appRenderer);
       SDL_DestroyTexture(gameTexture);
@@ -420,7 +433,7 @@ struct GameEngine {
         try
         {
           t = tileMap[zLevel][{i, j}];
-          int layer = 4;
+          int layer = 3;
           while (layer >= 0)
           {
             WorldObject o;
@@ -433,7 +446,7 @@ struct GameEngine {
         }
         catch (std::exception &e)
         {
-          t = {i, j, "Sprite 64x128"};
+          t = {i, j, "Sprite 64x320"};
         }
         renderCopySprite<Tile>(&t, x, y);
         for (WorldObject o : objects)
@@ -565,6 +578,13 @@ struct GameEngine {
       }
     }
   }
+  int renderCopyPlayer()
+  {
+    player.x = camera.x;
+    player.y = camera.y;
+    auto gridSize = getWindowSize();
+    return renderCopySprite<Player>(&player, gridSize.first/2, gridSize.second/2);
+  }
   int run()
   {
     while (running)
@@ -572,6 +592,7 @@ struct GameEngine {
       handleEvents();
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
+      renderCopyPlayer();
       applyUi();
       SDL_RenderPresent(appRenderer);
     }
