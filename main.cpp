@@ -317,41 +317,34 @@ struct GameEngine {
     int _w = gridSize.first*tileSize;
     int _h = gridSize.second*tileSize;
     SDL_Log("Current window is %dx%dpx.", _w, _h);
-    SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
-    // SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
+    SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
     SDL_Texture *screenTexture;
     SDL_Rect dest {0, 0, _w, _h};
     std::pair<int, int> offset = {0, 0};
     if (directions & RIGHT)
     {
-      //offset = {(0 - tileSize), 0};
       offset.first = (0 - tileSize);
     }
     if (directions & LEFT)
     {
-      //offset = {tileSize, 0};
       offset.first = tileSize;
     }
     if (directions & UP)
     {
-      //offset = {0, tileSize};
       offset.second = tileSize;
     }
     if (directions & DOWN)
     {
-      //offset = {0, (0 - tileSize)};
       offset.second = (0 - tileSize);
     }
     SDL_Log("offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
     while (dest.x != offset.first || dest.y != offset.second)
     {
       SDL_Log("animating: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
-      //SDL_SetRenderDrawColor(appRenderer, 0x00, 0x00, 0x00, 0x00);
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
-      //SDL_Surface* screenSurface = SDL_CreateRGBSurface(0, _w, _h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000); //SDL_GetWindowSurface(appWindow); <-- only for software rendering??? wut
       SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_UNKNOWN, screenSurface->pixels, screenSurface->pitch);
-      screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface); //SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, _w, _h);
+      screenTexture = SDL_CreateTextureFromSurface(appRenderer, screenSurface);
       if (directions & RIGHT) {
         dest.x -= 4;
       }
@@ -364,9 +357,9 @@ struct GameEngine {
       if (directions & DOWN) {
         dest.y -= 4;
       }
-      SDL_RenderCopy(appRenderer, screenTexture, NULL, &dest);
+      SDL_Rect src {tileSize, tileSize, _w-tileSize, _h-tileSize};
+      SDL_RenderCopy(appRenderer, screenTexture, &src, &dest);
       SDL_RenderPresent(appRenderer);
-      //SDL_Delay(1);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -395,10 +388,6 @@ struct GameEngine {
         {
           t = {i, j, "Sprite 64x128"};
         }
-        // if (x == std::round(windowSize.first/2) && y == std::round(windowSize.second/2))
-        // {
-        //   t = {i, j, "Sprite 64x256"};
-        // }
         renderCopySprite<Tile>(&t, x, y);
         y++;
       }
