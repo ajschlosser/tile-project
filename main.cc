@@ -74,29 +74,36 @@ struct GameEngine {
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4), gameSize(100) {}
+  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100) {}
   int init()
   {
-    player = {15, 15, "Sprite 192x192", 100};
-    int n = 1000;
+    player = {15, 15, "Sprite 0x96", 100};
+    int n = 500;
     while (n > 0)
     {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x192"};
       objectMap[0][0][{o.x, o.y}] = o;
-      n--;
-    }
-    n = 10000;
-    while (n > 0)
-    {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x192"};
-      objectMap[0][1][{o.x, o.y}] = o;
       n--;
     }
     n = 1000;
     while (n > 0)
     {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
-      objectMap[1][2][{o.x, o.y}] = o;
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x224"};
+      objectMap[0][2][{o.x, o.y}] = o;
+      n--;
+    }
+    n = 500;
+    while (n > 0)
+    {
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 32x192"};
+      objectMap[0][3][{o.x, o.y}] = o;
+      n--;
+    }
+    n = 500;
+    while (n > 0)
+    {
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x256"};
+      objectMap[1][4][{o.x, o.y}] = o;
       n--;
     }
     std::srand(std::time(nullptr));
@@ -182,7 +189,7 @@ struct GameEngine {
     }
 
     // Load spritesheet
-    SDL_Surface *surface = IMG_Load("tilemap.png");
+    SDL_Surface *surface = IMG_Load("tilemap640x640x32.png");
     if (!surface)
     {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "IMG_Load error: %s", IMG_GetError());
@@ -240,27 +247,27 @@ struct GameEngine {
       }
       for (auto j = 0; j < gameSize; j++)
       {
-        Tile top { i, j, "Sprite 64x0" };
-        Tile middle { i, j, "Sprite 64x64" };
-        Tile bottom { i, j, "Sprite 64x128" };
+        Tile top { i, j, "Sprite 0x0" };
+        Tile middle { i, j, "Sprite 0x32" };
+        Tile bottom { i, j, "Sprite 0x64" };
         int n = std::rand() % 150;
         if (n > 80)
         {
-          top.type = "Sprite 64x64";
+          top.type = "Sprite 0x32";
         }
         if (n > 98)
         {
-          top.type = "Sprite 64x128";
-          middle.type = "Sprite 64x128";
+          top.type = "Sprite 0x64";
+          middle.type = "Sprite 0x64";
         }
         if (n > 99)
         {
-          bottom.type = "Sprite 64x64";
+          bottom.type = "Sprite 0x32";
         }
         tileMap[0][{i, j}] = top;
         tileMap[1][{i, j}] = middle;
         tileMap[2][{i, j}] = bottom;
-        tileMap[3][{i, j}] = Tile {i,j,"Sprite 64x64"};
+        tileMap[3][{i, j}] = Tile {i,j,"Sprite 0x64"};
       }
     }
     SDL_Log("Tilemap of %d tiles created.",
@@ -302,7 +309,11 @@ struct GameEngine {
     int _w = viewportRect.w;
     int _h = viewportRect.h;
 
-    SDL_Log("Current window is %dx%dpx.", _w, _h);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+      "Current window is %dx%dpx.",
+      _w,
+      _h
+    );
     Uint32 rmask, gmask, bmask, amask;
     #if SDL_BYTEORDER == SDL_BIG_ENDIAN
         rmask = 0xff000000;
@@ -446,7 +457,7 @@ struct GameEngine {
         }
         catch (std::exception &e)
         {
-          t = {i, j, "Sprite 64x320"};
+          t = {i, j, "Sprite 0x128"};
         }
         renderCopySprite<Tile>(&t, x, y);
         for (WorldObject o : objects)
@@ -603,7 +614,7 @@ struct GameEngine {
 int main()
 {
   GameEngine engine;
-  engine.tileSize = 32;
+  engine.tileSize = 64;
   engine.init();
   engine.run();
   return 0;
