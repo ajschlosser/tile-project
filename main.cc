@@ -255,8 +255,13 @@ struct GameEngine {
   void scrollGameSurface(int directions)
   {
     auto gridSize = getWindowSize();
-    int _w = gridSize.first*tileSize;
-    int _h = gridSize.second*tileSize;
+    // int _w = gridSize.first*tileSize;
+    // int _h = gridSize.second*tileSize;
+    SDL_Rect viewportRect;
+    SDL_RenderGetViewport(appRenderer, &viewportRect);
+    int _w = viewportRect.w;
+    int _h = viewportRect.h;
+
     SDL_Log("Current window is %dx%dpx.", _w, _h);
     Uint32 rmask, gmask, bmask, amask;
     #if SDL_BYTEORDER == SDL_BIG_ENDIAN
