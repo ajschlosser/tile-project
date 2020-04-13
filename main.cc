@@ -355,6 +355,10 @@ struct GameEngine {
         dest.y -= movementSpeed;
       }
       SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
+      SDL_Rect r;
+      SDL_RenderGetViewport(appRenderer, &r);
+      r.w = tileSize;
+      SDL_RenderFillRect(appRenderer, &r);
       SDL_RenderPresent(appRenderer);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
