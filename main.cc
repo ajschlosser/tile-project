@@ -58,6 +58,7 @@ struct GameEngine {
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
   int tileSize;
+  int gameSize;
   const int spriteSize;
   int zLevel;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
@@ -66,7 +67,7 @@ struct GameEngine {
   std::map<std::string, Sprite> sprites;
   std::array<std::map<std::pair<int, int>, WorldObject>, 4> objects;
   Camera camera;
-  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4) {}
+  GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(4), gameSize(1000) {}
   int init()
   {
     std::srand(std::time(nullptr));
@@ -192,10 +193,16 @@ struct GameEngine {
       }
     }
     SDL_Log("Spritesheet processed.");
-
+    SDL_Log("Generating default tilemap...");
     // Create default tilemap
-    for (auto i = 0; i < 100; i++) { // map.size()
-      for (auto j = 0; j < 100; j++) {
+    for (auto i = 0; i < gameSize; i++) { // map.size()
+      if (i == std::floor(gameSize / 2)) {
+        SDL_Log("Still generating default tilemap...");
+      }
+      if (i == std::floor(gameSize / 4)) {
+        SDL_Log("Still generating default tilemap...");
+      }
+      for (auto j = 0; j < gameSize; j++) {
         Tile top { i, j, "Sprite 64x0" };
         Tile middle { i, j, "Sprite 64x64" };
         Tile bottom { i, j, "Sprite 64x128" };
@@ -355,11 +362,9 @@ struct GameEngine {
         dest.y -= movementSpeed;
       }
       SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
-      SDL_Rect r;
-      SDL_RenderGetViewport(appRenderer, &r);
-      r.w = tileSize;
-      SDL_RenderFillRect(appRenderer, &r);
+      applyUi();
       SDL_RenderPresent(appRenderer);
+      SDL_DestroyTexture(gameTexture);
     }
     if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -367,6 +372,19 @@ struct GameEngine {
         SDL_GetError()
       );
     }
+  }
+  void applyUi()
+  {
+    SDL_Rect viewportRect;
+    SDL_RenderGetViewport(appRenderer, &viewportRect);
+    SDL_Rect leftRect = {0, 0, tileSize, viewportRect.h};
+    SDL_Rect rightRect = {viewportRect.w-tileSize, 0, tileSize, viewportRect.h};
+    SDL_Rect topRect = {0, 0, viewportRect.w, tileSize};
+    SDL_Rect bottomRect = {0, viewportRect.h-tileSize*2, viewportRect.w, tileSize*2};
+    SDL_RenderFillRect(appRenderer, &leftRect);
+    SDL_RenderFillRect(appRenderer, &rightRect);
+    SDL_RenderFillRect(appRenderer, &topRect);
+    SDL_RenderFillRect(appRenderer, &bottomRect);
   }
   void renderCopyTiles()
   {
@@ -510,6 +528,7 @@ struct GameEngine {
       handleEvents();
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
+      applyUi();
       SDL_RenderPresent(appRenderer);
     }
     return 1;
