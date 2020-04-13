@@ -74,10 +74,10 @@ struct GameEngine {
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100) {}
+  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(200) {}
   int init()
   {
-    player = {15, 15, "Sprite 0x96", 100};
+    player = {0, 0, "Sprite 0x96", 100};
     int n = 500;
     while (n > 0)
     {
@@ -150,8 +150,10 @@ struct GameEngine {
       windowSize.first,
       windowSize.second
     );
-    camera = { 15, 15, windowSize.first/tileSize, windowSize.first/tileSize };
-    SDL_Log("Camera created with %dx%d tile dimensions.",
+    camera = { gameSize/2, gameSize/2, windowSize.first/tileSize, windowSize.first/tileSize };
+    SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.",
+      gameSize/2,
+      gameSize/2,
       displayMode.w/tileSize,
       displayMode.h/tileSize
     );
