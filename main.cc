@@ -252,25 +252,37 @@ struct GameEngine {
     SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest);
     return 0;
   }
-  void animate(int directions)
+  void scrollGameSurface(int directions)
   {
     auto gridSize = getWindowSize();
     int _w = gridSize.first*tileSize;
     int _h = gridSize.second*tileSize;
     SDL_Log("Current window is %dx%dpx.", _w, _h);
     Uint32 rmask, gmask, bmask, amask;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    rmask = 0xff000000;
-    gmask = 0x00ff0000;
-    bmask = 0x0000ff00;
-    amask = 0x000000ff;
-#else
-    rmask = 0x000000ff;
-    gmask = 0x0000ff00;
-    bmask = 0x00ff0000;
-    amask = 0xff000000;
-#endif
+    #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+        rmask = 0xff000000;
+        gmask = 0x00ff0000;
+        bmask = 0x0000ff00;
+        amask = 0x000000ff;
+    #else
+        rmask = 0x000000ff;
+        gmask = 0x0000ff00;
+        bmask = 0x00ff0000;
+        amask = 0xff000000;
+    #endif
     gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
+    if (!gameSurface)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not create RGB surface: %s",
+        SDL_GetError()
+      );
+    }
+    else
+    {
+      //gameSurface->pixels = (void *)malloc(_w*_h);
+    }
+    
     SDL_Rect dest {0, 0, _w, _h};
     std::pair<int, int> offset = {0, 0};
     if (directions & RIGHT)
@@ -289,12 +301,32 @@ struct GameEngine {
     {
       offset.second -= tileSize;
     }
-    SDL_Log("offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
     while (dest.x != offset.first || dest.y != offset.second)
     {
-      SDL_Log("animating: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y);
-      SDL_RenderClear(appRenderer);
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+        "scrollGameSurface: offset: %d %d \t dest: %d %d",
+        offset.first,
+        offset.second,
+        dest.x,
+        dest.y
+      );
+      if (SDL_RenderClear(appRenderer) < 0)
+      {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+          "Could not clear renderer: %s",
+          SDL_GetError()
+        );
+        break;
+      }
       renderCopyTiles();
+      if (SDL_LockSurface(gameSurface) < 0)
+      {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+          "Could not lock surface for pixel access: %s",
+          SDL_GetError()
+        );
+        break;
+      }
       if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, gameSurface->pixels, gameSurface->pitch) < 0)
       {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -303,6 +335,7 @@ struct GameEngine {
         );
         break;
       }
+      SDL_UnlockSurface(gameSurface);
       gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
       if (directions & RIGHT) {
         dest.x -= movementSpeed;
@@ -316,7 +349,6 @@ struct GameEngine {
       if (directions & DOWN) {
         dest.y -= movementSpeed;
       }
-      SDL_Rect src {tileSize, tileSize, _w-tileSize, _h-tileSize};
       SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
       SDL_RenderPresent(appRenderer);
     }
@@ -358,7 +390,7 @@ struct GameEngine {
     );
   }
   void scrollCamera(int directions) {
-    animate(directions);
+    scrollGameSurface(directions);
     if (directions & LEFT) {
       camera.x -= 1;
     }
