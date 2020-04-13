@@ -66,8 +66,7 @@ struct GameEngine {
   const int spriteSize;
   int zLevel;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
-  std::map<int, std::map<std::pair<int, int>, WorldObject>> objectMap;
-  std::array<std::vector<WorldObject>, 4> objects;
+  std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
   GameEngine() : spriteSize(64), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(32), gameSize(100) {}
@@ -77,8 +76,21 @@ struct GameEngine {
     while (n > 0)
     {
       WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
-      objects.at(0).push_back(o);
-      objectMap[0][{o.x, o.y}] = o;
+      objectMap[0][0][{o.x, o.y}] = o;
+      n--;
+    }
+    n = 1000;
+    while (n > 0)
+    {
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x192"};
+      objectMap[0][1][{o.x, o.y}] = o;
+      n--;
+    }
+    n = 1000;
+    while (n > 0)
+    {
+      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 64x256"};
+      objectMap[1][0][{o.x, o.y}] = o;
       n--;
     }
     std::srand(std::time(nullptr));
@@ -245,7 +257,6 @@ struct GameEngine {
         tileMap[3][{i, j}] = Tile {i,j,"Sprite 64x64"};
       }
     }
-    //objects.at(0)[{ 0, 0 }] = WorldObject {15, 15, "Sprite 64x256"};
     SDL_Log("Tilemap of %d tiles created.",
       gameSize*gameSize*4
     );
@@ -405,18 +416,28 @@ struct GameEngine {
       for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
       {
         Tile t;
-        WorldObject o;
+        std::vector<WorldObject> objects;
         try
         {
           t = tileMap[zLevel][{i, j}];
-          o = objectMap[zLevel][{i, j}];
+          int layer = 4;
+          while (layer >= 0)
+          {
+            WorldObject o;
+            o = objectMap[zLevel][layer][{i, j}];
+            if (o.exists()) {
+              objects.push_back(o);
+            }
+            layer--;
+          }
         }
         catch (std::exception &e)
         {
           t = {i, j, "Sprite 64x128"};
         }
         renderCopySprite<Tile>(&t, x, y);
-        if (o.exists()) {
+        for (WorldObject o : objects)
+        {
           renderCopySprite<WorldObject>(&o, x, y);
         }
         y++;
@@ -509,13 +530,14 @@ struct GameEngine {
           if (zLevel > 0)
           {
             zLevel--;
+            SDL_Log("You are at level %d", zLevel);
           }
           break;
         case SDLK_q:
-          SDL_Log("You are at level %d", zLevel);
           if (std::abs(zLevel) < static_cast <int>(tileMap.size()))
           {
             zLevel++;
+            SDL_Log("You are at level %d", zLevel);
           }
           break;
         case SDLK_p:
@@ -550,11 +572,6 @@ struct GameEngine {
       handleEvents();
       SDL_RenderClear(appRenderer);
       renderCopyTiles();
-      for (auto o : objects.at(0))
-      {
-        //renderCopySprite<WorldObject>(&o, o.x, o.y);
-        //SDL_Log("%s", o.type.c_str());
-      }
       applyUi();
       SDL_RenderPresent(appRenderer);
     }
