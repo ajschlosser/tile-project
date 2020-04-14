@@ -8,6 +8,9 @@
 #include <utility>
 #include <vector>
 
+#include <future>
+#include <thread>
+
 enum direction {
   LEFT    = 0x01,
   RIGHT   = 0x02,
@@ -70,7 +73,7 @@ struct GameEngine {
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(200) {}
+  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100) {}
   int init()
   {
     player = {0, 0, "Sprite 0x96", 100};
@@ -141,7 +144,7 @@ struct GameEngine {
     );
 
     // Create camera
-    auto windowSize = getWindowSize();
+    auto windowSize = getWindowGridSize();
     SDL_Log("Current window is %dx%dpx.",
       windowSize.first,
       windowSize.second
@@ -237,9 +240,9 @@ struct GameEngine {
     SDL_Log("Generating default tilemap...");
     
     // Create default tilemap
-    for (auto i = 0; i < gameSize*1.5; i++)
+    for (auto i = 0; i < gameSize*2; i++)
     {
-      for (auto j = 0; j < gameSize*1.5; j++)
+      for (auto j = 0; j < gameSize*2; j++)
       {
         Tile top { i, j, "Sprite 0x0" };
         Tile middle { i, j, "Sprite 0x32" };
@@ -269,11 +272,7 @@ struct GameEngine {
     );
     return 0;
   }
-  int quit()
-  {
-    return 0;
-  }
-  std::pair<int, int> getWindowSize()
+  std::pair<int, int> getWindowGridSize()
   {
     int _w, _h;
     SDL_GetWindowSize(appWindow, &_w, &_h);
@@ -426,76 +425,79 @@ struct GameEngine {
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
+  void generateMapChunk(SDL_Rect* chunkRect)
+  {
+    int levels = tileMap.size();
+    for (auto h = 0; h < levels; h++)
+    {
+      SDL_Log("Generating new chunk: on level %d from ( %d, %d ) to ( %d, %d )",
+        h, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
+      );
+      for (auto i = chunkRect->x; i != chunkRect->w; i++)
+      {
+        for (auto j = chunkRect->y; j != chunkRect->h; j++)
+        {
+          Tile *tileAtCoordinates = &tileMap[h][{i, j}];
+          if (!tileAtCoordinates->exists())
+          {
+            Tile newTile = {i, j, "Sprite 0x32"};
+            if (rand() % 100 > 90) newTile.type = "Sprite 0x96";
+            tileMap[h][{i, j}] = newTile;
+          }
+        }
+      }
+    }
 
-  void generateTileMapChunk(int directions)
+    SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
+  }
+  void processMap(int directions)
   {
 
     SDL_Point checkCoordinates = { camera.x, camera.y };
-    SDL_Rect newChunk = { camera.x-1, camera.y-1, camera.x+1, camera.y+1 };
-    //SDL_Rect chunk = {camera.x + gameSize/2, camera.y - gameSize/2, camera.x + gameSize*1.5, camera.y + gameSize/2};
+    SDL_Rect chunkRect = { camera.x-1, camera.y-1, camera.x+1, camera.y+1 };
 
     if (directions & RIGHT)
     {
       checkCoordinates.x += gameSize/2;
 
-      newChunk.x += gameSize/2;
-      newChunk.y -= gameSize/2;
-      newChunk.w += gameSize*1.5;
-      newChunk.h += gameSize/2;
+      chunkRect.x += gameSize/2;
+      chunkRect.y -= gameSize/2;
+      chunkRect.w += gameSize*1.5;
+      chunkRect.h += gameSize/2;
     }
     if (directions & LEFT)
     {
       checkCoordinates.x -= gameSize/2;
 
-      newChunk.x -= gameSize*1.5;
-      newChunk.y -= gameSize/2;
-      newChunk.w -= gameSize/2;
-      newChunk.h += gameSize/2;
+      chunkRect.x -= gameSize*1.5;
+      chunkRect.y -= gameSize/2;
+      chunkRect.w -= gameSize/2;
+      chunkRect.h += gameSize/2;
     }
     if (directions & UP)
     {
       checkCoordinates.y -= gameSize/2;
 
-      newChunk.x -= gameSize/2;
-      newChunk.y -= gameSize*1.5;
-      newChunk.w += gameSize/2;
-      newChunk.h -= gameSize/2;
+      chunkRect.x -= gameSize/2;
+      chunkRect.y -= gameSize*1.5;
+      chunkRect.w += gameSize/2;
+      chunkRect.h -= gameSize/2;
     }
     if (directions & DOWN)
     {
       checkCoordinates.y += gameSize/2;
 
-      newChunk.x -= gameSize/2;
-      newChunk.y += gameSize/2;
-      newChunk.w += gameSize/2;
-      newChunk.h += gameSize*1.5;
+      chunkRect.x -= gameSize/2;
+      chunkRect.y += gameSize/2;
+      chunkRect.w += gameSize/2;
+      chunkRect.h += gameSize*1.5;
     }
 
     Tile *checkTile = &tileMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
 
     if (!checkTile->exists())
     {
-      SDL_Log("Generating new chunk: from ( %d, %d ) to ( %d, %d )",
-        newChunk.x,
-        newChunk.y,
-        newChunk.w,
-        newChunk.h
-      );
-      for (auto i = newChunk.x; i != newChunk.w; i++)
-      {
-        for (auto j = newChunk.y; j != newChunk.h; j++)
-        {
-          Tile *tileAtCoordinates = &tileMap[zLevel][{i, j}];
-          if (!tileAtCoordinates->exists()) {
-            Tile newTile = {i, j, "Sprite 0x32"};
-            if (rand() % 100 > 90) newTile.type = "Sprite 0x96";
-            tileMap[0][{i, j}] = newTile;
-            tileMap[1][{i, j}] = newTile;
-            tileMap[2][{i, j}] = newTile;
-          }
-        }
-      }
-      SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
+      generateMapChunk(&chunkRect);
     }
   
   };
@@ -505,7 +507,7 @@ struct GameEngine {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
       "renderCopyTiles() called"
     );
-    auto windowSize = getWindowSize();
+    auto windowSize = getWindowGridSize();
     int x = 0;
     int y = 0;
     for (auto i = camera.x - windowSize.first/2; i < camera.x + windowSize.first/2 + 3; i++)
@@ -603,8 +605,9 @@ struct GameEngine {
       {
         directions += DOWN;
       }
+    
       scrollCamera(directions);
-      generateTileMapChunk(directions);
+      processMap(directions);
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
@@ -673,7 +676,7 @@ struct GameEngine {
   {
     player.x = camera.x;
     player.y = camera.y;
-    auto gridSize = getWindowSize();
+    auto gridSize = getWindowGridSize();
     return renderCopySprite<Player>(&player, gridSize.first/2, gridSize.second/2);
   }
   int run()
