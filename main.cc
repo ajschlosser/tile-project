@@ -26,7 +26,7 @@ struct Sprite {
   std::string tileName;
 };
 
-struct WorldObject {
+struct Tile {
   int x;
   int y;
   std::string type;
@@ -36,14 +36,10 @@ struct WorldObject {
   }
 };
 
+struct WorldObject : Tile {};
+
 struct Player : WorldObject {
   int hp;
-};
-
-struct Tile {
-  int x;
-  int y;
-  std::string type;
 };
 
 struct Camera {
@@ -209,7 +205,8 @@ struct GameEngine {
 
     // Create sprites from spritesheet
     SDL_Texture *texture = SDL_CreateTextureFromSurface(appRenderer, surface);
-    if (!texture) {
+    if (!texture)
+    {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
         "Couldn't create texture from surface: %s",
         SDL_GetError()
@@ -223,8 +220,10 @@ struct GameEngine {
       );
     }
     tilemapImage = { surface, texture };
-    for (auto i = 0; i < surface->w; i += spriteSize) {
-      for (auto j = 0; j < surface->h; j += spriteSize) {
+    for (auto i = 0; i < surface->w; i += spriteSize)
+    {
+      for (auto j = 0; j < surface->h; j += spriteSize)
+      {
         std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
         Sprite s { i, j, name };
         sprites[name] = s;
@@ -236,18 +235,11 @@ struct GameEngine {
     }
     SDL_Log("Spritesheet processed.");
     SDL_Log("Generating default tilemap...");
+    
     // Create default tilemap
-    for (auto i = 0; i < gameSize; i++)
+    for (auto i = 0; i < gameSize*1.5; i++)
     {
-      if (i == std::floor(gameSize / 2))
-      {
-        SDL_Log("Still generating default tilemap...");
-      }
-      if (i == std::floor(gameSize / 4))
-      {
-        SDL_Log("Still generating default tilemap...");
-      }
-      for (auto j = 0; j < gameSize; j++)
+      for (auto j = 0; j < gameSize*1.5; j++)
       {
         Tile top { i, j, "Sprite 0x0" };
         Tile middle { i, j, "Sprite 0x32" };
@@ -391,16 +383,20 @@ struct GameEngine {
       }
       SDL_UnlockSurface(gameSurface);
       gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
-      if (directions & RIGHT) {
+      if (directions & RIGHT)
+      {
         dest.x -= movementSpeed;
       }
-      if (directions & LEFT) {
+      if (directions & LEFT)
+      {
         dest.x += movementSpeed;
       }
-      if (directions & UP) {
+      if (directions & UP)
+      {
         dest.y += movementSpeed;
       }
-      if (directions & DOWN) {
+      if (directions & DOWN)
+      {
         dest.y -= movementSpeed;
       }
       SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
@@ -409,7 +405,8 @@ struct GameEngine {
       SDL_RenderPresent(appRenderer);
       SDL_DestroyTexture(gameTexture);
     }
-    if (SDL_SetRenderTarget(appRenderer, NULL) < 0) {
+    if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
+    {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
         "Could not reset render target: %s",
         SDL_GetError()
@@ -429,6 +426,80 @@ struct GameEngine {
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
+
+  void generateTileMapChunk(int directions)
+  {
+
+    SDL_Point checkCoordinates = { camera.x, camera.y };
+    SDL_Rect newChunk = { camera.x-1, camera.y-1, camera.x+1, camera.y+1 };
+    //SDL_Rect chunk = {camera.x + gameSize/2, camera.y - gameSize/2, camera.x + gameSize*1.5, camera.y + gameSize/2};
+
+    if (directions & RIGHT)
+    {
+      checkCoordinates.x += gameSize/2;
+
+      newChunk.x += gameSize/2;
+      newChunk.y -= gameSize/2;
+      newChunk.w += gameSize*1.5;
+      newChunk.h += gameSize/2;
+    }
+    if (directions & LEFT)
+    {
+      checkCoordinates.x -= gameSize/2;
+
+      newChunk.x -= gameSize*1.5;
+      newChunk.y -= gameSize/2;
+      newChunk.w -= gameSize/2;
+      newChunk.h += gameSize/2;
+    }
+    if (directions & UP)
+    {
+      checkCoordinates.y -= gameSize/2;
+
+      newChunk.x -= gameSize/2;
+      newChunk.y -= gameSize*1.5;
+      newChunk.w += gameSize/2;
+      newChunk.h -= gameSize/2;
+    }
+    if (directions & DOWN)
+    {
+      checkCoordinates.y += gameSize/2;
+
+      newChunk.x -= gameSize/2;
+      newChunk.y += gameSize/2;
+      newChunk.w += gameSize/2;
+      newChunk.h += gameSize*1.5;
+    }
+
+    Tile *checkTile = &tileMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
+
+    if (!checkTile->exists())
+    {
+      SDL_Log("Generating new chunk: from ( %d, %d ) to ( %d, %d )",
+        newChunk.x,
+        newChunk.y,
+        newChunk.w,
+        newChunk.h
+      );
+      for (auto i = newChunk.x; i != newChunk.w; i++)
+      {
+        for (auto j = newChunk.y; j != newChunk.h; j++)
+        {
+          Tile *tileAtCoordinates = &tileMap[zLevel][{i, j}];
+          if (!tileAtCoordinates->exists()) {
+            Tile newTile = {i, j, "Sprite 0x32"};
+            if (rand() % 100 > 90) newTile.type = "Sprite 0x96";
+            tileMap[0][{i, j}] = newTile;
+            tileMap[1][{i, j}] = newTile;
+            tileMap[2][{i, j}] = newTile;
+          }
+        }
+      }
+      SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
+    }
+  
+  };
+
   void renderCopyTiles()
   {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
@@ -437,34 +508,37 @@ struct GameEngine {
     auto windowSize = getWindowSize();
     int x = 0;
     int y = 0;
-    for (auto i = camera.x - windowSize.first/2 - 3; i < camera.x + windowSize.first/2 + 3; i++)
+    for (auto i = camera.x - windowSize.first/2; i < camera.x + windowSize.first/2 + 3; i++)
     {
       for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
       {
-        Tile t;
-        std::vector<WorldObject> objects;
+        Tile* t;
+        std::vector<WorldObject*> objects;
         try
         {
-          t = tileMap[zLevel][{i, j}];
+          t = &tileMap[zLevel][{i, j}];
           int layer = 3;
           while (layer >= 0)
           {
-            WorldObject o;
-            o = objectMap[zLevel][layer][{i, j}];
-            if (o.exists()) {
+            WorldObject *o;
+            o = &objectMap[zLevel][layer][{i, j}];
+            if (o->exists()) {
               objects.push_back(o);
             }
             layer--;
           }
+          renderCopySprite<Tile>(t, x, y);
         }
+
+        // Handle potential null pointers
         catch (std::exception &e)
         {
-          t = {i, j, "Sprite 0x128"};
+          Tile invalid = {i, j, "Sprite 0x128"};
+          renderCopySprite<Tile>(&invalid, x, y);
         }
-        renderCopySprite<Tile>(&t, x, y);
-        for (WorldObject o : objects)
+        for (WorldObject *o : objects)
         {
-          renderCopySprite<WorldObject>(&o, x, y);
+          renderCopySprite<WorldObject>(o, x, y);
         }
         y++;
       }
@@ -530,6 +604,7 @@ struct GameEngine {
         directions += DOWN;
       }
       scrollCamera(directions);
+      generateTileMapChunk(directions);
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
@@ -567,7 +642,10 @@ struct GameEngine {
           }
           break;
         case SDLK_p:
-          paused = !paused;
+          tileSize = tileSize / 2;
+          break;
+        case SDLK_o:
+          tileSize = tileSize * 2;
           break;
       }
     }
