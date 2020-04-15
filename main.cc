@@ -1,14 +1,11 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include <cmath>
-#include <ctime>
 #include <array>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <future>
 #include <thread>
 
 enum direction {
@@ -425,28 +422,38 @@ struct GameEngine {
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
-  void generateMapChunk(SDL_Rect* chunkRect)
+  template<typename Functor>
+  void iterateOverChunk(SDL_Rect* chunkRect, Functor f) //std::function<void(int, int, int)>& const lambda)
   {
     int levels = tileMap.size();
     for (auto h = 0; h < levels; h++)
     {
-      SDL_Log("Generating new chunk: on level %d from ( %d, %d ) to ( %d, %d )",
+      SDL_Log("Processing chunk: on level %d from ( %d, %d ) to ( %d, %d )",
         h, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
       );
       for (auto i = chunkRect->x; i != chunkRect->w; i++)
       {
         for (auto j = chunkRect->y; j != chunkRect->h; j++)
         {
-          Tile *tileAtCoordinates = &tileMap[h][{i, j}];
-          if (!tileAtCoordinates->exists())
-          {
-            Tile newTile = {i, j, "Sprite 0x32"};
-            if (rand() % 100 > 90) newTile.type = "Sprite 0x96";
-            tileMap[h][{i, j}] = newTile;
-          }
+          f(h, i, j);
         }
       }
-    }
+    }          
+  }
+  void generateMapChunk(SDL_Rect* chunkRect)
+  {
+
+    auto lambda = [this](int h, int i, int j)
+    {
+      Tile *tileAtCoordinates = &tileMap[h][{i, j}];
+      if (!tileAtCoordinates->exists())
+      {
+        Tile newTile = {i, j, "Sprite 0x32"};
+        if (std::rand() % 100 > 90) newTile.type = "Sprite 0x96";
+        tileMap[h][{i, j}] = newTile;
+      }
+    };
+    iterateOverChunk(chunkRect, lambda);
 
     SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
   }
@@ -605,9 +612,10 @@ struct GameEngine {
       {
         directions += DOWN;
       }
-    
-      scrollCamera(directions);
-      processMap(directions);
+      std::thread th1([this](int d) { processMap(d); }, directions);
+      std::thread th2([this](int d) { scrollCamera(d); }, directions);
+      th1.detach();
+      th2.join();
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
