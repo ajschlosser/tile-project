@@ -1,5 +1,6 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
+#include "json/json.h"
 #include <cmath>
 #include <array>
 #include <map>
@@ -7,29 +8,57 @@
 #include <utility>
 #include <vector>
 #include <thread>
+#include <fstream>
 
-enum direction {
+enum direction 
+{
   LEFT    = 0x01,
   RIGHT   = 0x02,
   UP      = 0x04,
   DOWN    = 0x08
 };
 
-struct Image {
+struct Image
+{
   SDL_Surface* surface;
   SDL_Texture* texture;
 };
 
-struct Sprite {
+struct Sprite
+{
   int tileMapX;
   int tileMapY;
   std::string tileName;
 };
 
-struct Tile {
+struct GenericType
+{
+  Sprite* sprite;
+  std::string name;
+};
+
+struct TileType;
+struct ObjectType : GenericType
+{
+  std::vector<TileType*> tiles;
+};
+
+struct TileType : GenericType
+{
+  std::vector<ObjectType*> objects;
+};
+
+struct BiomeType : GenericType
+{
+  std::vector<TileType*> tiles;
+};
+
+struct Tile
+{
   int x;
   int y;
   std::string type;
+  TileType* tileType;
   bool exists ()
   {
     return type.length() > 0;
@@ -38,18 +67,23 @@ struct Tile {
 
 struct WorldObject : Tile {};
 
-struct Player : WorldObject {
+struct Player {
+  int x;
+  int y;
+  std::string type;
   int hp;
 };
 
-struct Camera {
+struct Camera
+{
   int x;
   int y;
   int w;
   int h;
 };
 
-struct GameEngine {
+struct GameEngine
+{
   bool running;
   bool paused;
   bool refreshed;
@@ -66,6 +100,7 @@ struct GameEngine {
   int gameSize;
   const int spriteSize;
   int zLevel;
+  std::map<std::string, TileType> tileTypes;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
@@ -187,7 +222,7 @@ struct GameEngine {
     }
 
     // Load spritesheet
-    SDL_Surface *surface = IMG_Load("tilemap640x640x32.png");
+    SDL_Surface *surface = IMG_Load("assets/tilemap640x640x32.png");
     if (!surface)
     {
       SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "IMG_Load error: %s", IMG_GetError());
@@ -228,31 +263,48 @@ struct GameEngine {
         Sprite s { i, j, name };
         sprites[name] = s;
         SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-          "Created tile: %s",
+          "Created sprite: %s",
           name.c_str()
         );
       }
     }
     SDL_Log("Spritesheet processed.");
+
+    SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
+    std::ifstream tileConfigJsonFile("tilemap.config.json");
+
+    Json::Value tileConfigJson;
+    tileConfigJsonFile >> tileConfigJson;
+
+    for (auto i = 0; i < tileConfigJson["tiles"].size(); ++i)
+    {
+      std::string spriteName = tileConfigJson["tiles"][i]["sprite"].asString();
+      std::string tileTypeName = tileConfigJson["tiles"][i]["name"].asString();
+      TileType t { &sprites[spriteName], tileTypeName };
+      tileTypes[tileTypeName] = t;
+    }
+
     SDL_Log("Generating default tilemap...");
-    
     // Create default tilemap
     for (auto i = 0; i < gameSize*2; i++)
     {
       for (auto j = 0; j < gameSize*2; j++)
       {
-        Tile top { i, j, "Sprite 0x0" };
-        Tile middle { i, j, "Sprite 0x32" };
-        Tile bottom { i, j, "Sprite 0x64" };
+        Tile top { i, j, "Sprite 0x0", &tileTypes["grass"] };
+        Tile middle { i, j, "Sprite 0x32", &tileTypes["soil"] };
+        Tile bottom { i, j, "Sprite 0x64", &tileTypes["rock"] };
         int n = std::rand() % 150;
         if (n > 80)
         {
           top.type = "Sprite 0x32";
+          top.tileType = &tileTypes["soil"];
         }
         if (n > 98)
         {
           top.type = "Sprite 0x64";
           middle.type = "Sprite 0x64";
+          top.tileType = &tileTypes["rock"];
+          middle.tileType = &tileTypes["rock"];
         }
         if (n > 99)
         {
@@ -261,7 +313,7 @@ struct GameEngine {
         tileMap[0][{i, j}] = top;
         tileMap[1][{i, j}] = middle;
         tileMap[2][{i, j}] = bottom;
-        tileMap[3][{i, j}] = Tile {i,j,"Sprite 0x64"};
+        tileMap[3][{i, j}] = Tile {i,j,"Sprite 0x64", &tileTypes["rock"]};
       }
     }
     SDL_Log("Tilemap of %d tiles created.",
@@ -625,17 +677,19 @@ struct GameEngine {
     }
     else if (appEvent.type == SDL_KEYDOWN)
     {
+      std::string tileType = tileMap[zLevel][{camera.x, camera.y}].tileType->name;
       switch(appEvent.key.keysym.sym)
       {
         case SDLK_ESCAPE:
           running = false;
           break;
         case SDLK_SPACE:
-          SDL_Log("Camera: %dx%dx%dx%d",
+          SDL_Log("Camera: %dx%dx%dx%d %s",
             camera.x,
             camera.y,
             camera.w,
-            camera.h
+            camera.h,
+            tileType.c_str()
           );
           break;
         case SDLK_w:

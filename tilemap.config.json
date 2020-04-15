@@ -1,0 +1,42 @@
+{
+  "objects": [
+    {
+      "name": "green bush",
+      "sprite": "Sprite 0x192",
+      "tiles": ["grass"]
+    }
+  ],
+  "tiles": [
+    {
+      "name": "grass",
+      "sprite": "Sprite 0x0",
+      "objects": ["green bush"]
+    },
+    {
+      "name": "soil",
+      "sprite": "Sprite 0x32"
+    },
+    {
+      "name": "rock",
+      "sprite": "Sprite 0x64"
+    },
+    {
+      "name": "water",
+      "sprite": "Sprite 0x96"
+    },
+    {
+      "name": "shadow",
+      "sprite": "Sprite 0x128"
+    },
+    {
+      "name": "snow",
+      "sprite": "Sprite 0x160"
+    }
+  ],
+  "biomes": [
+    {
+      "name": "grasslands",
+      "tiles": ["grass", "rock"]
+    }
+  ]
+}
