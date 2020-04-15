@@ -111,7 +111,7 @@ struct GameEngine
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100), zDepth(4) {}
+  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(50), zDepth(4) {}
   int init()
   {
     player = {gameSize/2, gameSize/2, "Sprite 0x96", &tileTypes["water"], 100};
@@ -511,6 +511,7 @@ struct GameEngine
         if (n > 99)
         {
           newTile.type = "Sprite 0x32";
+          newTile.tileType = &tileTypes["soil"];
         }
         tileMap[h][{i, j}] = newTile;
       }
@@ -522,7 +523,7 @@ struct GameEngine
   {
 
     SDL_Point checkCoordinates = { camera.x, camera.y };
-    SDL_Rect chunkRect = { camera.x-1, camera.y-1, camera.x+1, camera.y+1 };
+    SDL_Rect chunkRect = { camera.x-3, camera.y-3, camera.x+3, camera.y+3 };
 
     if (directions & RIGHT)
     {
@@ -604,6 +605,8 @@ struct GameEngine
           else
           {
             renderCopySprite("Sprite 0x128", x, y);
+            SDL_Rect fillChunkRect = {i, j, i + gameSize/2, j + gameSize/2};
+            generateMapChunk(&fillChunkRect);
           }
           
         }
@@ -613,8 +616,6 @@ struct GameEngine
         {
           //Tile invalid = {i, j, "Sprite 0x128", &tileTypes["shadow"]};
           //renderCopySprite<Tile>(invalid, x, y);
-          SDL_Log("here");
-          renderCopySprite("shadow", x, y);
         }
         for (WorldObject *o : objects)
         {
