@@ -71,7 +71,12 @@ struct Player {
   int x;
   int y;
   std::string type;
+  TileType* tileType;
   int hp;
+  bool exists ()
+  {
+    return type.length() > 0;
+  }
 };
 
 struct Camera
@@ -100,43 +105,44 @@ struct GameEngine
   int gameSize;
   const int spriteSize;
   int zLevel;
+  int zDepth;
   std::map<std::string, TileType> tileTypes;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100) {}
+  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(100), zDepth(4) {}
   int init()
   {
-    player = {0, 0, "Sprite 0x96", 100};
-    int n = 500;
-    while (n > 0)
-    {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x192"};
-      objectMap[0][0][{o.x, o.y}] = o;
-      n--;
-    }
-    n = 1000;
-    while (n > 0)
-    {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x224"};
-      objectMap[0][2][{o.x, o.y}] = o;
-      n--;
-    }
-    n = 500;
-    while (n > 0)
-    {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 32x192"};
-      objectMap[0][3][{o.x, o.y}] = o;
-      n--;
-    }
-    n = 500;
-    while (n > 0)
-    {
-      WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x256"};
-      objectMap[1][4][{o.x, o.y}] = o;
-      n--;
-    }
+    player = {gameSize/2, gameSize/2, "Sprite 0x96", &tileTypes["water"], 100};
+    // int n = 500;
+    // while (n > 0)
+    // {
+    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x192"};
+    //   objectMap[0][0][{o.x, o.y}] = o;
+    //   n--;
+    // }
+    // n = 1000;
+    // while (n > 0)
+    // {
+    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x224"};
+    //   objectMap[0][2][{o.x, o.y}] = o;
+    //   n--;
+    // }
+    // n = 500;
+    // while (n > 0)
+    // {
+    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 32x192"};
+    //   objectMap[0][3][{o.x, o.y}] = o;
+    //   n--;
+    // }
+    // n = 500;
+    // while (n > 0)
+    // {
+    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x256"};
+    //   objectMap[1][4][{o.x, o.y}] = o;
+    //   n--;
+    // }
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
@@ -284,38 +290,11 @@ struct GameEngine
       tileTypes[tileTypeName] = t;
     }
 
-    SDL_Log("Generating default tilemap...");
     // Create default tilemap
-    for (auto i = 0; i < gameSize*2; i++)
-    {
-      for (auto j = 0; j < gameSize*2; j++)
-      {
-        Tile top { i, j, "Sprite 0x0", &tileTypes["grass"] };
-        Tile middle { i, j, "Sprite 0x32", &tileTypes["soil"] };
-        Tile bottom { i, j, "Sprite 0x64", &tileTypes["rock"] };
-        int n = std::rand() % 150;
-        if (n > 80)
-        {
-          top.type = "Sprite 0x32";
-          top.tileType = &tileTypes["soil"];
-        }
-        if (n > 98)
-        {
-          top.type = "Sprite 0x64";
-          middle.type = "Sprite 0x64";
-          top.tileType = &tileTypes["rock"];
-          middle.tileType = &tileTypes["rock"];
-        }
-        if (n > 99)
-        {
-          bottom.type = "Sprite 0x32";
-        }
-        tileMap[0][{i, j}] = top;
-        tileMap[1][{i, j}] = middle;
-        tileMap[2][{i, j}] = bottom;
-        tileMap[3][{i, j}] = Tile {i,j,"Sprite 0x64", &tileTypes["rock"]};
-      }
-    }
+    SDL_Log("Generating default tilemap...");
+    SDL_Rect initialChunk = { 0, 0, gameSize*2, gameSize*2 };
+    generateMapChunk(&initialChunk);
+
     SDL_Log("Tilemap of %d tiles created.",
       gameSize*gameSize*4
     );
@@ -329,10 +308,26 @@ struct GameEngine
     int height = static_cast <int> (std::floor(_h/tileSize));
     return {width, height};
   }
+  int renderCopySprite(std::string spriteName, int x, int y)
+  {
+    Sprite *s = &sprites[spriteName];
+    SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
+    SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
+    if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Couldn't copy sprite to renderer: %s",
+        SDL_GetError()
+      );
+      return 3;
+    }
+    return 0;
+  }
   template <class T>
-  int renderCopySprite(T* t, int x, int y) {
-    Sprite s = sprites[t->type];
-    SDL_Rect src {s.tileMapX, s.tileMapY, spriteSize, spriteSize};
+  int renderCopySpriteFrom(T* t, int x, int y)
+  {
+    Sprite *s = t->tileType->sprite;
+    SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
     SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
     if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
     {
@@ -474,39 +469,53 @@ struct GameEngine
     SDL_RenderFillRect(appRenderer, &topRect);
     SDL_RenderFillRect(appRenderer, &bottomRect);
   }
-  template<typename Functor>
-  void iterateOverChunk(SDL_Rect* chunkRect, Functor f) //std::function<void(int, int, int)>& const lambda)
+  template<typename F>
+  void iterateOverChunk(SDL_Rect* chunkRect, F f) //std::function<void(int, int, int)>& const lambda)
   {
-    int levels = tileMap.size();
-    for (auto h = 0; h < levels; h++)
+    int levels = zDepth;
+    SDL_Log("Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+      levels, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
+    );
+    for (auto i = chunkRect->x; i != chunkRect->w; i++)
     {
-      SDL_Log("Processing chunk: on level %d from ( %d, %d ) to ( %d, %d )",
-        h, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
-      );
-      for (auto i = chunkRect->x; i != chunkRect->w; i++)
+      for (auto j = chunkRect->y; j != chunkRect->h; j++)
       {
-        for (auto j = chunkRect->y; j != chunkRect->h; j++)
+        for (auto h = 0; h < levels; h++)
         {
           f(h, i, j);
         }
       }
-    }          
+    }         
   }
   void generateMapChunk(SDL_Rect* chunkRect)
   {
-
     auto lambda = [this](int h, int i, int j)
     {
       Tile *tileAtCoordinates = &tileMap[h][{i, j}];
       if (!tileAtCoordinates->exists())
       {
-        Tile newTile = {i, j, "Sprite 0x32"};
-        if (std::rand() % 100 > 90) newTile.type = "Sprite 0x96";
+
+        Tile newTile = {i, j, "Sprite 0x32", h == 0 ? &tileTypes["grass"] : &tileTypes["soil"]};
+
+        int n = std::rand() % 150;
+        if (n > 80 && h == 0)
+        {
+          newTile.type = "Sprite 0x32";
+          newTile.tileType = &tileTypes["soil"];
+        }
+        if (n > 98)
+        {
+          newTile.type = "Sprite 0x64";
+          newTile.tileType = &tileTypes["rock"];
+        }
+        if (n > 99)
+        {
+          newTile.type = "Sprite 0x32";
+        }
         tileMap[h][{i, j}] = newTile;
       }
     };
     iterateOverChunk(chunkRect, lambda);
-
     SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
   }
   void processMap(int directions)
@@ -588,18 +597,28 @@ struct GameEngine
             }
             layer--;
           }
-          renderCopySprite<Tile>(t, x, y);
+          if (t->exists())
+          {
+            renderCopySpriteFrom<Tile>(t, x, y);
+          }
+          else
+          {
+            renderCopySprite("Sprite 0x128", x, y);
+          }
+          
         }
 
         // Handle potential null pointers
         catch (std::exception &e)
         {
-          Tile invalid = {i, j, "Sprite 0x128"};
-          renderCopySprite<Tile>(&invalid, x, y);
+          //Tile invalid = {i, j, "Sprite 0x128", &tileTypes["shadow"]};
+          //renderCopySprite<Tile>(invalid, x, y);
+          SDL_Log("here");
+          renderCopySprite("shadow", x, y);
         }
         for (WorldObject *o : objects)
         {
-          renderCopySprite<WorldObject>(o, x, y);
+          //renderCopySprite("shadow", x, y);
         }
         y++;
       }
@@ -702,7 +721,10 @@ struct GameEngine
         case SDLK_q:
           if (std::abs(zLevel) < static_cast <int>(tileMap.size()))
           {
-            zLevel++;
+            if (zLevel < zDepth - 1)
+            {
+              zLevel++;
+            }
             SDL_Log("You are at level %d", zLevel);
           }
           break;
@@ -739,7 +761,7 @@ struct GameEngine
     player.x = camera.x;
     player.y = camera.y;
     auto gridSize = getWindowGridSize();
-    return renderCopySprite<Player>(&player, gridSize.first/2, gridSize.second/2);
+    return renderCopySpriteFrom<Player>(&player, gridSize.first/2, gridSize.second/2);
   }
   int run()
   {
