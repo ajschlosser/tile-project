@@ -107,6 +107,7 @@ struct GameEngine
   int zLevel;
   int zDepth;
   std::map<std::string, TileType> tileTypes;
+  std::map<std::string, ObjectType> objectTypes;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
@@ -286,8 +287,17 @@ struct GameEngine
     {
       std::string spriteName = tileConfigJson["tiles"][i]["sprite"].asString();
       std::string tileTypeName = tileConfigJson["tiles"][i]["name"].asString();
+      SDL_Log("- Loaded '%s' tile", tileTypeName);
       TileType t { &sprites[spriteName], tileTypeName };
       tileTypes[tileTypeName] = t;
+    }
+    for (auto i = 0; i < tileConfigJson["objects"].size(); ++i)
+    {
+      std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
+      std::string objectTypeName = tileConfigJson["objects"][i]["name"].asString();
+      SDL_Log("- Loaded '%s' object", objectTypeName);
+      ObjectType o { &sprites[spriteName], objectTypeName };
+      objectTypes[objectTypeName] = o;
     }
 
     // Create default tilemap
@@ -485,7 +495,7 @@ struct GameEngine
           f(h, i, j);
         }
       }
-    }         
+    }
   }
   void generateMapChunk(SDL_Rect* chunkRect)
   {
