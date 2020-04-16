@@ -59,7 +59,20 @@
   "biomes": [
     {
       "name": "grasslands",
-      "tiles": ["grass", "rock"]
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1
+        },
+        {
+          "name": "soil",
+          "multiplier": 0.5
+        },
+        {
+          "name": "rock",
+          "multiplier": 0.25
+        }
+      ]
     }
   ]
 }

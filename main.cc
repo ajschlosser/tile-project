@@ -49,9 +49,10 @@ struct TileType : GenericType
   //std::vector<ObjectType*> objects;
 };
 
-struct BiomeType : GenericType
+struct BiomeType
 {
-  std::vector<TileType*> tiles;
+  std::string name;
+  std::vector<std::pair<std::string, float>> terrainTypes;
 };
 
 struct Tile
@@ -290,10 +291,15 @@ struct GameEngine
     {
       //std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
       std::string biomeTypeName = tileConfigJson["biomes"][i]["name"].asString();
+      BiomeType b = {biomeTypeName};
+      const Json::Value& terrainsArray = tileConfigJson["biomes"][i]["terrains"];
+      for (int i = 0; i < terrainsArray.size(); i++)
+      {
+        auto t = terrainsArray[i];
+        b.terrainTypes.push_back({ t["name"].asString(), t["multiplier"].asFloat() });
+      }
       SDL_Log("- Loaded '%s' biome", biomeTypeName.c_str());
-      //BiomeType b = {};
-      //ObjectType o { &sprites[spriteName], objectTypeName };
-      //objectTypes[objectTypeName] = o;
+
     }
 
     // Create default tilemap
