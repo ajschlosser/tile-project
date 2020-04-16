@@ -4,25 +4,48 @@
       "name": "green bush",
       "sprite": "Sprite 0x192",
       "tiles": ["grass"]
+    },
+    {
+      "name": "light green bush",
+      "sprite": "Sprite 32x192",
+      "tiles": ["grass"]
+    },
+    {
+      "name": "dirt",
+      "sprite": "Sprite 0x224",
+      "tiles": ["grass"]
+    },
+    {
+      "name": "mud",
+      "sprite": "Sprite 32x224",
+      "tiles": ["water"]
+    },
+    {
+      "name": "boulder",
+      "sprite": "Sprite 0x256",
+      "tiles": ["rock"]
     }
   ],
   "tiles": [
     {
       "name": "grass",
       "sprite": "Sprite 0x0",
-      "objects": ["green bush"]
+      "objects": ["green bush", "dirt", "light green bush"]
     },
     {
       "name": "soil",
-      "sprite": "Sprite 0x32"
+      "sprite": "Sprite 0x32",
+      "objects": ["mud"]
     },
     {
       "name": "rock",
-      "sprite": "Sprite 0x64"
+      "sprite": "Sprite 0x64",
+      "objects": ["boulder", "dirt"]
     },
     {
       "name": "water",
-      "sprite": "Sprite 0x96"
+      "sprite": "Sprite 0x96",
+      "objects": ["mud"]
     },
     {
       "name": "shadow",

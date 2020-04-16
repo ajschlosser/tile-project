@@ -45,7 +45,8 @@ struct ObjectType : GenericType
 
 struct TileType : GenericType
 {
-  std::vector<ObjectType*> objects;
+  std::vector<std::string> objects;
+  //std::vector<ObjectType*> objects;
 };
 
 struct BiomeType : GenericType
@@ -65,7 +66,12 @@ struct Tile
   }
 };
 
-struct WorldObject : Tile {};
+struct TerrainObject : Tile { };
+
+struct WorldObject : Tile
+{
+  ObjectType* objectType;
+};
 
 struct Player {
   int x;
@@ -116,34 +122,6 @@ struct GameEngine
   int init()
   {
     player = {gameSize/2, gameSize/2, "Sprite 0x96", &tileTypes["water"], 100};
-    // int n = 500;
-    // while (n > 0)
-    // {
-    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x192"};
-    //   objectMap[0][0][{o.x, o.y}] = o;
-    //   n--;
-    // }
-    // n = 1000;
-    // while (n > 0)
-    // {
-    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x224"};
-    //   objectMap[0][2][{o.x, o.y}] = o;
-    //   n--;
-    // }
-    // n = 500;
-    // while (n > 0)
-    // {
-    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 32x192"};
-    //   objectMap[0][3][{o.x, o.y}] = o;
-    //   n--;
-    // }
-    // n = 500;
-    // while (n > 0)
-    // {
-    //   WorldObject o = {std::rand() % gameSize, std::rand() % gameSize, "Sprite 0x256"};
-    //   objectMap[1][4][{o.x, o.y}] = o;
-    //   n--;
-    // }
     std::srand(std::time(nullptr));
     if (!tileSize)
     {
@@ -287,17 +265,35 @@ struct GameEngine
     {
       std::string spriteName = tileConfigJson["tiles"][i]["sprite"].asString();
       std::string tileTypeName = tileConfigJson["tiles"][i]["name"].asString();
-      SDL_Log("- Loaded '%s' tile", tileTypeName);
-      TileType t { &sprites[spriteName], tileTypeName };
+      std::vector<std::string> relatedObjectTypes;
+      const Json::Value& relatedObjectsArray = tileConfigJson["tiles"][i]["objects"];
+      for (int i = 0; i < relatedObjectsArray.size(); i++)
+      {
+        relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
+      }
+      SDL_Log("- Loaded '%s' tile", tileTypeName.c_str());
+      TileType t { &sprites[spriteName], tileTypeName, relatedObjectTypes };
       tileTypes[tileTypeName] = t;
     }
     for (auto i = 0; i < tileConfigJson["objects"].size(); ++i)
     {
       std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
       std::string objectTypeName = tileConfigJson["objects"][i]["name"].asString();
-      SDL_Log("- Loaded '%s' object", objectTypeName);
-      ObjectType o { &sprites[spriteName], objectTypeName };
-      objectTypes[objectTypeName] = o;
+      SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
+
+      TileType t { &sprites[spriteName], objectTypeName };
+      tileTypes[objectTypeName] = t;
+      //ObjectType o { &sprites[spriteName], objectTypeName };
+      //objectTypes[objectTypeName] = o;
+    }
+    for (auto i = 0; i < tileConfigJson["biomes"].size(); ++i)
+    {
+      //std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
+      std::string biomeTypeName = tileConfigJson["biomes"][i]["name"].asString();
+      SDL_Log("- Loaded '%s' biome", biomeTypeName.c_str());
+      //BiomeType b = {};
+      //ObjectType o { &sprites[spriteName], objectTypeName };
+      //objectTypes[objectTypeName] = o;
     }
 
     // Create default tilemap
@@ -336,7 +332,7 @@ struct GameEngine
   template <class T>
   int renderCopySpriteFrom(T* t, int x, int y)
   {
-    Sprite *s = t->tileType->sprite;
+    Sprite *s = t->tileType->sprite; // gotta genericize tiles more; current tiles should be children of a generic tile object and called something else, i.e. Terrain
     SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
     SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
     if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
@@ -466,6 +462,24 @@ struct GameEngine
       );
     }
   }
+  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect* rangeRect)
+  {
+
+    std::map<int, std::map<std::string, int>> tilesInRange;
+    auto lambda = [this, &tilesInRange](int h, int i, int j)
+    {
+      Tile *tileAtCoordinates = &tileMap[h][{i, j}];
+      if (tileAtCoordinates->exists())
+      {
+        tilesInRange[h][tileAtCoordinates->tileType->name] += 1;
+        //SDL_Log("%s: %d", tileAtCoordinates->type.c_str(), tilesInRange[h][tileAtCoordinates->type]);
+      }
+    };
+    iterateOverChunk(rangeRect, lambda);
+
+    return tilesInRange;
+
+  }
   void applyUi()
   {
     SDL_Rect viewportRect;
@@ -483,7 +497,8 @@ struct GameEngine
   void iterateOverChunk(SDL_Rect* chunkRect, F f) //std::function<void(int, int, int)>& const lambda)
   {
     int levels = zDepth;
-    SDL_Log("Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+      "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
       levels, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
     );
     for (auto i = chunkRect->x; i != chunkRect->w; i++)
@@ -513,17 +528,37 @@ struct GameEngine
           newTile.type = "Sprite 0x32";
           newTile.tileType = &tileTypes["soil"];
         }
-        if (n > 98)
+        if (n > 98 || h == 2)
         {
           newTile.type = "Sprite 0x64";
           newTile.tileType = &tileTypes["rock"];
         }
-        if (n > 99)
+        if (n > 102)
+        {
+          newTile.type = "Sprite 0x64";
+          newTile.tileType = &tileTypes["water"];
+        }
+        if (n > 105)
         {
           newTile.type = "Sprite 0x32";
           newTile.tileType = &tileTypes["soil"];
         }
         tileMap[h][{i, j}] = newTile;
+        int threshold = 1500;
+        SDL_Rect rangeRect {i-1, j-1, i+1, j+1};
+        auto tilesInRange = getTilesInRange(&rangeRect); // TODO: only if there are objects
+        int layer = 0;
+        for (auto relatedObjectType : newTile.tileType->objects)
+        {
+          threshold = std::pow(threshold, (tilesInRange[h][relatedObjectType] + 1));
+          if (std::rand() % threshold > 825)
+          {
+            WorldObject o = { i, j, "Sprite 0x192", &tileTypes[relatedObjectType] };
+            //SDL_Log("placing %s", relatedObjectType.c_str());
+            objectMap[h][layer][{o.x, o.y}] = o;
+            layer++;
+          }
+        }
       }
     };
     iterateOverChunk(chunkRect, lambda);
@@ -629,7 +664,7 @@ struct GameEngine
         }
         for (WorldObject *o : objects)
         {
-          //renderCopySprite("shadow", x, y);
+          renderCopySpriteFrom<WorldObject>(o, x, y);
         }
         y++;
       }
