@@ -30,13 +30,19 @@
       "sprite": "Sprite 0x320",
       "tiles": ["grass"],
       "solitary": true
+    },
+    {
+      "name": "pink flower",
+      "sprite": "Sprite 32x320",
+      "tiles": ["grass"],
+      "solitary": true
     }
   ],
   "tiles": [
     {
       "name": "grass",
       "sprite": "Sprite 0x0",
-      "objects": ["green bush", "dirt", "light green bush", "yellow flower"]
+      "objects": ["green bush", "dirt", "light green bush", "yellow flower", "pink flower"]
     },
     {
       "name": "soil",
@@ -86,6 +92,10 @@
       "terrains": [
         {
           "name": "soil",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rock",
           "multiplier": 1.0
         }
       ]

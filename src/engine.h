@@ -458,13 +458,12 @@ struct GameEngine
   }
   void generateMapChunk(SDL_Rect* chunkRect)
   {
-    auto lambda = [this](int h, int i, int j)
+    BiomeType *b = &biomeTypes[std::rand() % 2];
+    auto lambda = [this, b](int h, int i, int j)
     {
       Tile *tileAtCoordinates = &tileMap[h][{i, j}];
       if (!tileAtCoordinates->exists())
       {
-
-        BiomeType *b = &biomeTypes[std::rand() % biomeTypes.size()];
         int index = std::rand() % b->terrainTypes.size();
         Tile newTile = { i, j, "Sprite 0x0", &tileTypes[b->terrainTypes[0].first]};
 
@@ -474,10 +473,9 @@ struct GameEngine
         nT->type = "Sprite 0x0";
         nT->tileType =  &tileTypes[b->terrainTypes[0].first];
         terrainMap[h][{i, j}] = nT;
-
         tileMap[h][{i, j}] = newTile;
         int threshold = 1500;
-        SDL_Rect rangeRect {i-1, j-1, i+1, j+1};
+        SDL_Rect rangeRect { i-1, j-1, i+1, j+1 };
         auto tilesInRange = getTilesInRange(&rangeRect); // TODO: only if there are objects
         int layer = 0;
         for (auto relatedObjectType : newTile.tileType->objects)
@@ -664,10 +662,12 @@ struct GameEngine
       {
         directions += DOWN;
       }
-      std::thread th1([this](int d) { processMap(d); }, directions);
-      std::thread th2([this](int d) { scrollCamera(d); }, directions);
-      th1.detach();
-      th2.join();
+      //std::thread th1([this](int d) { processMap(d); }, directions);
+      //std::thread th2([this](int d) { scrollCamera(d); }, directions);
+      //th1.detach();
+      //th2.join();
+      processMap(directions);
+      scrollCamera(directions);
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
