@@ -48,6 +48,7 @@ struct GameEngine
   const int spriteSize;
   int zLevel;
   int zDepth;
+  bool generatingChunk;
   std::map<int, BiomeType> biomeTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<std::string, ObjectType> objectTypes;
@@ -56,7 +57,7 @@ struct GameEngine
   std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
-  GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(50), zDepth(4) {}
+  GameEngine() : generatingChunk(false), spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(50), zDepth(4) {}
   int init()
   {
     player = {gameSize/2, gameSize/2, "Sprite 0x96", &tileTypes["water"], 100};
@@ -456,13 +457,18 @@ struct GameEngine
     return std::make_shared<std::map<int, std::map<std::string, int>>>(tilesInRange);
 
   }
-  void generateMapChunk(SDL_Rect* chunkRect)
+  int_fast32_t generateMapChunk(SDL_Rect* chunkRect)
   {
+    if (generatingChunk)
+    {
+      return -1;
+    }
+    generatingChunk = true;
     BiomeType *b = &biomeTypes[std::rand() % 2];
     auto lambda = [this, b](int h, int i, int j)
     {
-      std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
-      if (!tileAtCoordinates)
+      auto tileAtCoordinates = &terrainMap[h][{i, j}];
+      if (!tileAtCoordinates->get())
       {
         int index = std::rand() % b->terrainTypes.size();
         Tile newTile = { i, j, "Sprite 0x0", &tileTypes[b->terrainTypes[0].first]};
@@ -500,7 +506,9 @@ struct GameEngine
       }
     };
     iterateOverChunk(chunkRect, lambda);
+    generatingChunk = false;
     SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
+    return 0;
   }
   void processMap(int directions)
   {
@@ -510,7 +518,7 @@ struct GameEngine
 
     if (directions & RIGHT)
     {
-      checkCoordinates.x += gameSize/2;
+      checkCoordinates.x += gameSize;
 
       chunkRect.x += gameSize/2;
       chunkRect.y -= gameSize/2;
@@ -519,7 +527,7 @@ struct GameEngine
     }
     if (directions & LEFT)
     {
-      checkCoordinates.x -= gameSize/2;
+      checkCoordinates.x -= gameSize;
 
       chunkRect.x -= gameSize*1.5;
       chunkRect.y -= gameSize/2;
@@ -528,7 +536,7 @@ struct GameEngine
     }
     if (directions & UP)
     {
-      checkCoordinates.y -= gameSize/2;
+      checkCoordinates.y -= gameSize;
 
       chunkRect.x -= gameSize/2;
       chunkRect.y -= gameSize*1.5;
@@ -537,7 +545,7 @@ struct GameEngine
     }
     if (directions & DOWN)
     {
-      checkCoordinates.y += gameSize/2;
+      checkCoordinates.y += gameSize;
 
       chunkRect.x -= gameSize/2;
       chunkRect.y += gameSize/2;
@@ -546,9 +554,10 @@ struct GameEngine
     }
 
     auto checkTile = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
-
-    if (!checkTile)
+    // SDL_Log("here: %s", checkTile->get()->tileType->name.c_str());
+    if (!checkTile->get())
     {
+      SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
       generateMapChunk(&chunkRect);
     }
   
