@@ -43,6 +43,13 @@ struct TerrainObject : Tile { };
 struct WorldObject : Tile
 {
   ObjectType* objectType;
+  WorldObject() {}
+  WorldObject(int x, int y, TileType* tileType)
+  {
+    this->x = x;
+    this->y = y;
+    this->tileType = tileType;
+  }
 };
 
 struct Player {

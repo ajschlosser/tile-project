@@ -53,7 +53,7 @@ struct GameEngine
   std::map<std::string, ObjectType> objectTypes;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
   std::map<int, std::map<std::pair<int, int>, std::shared_ptr<Tile>>> terrainMap;
-  std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
+  std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
   GameEngine() : spriteSize(32), running(true), paused(false), refreshed(false), zLevel(0), movementSpeed(8), gameSize(50), zDepth(4) {}
@@ -274,7 +274,7 @@ struct GameEngine
     return 0;
   }
   template <class T>
-  int renderCopySpriteFrom(T* t, int x, int y)
+  int renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y)
   {
     Sprite *s = t->tileType->sprite; // gotta genericize tiles more; current tiles should be children of a generic tile object and called something else, i.e. Terrain
     SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
@@ -461,8 +461,8 @@ struct GameEngine
     BiomeType *b = &biomeTypes[std::rand() % 2];
     auto lambda = [this, b](int h, int i, int j)
     {
-      Tile *tileAtCoordinates = &tileMap[h][{i, j}];
-      if (!tileAtCoordinates->exists())
+      std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
+      if (!tileAtCoordinates)
       {
         int index = std::rand() % b->terrainTypes.size();
         Tile newTile = { i, j, "Sprite 0x0", &tileTypes[b->terrainTypes[0].first]};
@@ -486,9 +486,14 @@ struct GameEngine
           }
           if (std::rand() % threshold > 825)
           {
-            WorldObject o = { i, j, "Sprite 0x192", &tileTypes[relatedObjectType] };
+            //WorldObject o2 = { i, j, "Sprite 0x192", &tileTypes[relatedObjectType] };
             //SDL_Log("placing %s", relatedObjectType.c_str());
-            objectMap[h][layer][{o.x, o.y}] = o;
+
+            std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
+              i, j, &tileTypes[relatedObjectType]
+            );
+
+            objectMap[h][layer][{o->x, o->y}] = o;
             layer++;
           }
         }
@@ -540,9 +545,9 @@ struct GameEngine
       chunkRect.h += gameSize*1.5;
     }
 
-    Tile *checkTile = &tileMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
+    auto checkTile = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
 
-    if (!checkTile->exists())
+    if (!checkTile)
     {
       generateMapChunk(&chunkRect);
     }
@@ -562,28 +567,30 @@ struct GameEngine
       for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
       {
         Tile* t;
-        std::vector<WorldObject*> objects;
+        std::vector<std::shared_ptr<WorldObject>> objects;
         try
         {
-          t = &tileMap[zLevel][{i, j}];
+          std::shared_ptr<Tile> t = terrainMap[zLevel][{i, j}];
           int layer = 3;
           while (layer >= 0)
           {
-            WorldObject *o;
-            o = &objectMap[zLevel][layer][{i, j}];
-            if (o->exists()) {
+            std::shared_ptr<WorldObject> o = objectMap[zLevel][layer][{i, j}];
+            if (o) {
               objects.push_back(o);
             }
             layer--;
           }
-          if (t->exists())
+          if (t)
           {
             renderCopySpriteFrom<Tile>(t, x, y);
           }
           else
           {
             renderCopySprite("Sprite 0x128", x, y);
-            SDL_Rect fillChunkRect = {i, j, i + gameSize/2, j + gameSize/2};
+            SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
+            // std::thread foo([this](SDL_Rect* r) {generateMapChunk(r); }, &fillChunkRect);
+            // foo.detach();
+            // //std::thread th1([this](int d) { processMap(d); }, directions);
             generateMapChunk(&fillChunkRect);
           }
           
@@ -595,7 +602,7 @@ struct GameEngine
           //Tile invalid = {i, j, "Sprite 0x128", &tileTypes["shadow"]};
           //renderCopySprite<Tile>(invalid, x, y);
         }
-        for (WorldObject *o : objects)
+        for (std::shared_ptr<WorldObject> o : objects)
         {
           renderCopySpriteFrom<WorldObject>(o, x, y);
         }
@@ -662,12 +669,15 @@ struct GameEngine
       {
         directions += DOWN;
       }
-      //std::thread th1([this](int d) { processMap(d); }, directions);
-      //std::thread th2([this](int d) { scrollCamera(d); }, directions);
-      //th1.detach();
-      //th2.join();
-      processMap(directions);
-      scrollCamera(directions);
+      std::thread th1([this](int d) { processMap(d); }, directions);
+      std::thread th2([this](int d) { scrollCamera(d); }, directions);
+      th1.detach();
+      th2.join();
+
+
+
+      // processMap(directions);
+      // scrollCamera(directions);
       SDL_PumpEvents();
     }
     SDL_PollEvent(&appEvent);
@@ -677,7 +687,7 @@ struct GameEngine
     }
     else if (appEvent.type == SDL_KEYDOWN)
     {
-      std::string tileType = tileMap[zLevel][{camera.x, camera.y}].tileType->name;
+      std::string tileType = (*terrainMap[zLevel][{camera.x, camera.y}]).tileType->name;
       switch(appEvent.key.keysym.sym)
       {
         case SDLK_ESCAPE:
@@ -742,7 +752,10 @@ struct GameEngine
     player.x = camera.x;
     player.y = camera.y;
     auto gridSize = getWindowGridSize();
-    return renderCopySpriteFrom<Player>(&player, gridSize.first/2, gridSize.second/2);
+    SDL_Rect playerRect = { gridSize.first/2*tileSize, gridSize.second/2*tileSize, tileSize, tileSize };
+    SDL_RenderFillRect(appRenderer, &playerRect);
+    return 0;
+    //return renderCopySpriteFrom<Player>(&player, gridSize.first/2, gridSize.second/2);
   }
   int run()
   {
