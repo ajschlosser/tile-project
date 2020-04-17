@@ -22,15 +22,21 @@
     },
     {
       "name": "boulder",
-      "sprite": "Sprite 0x256",
+      "sprite": "Sprite 0x255",
       "tiles": ["rock"]
+    },
+    {
+      "name": "yellow flower",
+      "sprite": "Sprite 0x320",
+      "tiles": ["grass"],
+      "solitary": true
     }
   ],
   "tiles": [
     {
       "name": "grass",
       "sprite": "Sprite 0x0",
-      "objects": ["green bush", "dirt", "light green bush"]
+      "objects": ["green bush", "dirt", "light green bush", "yellow flower"]
     },
     {
       "name": "soil",
@@ -53,7 +59,8 @@
     },
     {
       "name": "snow",
-      "sprite": "Sprite 0x160"
+      "sprite": "Sprite 0x160",
+      "objects": ["mud"]
     }
   ],
   "biomes": [
@@ -62,7 +69,7 @@
       "terrains": [
         {
           "name": "grass",
-          "multiplier": 1
+          "multiplier": 1.0
         },
         {
           "name": "soil",
@@ -71,6 +78,15 @@
         {
           "name": "rock",
           "multiplier": 0.25
+        }
+      ]
+    },
+    {
+      "name": "underground",
+      "terrains": [
+        {
+          "name": "soil",
+          "multiplier": 1.0
         }
       ]
     }

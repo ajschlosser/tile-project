@@ -1,6 +1,3 @@
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
-#include "json/json.h"
 #include <cmath>
 #include <array>
 #include <map>
@@ -9,6 +6,7 @@
 #include <vector>
 #include <thread>
 #include <fstream>
+#include <memory>
 
 enum direction 
 {
@@ -31,69 +29,6 @@ struct Sprite
   std::string tileName;
 };
 
-struct GenericType
-{
-  Sprite* sprite;
-  std::string name;
-};
-
-struct TileType;
-struct ObjectType : GenericType
-{
-  std::vector<TileType*> tiles;
-};
-
-struct TileType : GenericType
-{
-  std::vector<std::string> objects;
-  //std::vector<ObjectType*> objects;
-};
-
-struct BiomeType
-{
-  std::string name;
-  std::vector<std::pair<std::string, float>> terrainTypes;
-};
-
-struct Tile
-{
-  int x;
-  int y;
-  std::string type;
-  TileType* tileType;
-  bool exists ()
-  {
-    return type.length() > 0;
-  }
-};
-
-struct TerrainObject : Tile { };
-
-struct WorldObject : Tile
-{
-  ObjectType* objectType;
-};
-
-struct Player {
-  int x;
-  int y;
-  std::string type;
-  TileType* tileType;
-  int hp;
-  bool exists ()
-  {
-    return type.length() > 0;
-  }
-};
-
-struct Camera
-{
-  int x;
-  int y;
-  int w;
-  int h;
-};
-
 struct GameEngine
 {
   bool running;
@@ -113,9 +48,11 @@ struct GameEngine
   const int spriteSize;
   int zLevel;
   int zDepth;
+  std::map<int, BiomeType> biomeTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<std::string, ObjectType> objectTypes;
   std::map<int, std::map<std::pair<int, int>, Tile>> tileMap;
+  std::map<int, std::map<std::pair<int, int>, std::shared_ptr<Tile>>> terrainMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, WorldObject>>> objectMap;
   std::map<std::string, Sprite> sprites;
   Camera camera;
@@ -291,13 +228,14 @@ struct GameEngine
     {
       //std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
       std::string biomeTypeName = tileConfigJson["biomes"][i]["name"].asString();
-      BiomeType b = {biomeTypeName};
+      BiomeType b = { biomeTypeName };
       const Json::Value& terrainsArray = tileConfigJson["biomes"][i]["terrains"];
       for (int i = 0; i < terrainsArray.size(); i++)
       {
         auto t = terrainsArray[i];
-        b.terrainTypes.push_back({ t["name"].asString(), t["multiplier"].asFloat() });
+        b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), t["multiplier"].asFloat() };
       }
+      biomeTypes[biomeTypes.size()] = b;
       SDL_Log("- Loaded '%s' biome", biomeTypeName.c_str());
 
     }
@@ -468,24 +406,6 @@ struct GameEngine
       );
     }
   }
-  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect* rangeRect)
-  {
-
-    std::map<int, std::map<std::string, int>> tilesInRange;
-    auto lambda = [this, &tilesInRange](int h, int i, int j)
-    {
-      Tile *tileAtCoordinates = &tileMap[h][{i, j}];
-      if (tileAtCoordinates->exists())
-      {
-        tilesInRange[h][tileAtCoordinates->tileType->name] += 1;
-        //SDL_Log("%s: %d", tileAtCoordinates->type.c_str(), tilesInRange[h][tileAtCoordinates->type]);
-      }
-    };
-    iterateOverChunk(rangeRect, lambda);
-
-    return tilesInRange;
-
-  }
   void applyUi()
   {
     SDL_Rect viewportRect;
@@ -518,6 +438,24 @@ struct GameEngine
       }
     }
   }
+  std::shared_ptr<std::map<int, std::map<std::string, int>>> getTilesInRange (SDL_Rect* rangeRect)
+  {
+
+    std::map<int, std::map<std::string, int>> tilesInRange;
+    auto lambda = [this, &tilesInRange](int h, int i, int j)
+    {
+      std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
+      if (tileAtCoordinates)
+      {
+        std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
+        tilesInRange[h][tileAtCoordinates->tileType->name] += 1;
+      }
+    };
+    iterateOverChunk(rangeRect, lambda);
+
+    return std::make_shared<std::map<int, std::map<std::string, int>>>(tilesInRange);
+
+  }
   void generateMapChunk(SDL_Rect* chunkRect)
   {
     auto lambda = [this](int h, int i, int j)
@@ -526,29 +464,17 @@ struct GameEngine
       if (!tileAtCoordinates->exists())
       {
 
-        Tile newTile = {i, j, "Sprite 0x32", h == 0 ? &tileTypes["grass"] : &tileTypes["soil"]};
+        BiomeType *b = &biomeTypes[std::rand() % biomeTypes.size()];
+        int index = std::rand() % b->terrainTypes.size();
+        Tile newTile = { i, j, "Sprite 0x0", &tileTypes[b->terrainTypes[0].first]};
 
-        int n = std::rand() % 150;
-        if (n > 80 && h == 0)
-        {
-          newTile.type = "Sprite 0x32";
-          newTile.tileType = &tileTypes["soil"];
-        }
-        if (n > 98 || h == 2)
-        {
-          newTile.type = "Sprite 0x64";
-          newTile.tileType = &tileTypes["rock"];
-        }
-        if (n > 102)
-        {
-          newTile.type = "Sprite 0x64";
-          newTile.tileType = &tileTypes["water"];
-        }
-        if (n > 105)
-        {
-          newTile.type = "Sprite 0x32";
-          newTile.tileType = &tileTypes["soil"];
-        }
+        std::shared_ptr<Tile> nT = std::make_shared<Tile>();
+        nT->x = i;
+        nT->y = j;
+        nT->type = "Sprite 0x0";
+        nT->tileType =  &tileTypes[b->terrainTypes[0].first];
+        terrainMap[h][{i, j}] = nT;
+
         tileMap[h][{i, j}] = newTile;
         int threshold = 1500;
         SDL_Rect rangeRect {i-1, j-1, i+1, j+1};
@@ -556,7 +482,10 @@ struct GameEngine
         int layer = 0;
         for (auto relatedObjectType : newTile.tileType->objects)
         {
-          threshold = std::pow(threshold, (tilesInRange[h][relatedObjectType] + 1));
+          if ((*tilesInRange)[h][relatedObjectType])
+          {
+            threshold = std::pow(threshold, ((*tilesInRange)[h][relatedObjectType] + 1));
+          }
           if (std::rand() % threshold > 825)
           {
             WorldObject o = { i, j, "Sprite 0x192", &tileTypes[relatedObjectType] };
@@ -829,12 +758,3 @@ struct GameEngine
     return 1;
   }
 };
-
-int main()
-{
-  GameEngine engine;
-  engine.tileSize = 64;
-  engine.init();
-  engine.run();
-  return 0;
-}
