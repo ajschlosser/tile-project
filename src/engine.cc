@@ -229,43 +229,52 @@ void GameEngine::scrollCamera(int directions)
 
 void GameEngine::handleEvents()
 {
-  SDL_PumpEvents();
-  auto *ks = SDL_GetKeyboardState(NULL);
-  while(ks[SDL_SCANCODE_LEFT]
-      || ks[SDL_SCANCODE_RIGHT]
-      || ks[SDL_SCANCODE_UP]
-      || ks[SDL_SCANCODE_DOWN]
-    )
-  {
-    if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
-        || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
-      )
+    auto lambda = [this](int directions)
     {
-      break;
-    }
-    int directions = 0x00;
-    if (ks[SDL_SCANCODE_LEFT])
-    {
-      directions += LEFT;
-    }
-    if (ks[SDL_SCANCODE_RIGHT])
-    {
-      directions += RIGHT;
-    }
-    if (ks[SDL_SCANCODE_UP])
-    {
-      directions += UP;
-    }
-    if (ks[SDL_SCANCODE_DOWN])
-    {
-      directions += DOWN;
-    }
-    std::thread th1([this](int d) { processMap(d); }, directions);
-    std::thread th2([this](int d) { scrollCamera(d); }, directions);
-    th1.detach();
-    th2.join();
-    SDL_PumpEvents();
-  }
+      std::thread th1([this](int d) { processMap(d); }, directions);
+      std::thread th2([this](int d) { scrollCamera(d); }, directions);
+      th1.detach();
+      th2.join();
+      return directions;
+    };
+    userInputHandler.handleKeyboardEvents(lambda);
+  // SDL_PumpEvents();
+  // auto *ks = SDL_GetKeyboardState(NULL);
+  // while(ks[SDL_SCANCODE_LEFT]
+  //     || ks[SDL_SCANCODE_RIGHT]
+  //     || ks[SDL_SCANCODE_UP]
+  //     || ks[SDL_SCANCODE_DOWN]
+  //   )
+  // {
+  //   if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
+  //       || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
+  //     )
+  //   {
+  //     break;
+  //   }
+  //   int directions = 0x00;
+  //   if (ks[SDL_SCANCODE_LEFT])
+  //   {
+  //     directions += LEFT;
+  //   }
+  //   if (ks[SDL_SCANCODE_RIGHT])
+  //   {
+  //     directions += RIGHT;
+  //   }
+  //   if (ks[SDL_SCANCODE_UP])
+  //   {
+  //     directions += UP;
+  //   }
+  //   if (ks[SDL_SCANCODE_DOWN])
+  //   {
+  //     directions += DOWN;
+  //   }
+  //   std::thread th1([this](int d) { processMap(d); }, directions);
+  //   std::thread th2([this](int d) { scrollCamera(d); }, directions);
+  //   th1.detach();
+  //   th2.join();
+  //   SDL_PumpEvents();
+  // }
   SDL_PollEvent(&appEvent);
   if (appEvent.type == SDL_QUIT)
   {
