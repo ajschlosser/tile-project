@@ -1,7 +1,3 @@
-#include "SDL2/SDL.h"
-#include "SDL2/SDL_image.h"
-#include "json/json.h"
-#include "objects.h"
 #include "engine.h"
 
 int main()

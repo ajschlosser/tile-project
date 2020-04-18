@@ -23,6 +23,8 @@ struct TileType : GenericType
 struct BiomeType
 {
   std::string name;
+  int maxDepth;
+  int minDepth;
   std::map<int, std::pair<std::string, float>> terrainTypes;
 };
 
@@ -32,10 +34,6 @@ struct Tile
   int y;
   std::string type;
   TileType* tileType;
-  bool exists ()
-  {
-    return type.length() > 0;
-  }
 };
 
 struct TerrainObject : Tile { };
@@ -58,10 +56,6 @@ struct Player {
   std::string type;
   TileType* tileType;
   int hp;
-  bool exists ()
-  {
-    return type.length() > 0;
-  }
 };
 
 struct Camera
