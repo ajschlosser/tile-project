@@ -271,8 +271,8 @@ void GameEngine::processMap(int directions)
     chunkRect.h += gameSize*1.5;
   }
 
-  auto checkTile = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
-  if (!checkTile->get())
+  auto checkTerrainObject = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
+  if (!checkTerrainObject->get())
   {
     SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
     generateMapChunk(&chunkRect);
@@ -293,11 +293,11 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   SDL_Log("Generating chunk: %s", b->name.c_str());
   auto lambda = [this, b](int h, int i, int j)
   {
-    auto tileAtCoordinates = &terrainMap[h][{i, j}];
-    if (!tileAtCoordinates->get())
+    auto terrainObjectAtCoordinates = &terrainMap[h][{i, j}];
+    if (!terrainObjectAtCoordinates->get())
     {
       int index = std::rand() % b->terrainTypes.size();
-      std::shared_ptr<Tile> nT = std::make_shared<Tile>();
+      std::shared_ptr<TerrainObject> nT = std::make_shared<TerrainObject>();
       nT->x = i;
       nT->y = j;
       nT->tileType =  &tileTypes[b->terrainTypes[0].first];
@@ -336,10 +336,10 @@ std::shared_ptr<std::map<int, std::map<std::string, int>>> GameEngine::getTilesI
   std::map<int, std::map<std::string, int>> tilesInRange;
   auto lambda = [this, &tilesInRange](int h, int i, int j)
   {
-    std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
-    if (tileAtCoordinates)
+    std::shared_ptr<TerrainObject> terrainObjectAtCoordinates = terrainMap[h][{i, j}];
+    if (terrainObjectAtCoordinates)
     {
-      tilesInRange[h][tileAtCoordinates->tileType->name] += 1;
+      tilesInRange[h][terrainObjectAtCoordinates->tileType->name] += 1;
     }
   };
   iterateOverChunk(rangeRect, lambda);
@@ -629,41 +629,26 @@ void GameEngine::renderCopyTiles()
   {
     for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
     {
-      Tile* t;
       std::vector<std::shared_ptr<WorldObject>> objects;
-      try
+      std::shared_ptr<TerrainObject> t = terrainMap[zLevel][{i, j}];
+      int layer = 3;
+      while (layer >= 0)
       {
-        std::shared_ptr<Tile> t = terrainMap[zLevel][{i, j}];
-        int layer = 3;
-        while (layer >= 0)
-        {
-          std::shared_ptr<WorldObject> o = objectMap[zLevel][layer][{i, j}];
-          if (o) {
-            objects.push_back(o);
-          }
-          layer--;
+        std::shared_ptr<WorldObject> o = objectMap[zLevel][layer][{i, j}];
+        if (o) {
+          objects.push_back(o);
         }
-        if (t)
-        {
-          renderCopySpriteFrom<Tile>(t, x, y);
-        }
-        else
-        {
-          renderCopySprite("Sprite 0x128", x, y);
-          SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
-          // std::thread foo([this](SDL_Rect* r) {generateMapChunk(r); }, &fillChunkRect);
-          // foo.detach();
-          // //std::thread th1([this](int d) { processMap(d); }, directions);
-          generateMapChunk(&fillChunkRect);
-        }
-        
+        layer--;
       }
-
-      // Handle potential null pointers
-      catch (std::exception &e)
+      if (t)
       {
-        //Tile invalid = {i, j, "Sprite 0x128", &tileTypes["shadow"]};
-        //renderCopySprite<Tile>(invalid, x, y);
+        renderCopySpriteFrom<TerrainObject>(t, x, y);
+      }
+      else
+      {
+        renderCopySprite("Sprite 0x128", x, y);
+        SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
+        generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {
