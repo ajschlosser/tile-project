@@ -32,7 +32,6 @@ struct Tile
 {
   int x;
   int y;
-  std::string type;
   TileType* tileType;
 };
 
@@ -53,15 +52,5 @@ struct WorldObject : Tile
 struct Player {
   int x;
   int y;
-  std::string type;
   TileType* tileType;
-  int hp;
-};
-
-struct Camera
-{
-  int x;
-  int y;
-  int w;
-  int h;
 };

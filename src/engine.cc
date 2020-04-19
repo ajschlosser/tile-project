@@ -3,7 +3,7 @@
 
 int GameEngine::init()
 {
-  player = {gameSize/2, gameSize/2, "Sprite 0x96", &tileTypes["water"], 100};
+  player = {gameSize/2, gameSize/2, &tileTypes["water"]};
   std::srand(std::time(nullptr));
   if (!tileSize)
   {
@@ -227,6 +227,317 @@ void GameEngine::scrollCamera(int directions)
   }
 }
 
+
+void GameEngine::processMap(int directions)
+{
+
+  SDL_Point checkCoordinates = { camera.x, camera.y };
+  SDL_Rect chunkRect = { camera.x-3, camera.y-3, camera.x+3, camera.y+3 };
+
+  if (directions & RIGHT)
+  {
+    checkCoordinates.x += gameSize;
+
+    chunkRect.x += gameSize/2;
+    chunkRect.y -= gameSize/2;
+    chunkRect.w += gameSize*1.5;
+    chunkRect.h += gameSize/2;
+  }
+  if (directions & LEFT)
+  {
+    checkCoordinates.x -= gameSize;
+
+    chunkRect.x -= gameSize*1.5;
+    chunkRect.y -= gameSize/2;
+    chunkRect.w -= gameSize/2;
+    chunkRect.h += gameSize/2;
+  }
+  if (directions & UP)
+  {
+    checkCoordinates.y -= gameSize;
+
+    chunkRect.x -= gameSize/2;
+    chunkRect.y -= gameSize*1.5;
+    chunkRect.w += gameSize/2;
+    chunkRect.h -= gameSize/2;
+  }
+  if (directions & DOWN)
+  {
+    checkCoordinates.y += gameSize;
+
+    chunkRect.x -= gameSize/2;
+    chunkRect.y += gameSize/2;
+    chunkRect.w += gameSize/2;
+    chunkRect.h += gameSize*1.5;
+  }
+
+  auto checkTile = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
+  if (!checkTile->get())
+  {
+    SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
+    generateMapChunk(&chunkRect);
+  }
+
+};
+
+
+int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
+{
+  if (generatingChunk)
+  {
+    return -1;
+  }
+  generatingChunk = true;
+  BiomeType *b = &biomeTypes[std::rand() % 2];
+  //while (b->maxDepth <= zLevel || b->maxDepth >= zLevel) b = &biomeTypes[std::rand() % 2];
+  SDL_Log("Generating chunk: %s", b->name.c_str());
+  auto lambda = [this, b](int h, int i, int j)
+  {
+    auto tileAtCoordinates = &terrainMap[h][{i, j}];
+    if (!tileAtCoordinates->get())
+    {
+      int index = std::rand() % b->terrainTypes.size();
+      std::shared_ptr<Tile> nT = std::make_shared<Tile>();
+      nT->x = i;
+      nT->y = j;
+      nT->tileType =  &tileTypes[b->terrainTypes[0].first];
+      terrainMap[h][{i, j}] = nT;
+      int threshold = 1500;
+      SDL_Rect rangeRect { i-1, j-1, i+1, j+1 };
+      auto tilesInRange = getTilesInRange(&rangeRect); // TODO: only if there are objects
+      int layer = 0;
+      for (auto relatedObjectType : nT->tileType->objects)
+      {
+        if ((*tilesInRange)[h][relatedObjectType])
+        {
+          threshold = std::pow(threshold, (*tilesInRange)[h][relatedObjectType] + 1);
+        }
+        if (std::rand() % threshold > 825)
+        {
+          std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
+            i, j, &tileTypes[relatedObjectType]
+          );
+          objectMap[h][layer][{o->x, o->y}] = o;
+          layer++;
+        }
+      }
+    }
+  };
+  iterateOverChunk(chunkRect, lambda);
+  generatingChunk = false;
+  SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
+  return 0;
+}
+
+
+std::shared_ptr<std::map<int, std::map<std::string, int>>> GameEngine::getTilesInRange (SDL_Rect* rangeRect)
+{
+
+  std::map<int, std::map<std::string, int>> tilesInRange;
+  auto lambda = [this, &tilesInRange](int h, int i, int j)
+  {
+    std::shared_ptr<Tile> tileAtCoordinates = terrainMap[h][{i, j}];
+    if (tileAtCoordinates)
+    {
+      tilesInRange[h][tileAtCoordinates->tileType->name] += 1;
+    }
+  };
+  iterateOverChunk(rangeRect, lambda);
+
+  return std::make_shared<std::map<int, std::map<std::string, int>>>(tilesInRange);
+
+}
+
+
+template <typename F>
+void GameEngine::iterateOverChunk(SDL_Rect* chunkRect, F f)
+{
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+    zMaxLevel, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
+  );
+  for (auto i = chunkRect->x; i != chunkRect->w; i++)
+  {
+    for (auto j = chunkRect->y; j != chunkRect->h; j++)
+    {
+      for (auto h = 0; h < zMaxLevel; h++)
+      {
+        f(h, i, j);
+      }
+    }
+  }
+}
+
+
+int GameEngine::renderCopySprite(std::string spriteName, int x, int y)
+{
+  Sprite *s = &sprites[spriteName];
+  SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
+  SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
+  if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+      "Couldn't copy sprite to renderer: %s",
+      SDL_GetError()
+    );
+    return 3;
+  }
+  return 0;
+}
+
+
+template<class T>
+int GameEngine::renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y)
+{
+  Sprite *s = t->tileType->sprite; // gotta genericize tiles more; current tiles should be children of a generic tile object and called something else, i.e. Terrain
+  SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
+  SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
+  if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+      "Couldn't copy sprite to renderer: %s",
+      SDL_GetError()
+    );
+    return 3;
+  }
+  return 0;
+}
+
+
+void GameEngine::applyUi()
+{
+  SDL_Rect viewportRect;
+  SDL_RenderGetViewport(appRenderer, &viewportRect);
+  SDL_Rect leftRect = {0, 0, tileSize, viewportRect.h};
+  SDL_Rect rightRect = {viewportRect.w-tileSize, 0, tileSize, viewportRect.h};
+  SDL_Rect topRect = {0, 0, viewportRect.w, tileSize};
+  SDL_Rect bottomRect = {0, viewportRect.h-tileSize*2, viewportRect.w, tileSize*2};
+  SDL_RenderFillRect(appRenderer, &leftRect);
+  SDL_RenderFillRect(appRenderer, &rightRect);
+  SDL_RenderFillRect(appRenderer, &topRect);
+  SDL_RenderFillRect(appRenderer, &bottomRect);
+}
+
+
+void GameEngine::scrollGameSurface(int directions)
+{
+  SDL_Rect viewportRect;
+  SDL_RenderGetViewport(appRenderer, &viewportRect);
+  int _w = viewportRect.w;
+  int _h = viewportRect.h;
+
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    "Current window is %dx%dpx.",
+    _w,
+    _h
+  );
+  Uint32 rmask, gmask, bmask, amask;
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+      rmask = 0xff000000;
+      gmask = 0x00ff0000;
+      bmask = 0x0000ff00;
+      amask = 0x000000ff;
+  #else
+      rmask = 0x000000ff;
+      gmask = 0x0000ff00;
+      bmask = 0x00ff0000;
+      amask = 0xff000000;
+  #endif
+  gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
+  if (!gameSurface)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+      "Could not create RGB surface: %s",
+      SDL_GetError()
+    );
+  }
+  
+  SDL_Rect dest {0, 0, _w, _h};
+  std::pair<int, int> offset = {0, 0};
+  if (directions & RIGHT)
+  {
+    offset.first -= tileSize;
+  }
+  if (directions & LEFT)
+  {
+    offset.first += tileSize;
+  }
+  if (directions & UP)
+  {
+    offset.second += tileSize;
+  }
+  if (directions & DOWN)
+  {
+    offset.second -= tileSize;
+  }
+  while (dest.x != offset.first || dest.y != offset.second)
+  {
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+      "scrollGameSurface: offset: %d %d \t dest: %d %d",
+      offset.first,
+      offset.second,
+      dest.x,
+      dest.y
+    );
+    if (SDL_RenderClear(appRenderer) < 0)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not clear renderer: %s",
+        SDL_GetError()
+      );
+      break;
+    }
+    renderCopyTiles();
+    if (SDL_LockSurface(gameSurface) < 0)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not lock surface for pixel access: %s",
+        SDL_GetError()
+      );
+      break;
+    }
+    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, gameSurface->pixels, gameSurface->pitch) < 0)
+    {
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+        "Could not read pixels from renderer: %s",
+        SDL_GetError()
+      );
+      break;
+    }
+    SDL_UnlockSurface(gameSurface);
+    gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
+    if (directions & RIGHT)
+    {
+      dest.x -= movementSpeed;
+    }
+    if (directions & LEFT)
+    {
+      dest.x += movementSpeed;
+    }
+    if (directions & UP)
+    {
+      dest.y += movementSpeed;
+    }
+    if (directions & DOWN)
+    {
+      dest.y -= movementSpeed;
+    }
+    SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
+    renderCopyPlayer();
+    applyUi();
+    SDL_RenderPresent(appRenderer);
+    SDL_DestroyTexture(gameTexture);
+  }
+  if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+      "Could not reset render target: %s",
+      SDL_GetError()
+    );
+  }
+}
+
+
 void GameEngine::handleEvents()
 {
     auto lambda = [this](int directions)
@@ -235,46 +546,8 @@ void GameEngine::handleEvents()
       std::thread th2([this](int d) { scrollCamera(d); }, directions);
       th1.detach();
       th2.join();
-      return directions;
     };
     userInputHandler.handleKeyboardEvents(lambda);
-  // SDL_PumpEvents();
-  // auto *ks = SDL_GetKeyboardState(NULL);
-  // while(ks[SDL_SCANCODE_LEFT]
-  //     || ks[SDL_SCANCODE_RIGHT]
-  //     || ks[SDL_SCANCODE_UP]
-  //     || ks[SDL_SCANCODE_DOWN]
-  //   )
-  // {
-  //   if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
-  //       || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
-  //     )
-  //   {
-  //     break;
-  //   }
-  //   int directions = 0x00;
-  //   if (ks[SDL_SCANCODE_LEFT])
-  //   {
-  //     directions += LEFT;
-  //   }
-  //   if (ks[SDL_SCANCODE_RIGHT])
-  //   {
-  //     directions += RIGHT;
-  //   }
-  //   if (ks[SDL_SCANCODE_UP])
-  //   {
-  //     directions += UP;
-  //   }
-  //   if (ks[SDL_SCANCODE_DOWN])
-  //   {
-  //     directions += DOWN;
-  //   }
-  //   std::thread th1([this](int d) { processMap(d); }, directions);
-  //   std::thread th2([this](int d) { scrollCamera(d); }, directions);
-  //   th1.detach();
-  //   th2.join();
-  //   SDL_PumpEvents();
-  // }
   SDL_PollEvent(&appEvent);
   if (appEvent.type == SDL_QUIT)
   {
@@ -305,9 +578,9 @@ void GameEngine::handleEvents()
         }
         break;
       case SDLK_q:
-        if (std::abs(zLevel) < static_cast <int>(tileMap.size()))
+        if (std::abs(zLevel) < static_cast <int>(terrainMap.size()))
         {
-          if (zLevel < zDepth - 1)
+          if (zLevel < zMaxLevel - 1)
           {
             zLevel++;
           }
@@ -341,6 +614,69 @@ void GameEngine::handleEvents()
         );
     }
   }
+}
+
+
+void GameEngine::renderCopyTiles()
+{
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    "renderCopyTiles() called"
+  );
+  auto windowSize = getWindowGridSize();
+  int x = 0;
+  int y = 0;
+  for (auto i = camera.x - windowSize.first/2; i < camera.x + windowSize.first/2 + 3; i++)
+  {
+    for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2 + 3; j++)
+    {
+      Tile* t;
+      std::vector<std::shared_ptr<WorldObject>> objects;
+      try
+      {
+        std::shared_ptr<Tile> t = terrainMap[zLevel][{i, j}];
+        int layer = 3;
+        while (layer >= 0)
+        {
+          std::shared_ptr<WorldObject> o = objectMap[zLevel][layer][{i, j}];
+          if (o) {
+            objects.push_back(o);
+          }
+          layer--;
+        }
+        if (t)
+        {
+          renderCopySpriteFrom<Tile>(t, x, y);
+        }
+        else
+        {
+          renderCopySprite("Sprite 0x128", x, y);
+          SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
+          // std::thread foo([this](SDL_Rect* r) {generateMapChunk(r); }, &fillChunkRect);
+          // foo.detach();
+          // //std::thread th1([this](int d) { processMap(d); }, directions);
+          generateMapChunk(&fillChunkRect);
+        }
+        
+      }
+
+      // Handle potential null pointers
+      catch (std::exception &e)
+      {
+        //Tile invalid = {i, j, "Sprite 0x128", &tileTypes["shadow"]};
+        //renderCopySprite<Tile>(invalid, x, y);
+      }
+      for (std::shared_ptr<WorldObject> o : objects)
+      {
+        renderCopySpriteFrom<WorldObject>(o, x, y);
+      }
+      y++;
+    }
+    y = 0;
+    x++;
+  }
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    "renderCopyTiles() completed. Screen refreshed."
+  );
 }
 
 
