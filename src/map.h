@@ -1,5 +1,5 @@
-#ifndef GAMEMAP_H
-#define GAMEMAP_H
+#ifndef GAME_MAP_H
+#define GAME_MAP_H
 
 #include "SDL2/SDL.h"
 #include "objects.h"

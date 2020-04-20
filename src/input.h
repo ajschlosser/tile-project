@@ -1,5 +1,5 @@
-#ifndef INPUT_H
-#define INPUT_H
+#ifndef GAME_INPUT_H
+#define GAME_INPUT_H
 
 #include "SDL2/SDL.h"
 #include <functional>

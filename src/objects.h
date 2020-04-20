@@ -1,5 +1,5 @@
-#ifndef OBJECTS_H
-#define OBJECTS_H
+#ifndef GAME_OBJECTS_H
+#define GAME_OBJECTS_H
 
 #include <map>
 #include <string>
@@ -80,8 +80,9 @@ struct Tile
 
 struct TerrainObject : Tile
 {
+  bool incomplete;
   std::shared_ptr<BiomeType> biomeType;
-  TerrainObject () {}
+  TerrainObject () : incomplete(false) {}
   TerrainObject (int x, int y, std::shared_ptr<BiomeType> b)
   {
     this->x = x; this->y = y; biomeType = b;

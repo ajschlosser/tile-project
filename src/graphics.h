@@ -1,5 +1,5 @@
-#ifndef DRAWER_H
-#define DRAWER_H
+#ifndef GAME_GRAPHICS_H
+#define GAME_GRAPHICS_H
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"

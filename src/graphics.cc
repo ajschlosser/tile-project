@@ -1,4 +1,4 @@
-#include "draw.h"
+#include "graphics.h"
 
 int GraphicsController::initializeSDL ()
 {
