@@ -39,15 +39,12 @@ struct GameEngine
   int zLevel;
   int zMaxLevel;
   MapController mapController;
-  //std::map<int, BiomeType> biomeTypes;
-  //std::map<std::string, BiomeType> biomeTypesMap;
-  std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
-  std::map<std::string, TileType> tileTypes;
+  //std::map<std::string, TileType> tileTypes;
   std::map<std::string, ObjectType> objectTypes;
   std::map<std::string, std::shared_ptr<BiomeType>> biomeTypes;
   std::vector<std::string> biomeTypeKeys;
-  // std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
-  // std::map<std::string, std::shared_ptr<TileType>> tileTypes;
+  std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
+  std::map<std::string, std::shared_ptr<TileType>> tileTypes;
   // std::map<std::string, std::shared_ptr<ObjectType>> objectTypes;
   std::map<int, std::map<std::pair<int, int>, std::shared_ptr<TerrainObject>>> terrainMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;

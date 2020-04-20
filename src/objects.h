@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <memory>
 
 struct Image
 {
@@ -31,7 +32,12 @@ struct ObjectType : GenericType
 
 struct TileType : GenericType
 {
-  std::vector<std::string> objects;
+  TileType () {}
+  TileType (Sprite* s, std::string n)
+  {
+    sprite = s;
+    name = n;
+  }
 };
 
 struct TerrainType : GenericType
@@ -59,24 +65,21 @@ struct Tile
 {
   int x;
   int y;
-  TileType* tileType;
+  std::shared_ptr<TileType> tileType;
   std::shared_ptr<TerrainType> terrainType;
   Tile() {}
   Tile (int x, int y) { this->x = x; this->y = y; }
-  Tile(int x, int y, TileType* tileType)
+  Tile(int x, int y, std::shared_ptr<TileType> t)
   {
     this->x = x;
     this->y = y;
-    this->tileType = tileType;
+    tileType = t;
   }
   std::shared_ptr<TerrainType>* getTerrainType() { return &terrainType; }
 };
 
 struct TerrainObject : Tile
 {
-  //std::shared_ptr<BiomeType> biomeTypePtr;
-  //BiomeType* biomeType;
-  //std::shared_ptr<BiomeType>* getBiomeType() { return &biomeTypePtr; }
   std::shared_ptr<BiomeType> biomeType;
   TerrainObject () {}
   TerrainObject (int x, int y, std::shared_ptr<BiomeType> b)
@@ -89,18 +92,18 @@ struct WorldObject : Tile
 {
   ObjectType* objectType;
   WorldObject() {}
-  WorldObject(int x, int y, TileType* tileType)
+  WorldObject(int x, int y, std::shared_ptr<TileType> t)
   {
     this->x = x;
     this->y = y;
-    this->tileType = tileType;
+    tileType = t;
   }
 };
 
 struct Player {
   int x;
   int y;
-  TileType* tileType;
+  std::shared_ptr<TileType> tileType;
 };
 
 #endif

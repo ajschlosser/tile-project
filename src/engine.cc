@@ -3,7 +3,7 @@
 
 int GameEngine::init()
 {
-  player = {gameSize/2, gameSize/2, &tileTypes["water"]};
+  player = {gameSize/2, gameSize/2, tileTypes["water"]};
 
   mapController.maxDepth = zMaxLevel;
   gfxController.tileSize = &tileSize;
@@ -137,10 +137,10 @@ int GameEngine::init()
       relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
     }
     SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
-    TileType t { &sprites[spriteName], tileTypeName, relatedObjectTypes };
-    auto t2 = std::make_shared<TerrainType> (&sprites[spriteName], tileTypeName, relatedObjectTypes);
-    tileTypes[tileTypeName] = t;
-    terrainTypes[tileTypeName] = t2;
+    auto tileType = std::make_shared<TileType> (&sprites[spriteName], tileTypeName);
+    auto terrainType = std::make_shared<TerrainType> (&sprites[spriteName], tileTypeName, relatedObjectTypes);
+    tileTypes[tileType->name] = tileType;
+    terrainTypes[terrainType->name] = terrainType;
   }
   for (auto i = 0; i < tileConfigJson["biomes"].size(); ++i)
   {
@@ -173,8 +173,9 @@ int GameEngine::init()
 
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
 
-    TileType t { &sprites[spriteName], objectTypeName };
-    tileTypes[objectTypeName] = t;
+    auto tileType = std::make_shared<TileType> (&sprites[spriteName], objectTypeName);
+    tileTypes[tileType->name] = tileType;
+
     ObjectType o { &sprites[spriteName], objectTypeName, bM };
     objectTypes[objectTypeName] = o;
   }
@@ -334,7 +335,7 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
     if (t->get())
     {
       t->get()->terrainType = terrainTypes[t->get()->biomeType->terrainTypes[0].first];
-      t->get()->tileType = &tileTypes[t->get()->biomeType->terrainTypes[0].first];
+      t->get()->tileType = tileTypes[t->get()->biomeType->terrainTypes[0].first];
     }
   };
 
@@ -342,7 +343,7 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   {
     auto terrainObjectAtCoordinates = &terrainMap[h][{i, j}];
     int layer = 0;
-    for (auto relatedObjectType : terrainObjectAtCoordinates->get()->tileType->objects)
+    for (auto relatedObjectType : terrainObjectAtCoordinates->get()->terrainType->objects)
     {
       int threshold = 1000;
       if (!objectTypes[relatedObjectType].biomes[terrainObjectAtCoordinates->get()->biomeType->name])
@@ -352,7 +353,7 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
       if (std::rand() % 1000 > 825)
       {
         std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-          i, j, &tileTypes[relatedObjectType]
+          i, j, tileTypes[relatedObjectType]
         );
         objectMap[h][layer][{o->x, o->y}] = o;
         layer++;
