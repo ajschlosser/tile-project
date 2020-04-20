@@ -3,38 +3,44 @@
     {
       "name": "green bush",
       "sprite": "Sprite 0x192",
-      "tiles": ["grass"]
+      "biomes": ["shrubland"]
     },
     {
       "name": "light green bush",
       "sprite": "Sprite 32x192",
-      "tiles": ["grass"]
+      "biomes": ["shrubland"]
     },
     {
       "name": "dirt",
       "sprite": "Sprite 0x224",
-      "tiles": ["grass"]
+      "biomes": ["wasteland", "underground"]
     },
     {
       "name": "mud",
       "sprite": "Sprite 32x224",
-      "tiles": ["water"]
+      "biomes": ["wasteland", "underground"]
     },
     {
       "name": "boulder",
       "sprite": "Sprite 0x255",
-      "tiles": ["rock"]
+      "biomes": ["wasteland", "underground"]
     },
     {
       "name": "yellow flower",
       "sprite": "Sprite 0x320",
-      "tiles": ["grass"],
+      "biomes": ["meadow", "grassland"],
       "solitary": true
     },
     {
       "name": "pink flower",
       "sprite": "Sprite 32x320",
-      "tiles": ["grass"],
+      "biomes": ["meadow"],
+      "solitary": true
+    },
+    {
+      "name": "red mushroom",
+      "sprite": "Sprite 0x352",
+      "biomes": ["underground"],
       "solitary": true
     }
   ],
@@ -42,12 +48,17 @@
     {
       "name": "grass",
       "sprite": "Sprite 0x0",
-      "objects": ["green bush", "dirt", "light green bush", "yellow flower", "pink flower"]
+      "objects": ["green bush", "dirt", "light green bush", "yellow flower", "pink flower", "boulder"]
     },
     {
       "name": "soil",
       "sprite": "Sprite 0x32",
       "objects": ["mud"]
+    },
+    {
+      "name": "underground soil",
+      "sprite": "Sprite 0x32",
+      "objects": ["mud", "red mushroom"]
     },
     {
       "name": "rock",
@@ -71,8 +82,9 @@
   ],
   "biomes": [
     {
-      "name": "grasslands",
+      "name": "meadow",
       "maxDepth": 0,
+      "minDepth": 0,
       "terrains": [
         {
           "name": "grass",
@@ -89,11 +101,49 @@
       ]
     },
     {
+      "name": "grassland",
+      "maxDepth": 0,
+      "minDepth": 0,
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "name": "shrubland",
+      "maxDepth": 0,
+      "minDepth": 0,
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 0,
+      "minDepth": 0,
+      "name": "wasteland",
+      "terrains": [
+        {
+          "name": "soil",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rock",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 10,
       "minDepth": 1,
       "name": "underground",
       "terrains": [
         {
-          "name": "soil",
+          "name": "underground soil",
           "multiplier": 1.0
         },
         {

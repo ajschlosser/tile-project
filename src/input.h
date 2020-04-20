@@ -11,5 +11,5 @@ enum directions
 
 struct UserInputHandler
 {
-  void handleKeyboardEvents (std::function<void(int)> f);
+  void handleKeyboardMovement (std::function<void(int)> f);
 };

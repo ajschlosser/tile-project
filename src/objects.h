@@ -12,7 +12,7 @@ struct GenericType
 struct TileType;
 struct ObjectType : GenericType
 {
-  std::vector<TileType*> tiles;
+  std::map<std::string, int> biomes;
 };
 
 struct TileType : GenericType
@@ -33,9 +33,19 @@ struct Tile
   int x;
   int y;
   TileType* tileType;
+  Tile() {}
+  Tile(int x, int y, TileType* tileType)
+  {
+    this->x = x;
+    this->y = y;
+    this->tileType = tileType;
+  }
 };
 
-struct TerrainObject : Tile { };
+struct TerrainObject : Tile
+{
+  BiomeType* biomeType;
+};
 
 struct WorldObject : Tile
 {

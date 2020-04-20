@@ -1,6 +1,6 @@
 #include "input.h"
 
-void UserInputHandler::handleKeyboardEvents (std::function<void(int)> f)
+void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
 {
   auto *ks = SDL_GetKeyboardState(NULL);
   while(ks[SDL_SCANCODE_LEFT]

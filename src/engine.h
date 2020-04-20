@@ -27,6 +27,13 @@ struct Sprite
   std::string tileName;
 };
 
+struct MapGeneratorController
+{
+  bool currentlyGenerating;
+  BiomeType* currentBiomeType;
+  MapGeneratorController () : currentlyGenerating(false) {}
+};
+
 struct GameEngine
 {
   UserInputHandler userInputHandler;
@@ -45,6 +52,7 @@ struct GameEngine
   const int spriteSize;
   int zLevel;
   int zMaxLevel;
+  MapGeneratorController mapGenerator;
   bool generatingChunk;
   std::map<int, BiomeType> biomeTypes;
   std::map<std::string, TileType> tileTypes;
@@ -53,17 +61,20 @@ struct GameEngine
   std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
-  GameEngine() : generatingChunk(false), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(4) {}
   int init();
   std::pair<int, int> getWindowGridSize();
   int renderCopySprite(std::string, int, int);
-  template <class T>
-  int renderCopySpriteFrom(std::shared_ptr<T>, int, int);
+  template <class T> int renderCopySpriteFrom(std::shared_ptr<T>, int, int);
   void scrollGameSurface(int);
   void applyUi();
-  template<typename F>
-  void iterateOverChunk(SDL_Rect*, F);
+  std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
+  template<typename F> void iterateOverChunk(SDL_Rect*, F);
+  template<typename F> void randomlyAccessAllTilesInChunk(SDL_Rect*, F);
   std::shared_ptr<std::map<int, std::map<std::string, int>>> getTilesInRange (SDL_Rect*);
+  std::shared_ptr<std::map<int, std::map<std::string, int>>> getBiomesInRange (SDL_Rect*);
+  std::map<std::string, std::map<std::string, int>> getCountsInRange (SDL_Rect*);
+  std::shared_ptr<TerrainObject>* getTerrainObjectAt (int z, int x, int y) { return &terrainMap[z][{ x, y }]; };
+  //std::shared_ptr<WorldObject> getWolrdObjectsAt (int z, int x, int y) { return objectMap[z][{ x, y }]; };
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();
@@ -71,4 +82,5 @@ struct GameEngine
   void handleEvents();
   int renderCopyPlayer();
   int run();
+  GameEngine() : generatingChunk(false), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(4) {}
 };
