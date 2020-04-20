@@ -40,7 +40,7 @@ std::map<int, std::vector<SDL_Point>> MapController::getAllPointsInRect(SDL_Rect
   return results;
 }
 
-
+// TODO: If this takes too long, bad things happen
 void MapController::randomlyAccessAllTilesInChunk(SDL_Rect* chunkRect, std::function<void(int, int, int)> f)
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,

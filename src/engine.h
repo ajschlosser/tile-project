@@ -39,11 +39,16 @@ struct GameEngine
   int zLevel;
   int zMaxLevel;
   MapController mapController;
-  bool generatingChunk;
-  std::map<int, BiomeType> biomeTypes;
+  //std::map<int, BiomeType> biomeTypes;
+  //std::map<std::string, BiomeType> biomeTypesMap;
   std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<std::string, ObjectType> objectTypes;
+  std::map<std::string, std::shared_ptr<BiomeType>> biomeTypes;
+  std::vector<std::string> biomeTypeKeys;
+  // std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
+  // std::map<std::string, std::shared_ptr<TileType>> tileTypes;
+  // std::map<std::string, std::shared_ptr<ObjectType>> objectTypes;
   std::map<int, std::map<std::pair<int, int>, std::shared_ptr<TerrainObject>>> terrainMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
@@ -51,9 +56,9 @@ struct GameEngine
   int init();
   std::pair<int, int> getWindowGridSize();
   void scrollGameSurface(int);
-  std::shared_ptr<std::map<int, std::map<std::string, int>>> getTilesInRange (SDL_Rect*);
-  std::shared_ptr<std::map<int, std::map<std::string, int>>> getBiomesInRange (SDL_Rect*);
-  std::map<std::string, std::map<std::string, int>> getCountsInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   std::shared_ptr<TerrainObject>* getTerrainObjectAt (int z, int x, int y) { return &terrainMap[z][{ x, y }]; }
   std::shared_ptr<TerrainType>* getTerrainType (std::string terrainType) { return &terrainTypes[terrainType]; }
   int generateMapChunk(SDL_Rect*);
@@ -63,7 +68,7 @@ struct GameEngine
   void handleEvents();
   int renderCopyPlayer();
   int run();
-  GameEngine() : generatingChunk(false), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(4) {}
+  GameEngine() : spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(4) {}
 };
 
 #endif

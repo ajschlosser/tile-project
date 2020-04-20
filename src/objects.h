@@ -52,6 +52,7 @@ struct BiomeType
   int maxDepth;
   int minDepth;
   std::map<int, std::pair<std::string, float>> terrainTypes;
+  BiomeType () {}
 };
 
 struct Tile
@@ -73,8 +74,15 @@ struct Tile
 
 struct TerrainObject : Tile
 {
-  BiomeType* biomeType;
-  TerrainObject (int x, int y, BiomeType* b) { this->x = x; this->y = y; biomeType = b; }
+  //std::shared_ptr<BiomeType> biomeTypePtr;
+  //BiomeType* biomeType;
+  //std::shared_ptr<BiomeType>* getBiomeType() { return &biomeTypePtr; }
+  std::shared_ptr<BiomeType> biomeType;
+  TerrainObject () {}
+  TerrainObject (int x, int y, std::shared_ptr<BiomeType> b)
+  {
+    this->x = x; this->y = y; biomeType = b;
+  }
 };
 
 struct WorldObject : Tile

@@ -1,16 +1,17 @@
-#ifndef MAP_H
-#define MAP_H
+#ifndef GAMEMAP_H
+#define GAMEMAP_H
 
 #include "SDL2/SDL.h"
 #include "objects.h"
 #include <functional>
+#include <memory>
 
 struct MapGenerator
 {
   bool processing;
-  BiomeType* currentBiomeType;
+  std::shared_ptr<BiomeType> currentBiomeType;
   MapGenerator () : processing(false) {}
-  void init(BiomeType* b)
+  void init(std::shared_ptr<BiomeType> b)
   {
     processing = true;
     currentBiomeType = b;
