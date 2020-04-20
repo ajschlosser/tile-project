@@ -322,12 +322,24 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   auto growBiomes = [this](int h, int i, int j)
   {
     auto t = getTerrainObjectAt(h, i, j);
-    SDL_Rect r { i-1, j-1, i+1, j+1 };
+    SDL_Rect r { i-3, j-3, i+3, j+3 };
     auto counts = getCountsInRange(&r);
-    if (counts["biome"]["grass"] > 2)
+
+    std::pair<std::string, int> top;
+    for (const auto &pair : counts["biome"])
     {
-      //SDL_Log("grassy");
+      if (pair.second > top.second)
+      {
+        top.second = pair.second;
+        top.first = pair.first;
+      }
     }
+
+    if (t->get()->biomeType->name != top.first)
+    {
+      SDL_Log("oops");
+    }
+
     //auto biomesInRange = (*getBiomesInRange(&r));
     // if (biomesInRange[h][t->get()->biomeType->name] < 2)
     // {
