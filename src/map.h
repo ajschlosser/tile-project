@@ -34,6 +34,8 @@ struct MapController
     this->maxDepth = maxDepth;
   }
   void iterateOverChunk(SDL_Rect*, std::function<void(int, int, int)>);
+  void randomlyAccessAllTilesInChunk(SDL_Rect*, std::function<void(int, int, int)>);
+  std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
 };
 
 #endif

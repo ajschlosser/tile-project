@@ -5,7 +5,19 @@
 #include <string>
 #include <vector>
 
-struct Sprite;
+struct Image
+{
+  SDL_Surface* surface;
+  SDL_Texture* texture;
+};
+
+struct Sprite
+{
+  int tileMapX;
+  int tileMapY;
+  std::string tileName;
+};
+
 struct GenericType
 {
   Sprite* sprite;

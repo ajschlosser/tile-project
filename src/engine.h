@@ -7,6 +7,7 @@
 #include "objects.h"
 #include "input.h"
 #include "map.h"
+#include "draw.h"
 
 #include <cmath>
 #include <array>
@@ -18,21 +19,9 @@
 #include <fstream>
 #include <memory>
 
-struct Image
-{
-  SDL_Surface* surface;
-  SDL_Texture* texture;
-};
-
-struct Sprite
-{
-  int tileMapX;
-  int tileMapY;
-  std::string tileName;
-};
-
 struct GameEngine
 {
+  GraphicsController gfxController;
   UserInputHandler userInputHandler;
   bool running;
   int movementSpeed;
@@ -61,19 +50,12 @@ struct GameEngine
   SDL_Rect camera;
   int init();
   std::pair<int, int> getWindowGridSize();
-  int renderCopySprite(std::string, int, int);
-  template <class T> int renderCopySpriteFrom(std::shared_ptr<T>, int, int);
   void scrollGameSurface(int);
-  void applyUi();
-  std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
-  template<typename F> void iterateOverChunk(SDL_Rect*, F);
-  template<typename F> void randomlyAccessAllTilesInChunk(SDL_Rect*, F);
   std::shared_ptr<std::map<int, std::map<std::string, int>>> getTilesInRange (SDL_Rect*);
   std::shared_ptr<std::map<int, std::map<std::string, int>>> getBiomesInRange (SDL_Rect*);
   std::map<std::string, std::map<std::string, int>> getCountsInRange (SDL_Rect*);
-  std::shared_ptr<TerrainObject>* getTerrainObjectAt (int z, int x, int y) { return &terrainMap[z][{ x, y }]; };
+  std::shared_ptr<TerrainObject>* getTerrainObjectAt (int z, int x, int y) { return &terrainMap[z][{ x, y }]; }
   std::shared_ptr<TerrainType>* getTerrainType (std::string terrainType) { return &terrainTypes[terrainType]; }
-  //std::shared_ptr<WorldObject> getWolrdObjectsAt (int z, int x, int y) { return objectMap[z][{ x, y }]; };
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();

@@ -7,6 +7,13 @@ int GameEngine::init()
 
   mapController.maxDepth = zMaxLevel;
 
+  //gfxController = { appRenderer, &tilemapImage, &sprites }
+  gfxController.appRenderer = appRenderer;
+  gfxController.tilemapImage = &tilemapImage;
+  gfxController.sprites = sprites;
+  gfxController.tileSize = &tileSize;
+  gfxController.spriteSize = const_cast<int*>(&spriteSize);
+
   std::srand(std::time(nullptr));
   if (!tileSize)
   {
@@ -374,9 +381,9 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
 
 
   mapController.iterateOverChunk(chunkRect, createTerrainPlaceholders);
-  randomlyAccessAllTilesInChunk(chunkRect, growBiomes);
-  iterateOverChunk(chunkRect, setTerrainTypes);
-  iterateOverChunk(chunkRect, addWorldObjects);
+  mapController.randomlyAccessAllTilesInChunk(chunkRect, growBiomes);
+  mapController.iterateOverChunk(chunkRect, setTerrainTypes);
+  mapController.iterateOverChunk(chunkRect, addWorldObjects);
   mapController.mapGenerator.reset();
   SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
   return 0;
@@ -394,7 +401,7 @@ std::shared_ptr<std::map<int, std::map<std::string, int>>> GameEngine::getTilesI
       tilesInRange[h][terrainObjectAtCoordinates->tileType->name] += 1;
     }
   };
-  iterateOverChunk(rangeRect, lambda);
+  mapController.iterateOverChunk(rangeRect, lambda);
   return std::make_shared<std::map<int, std::map<std::string, int>>>(tilesInRange);
 }
 
@@ -416,7 +423,7 @@ std::map<std::string, std::map<std::string, int>> GameEngine::getCountsInRange (
       results["biome"][t->get()->biomeType->name] += 1;
     }
   };
-  iterateOverChunk(r, lambda);
+  mapController.iterateOverChunk(r, lambda);
   return results;
 }
 
@@ -431,135 +438,8 @@ std::shared_ptr<std::map<int, std::map<std::string, int>>> GameEngine::getBiomes
       getBiomesInRange[h][terrainObjectAtCoordinates->biomeType->name] += 1;
     }
   };
-  iterateOverChunk(rangeRect, lambda);
+  mapController.iterateOverChunk(rangeRect, lambda);
   return std::make_shared<std::map<int, std::map<std::string, int>>>(getBiomesInRange);
-}
-
-
-template <typename F>
-void GameEngine::iterateOverChunk(SDL_Rect* chunkRect, F f)
-{
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
-    zMaxLevel, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
-  );
-  
-  if (std::rand() % 100 > 50)
-  {
-    for (auto h = 0; h < zMaxLevel; h++)
-    {
-      for (auto i = chunkRect->x; i != chunkRect->w; i++)
-      {
-        for (auto j = chunkRect->y; j != chunkRect->h; j++)
-        {
-          f(h, i ,j);
-        }
-      }
-    }
-  }
-  else
-  {
-    for (auto h = 0; h < zMaxLevel; h++)
-    {
-      for (auto j = chunkRect->y; j != chunkRect->h; j++)
-      {
-        for (auto i = chunkRect->x; i != chunkRect->w; i++)
-        {
-          f(h, i ,j);
-        }
-      }
-    }
-  }
-
-
-}
-
-std::map<int, std::vector<SDL_Point>> GameEngine::getAllPointsInRect(SDL_Rect* r)
-{
-  std::map<int, std::vector<SDL_Point>> results;
-  for (auto h = 0; h < zMaxLevel; h++)
-  {
-    std::vector<SDL_Point> points;
-    for (auto i = r->x; i != r->w; i++)
-    {
-      for (auto j = r->y; j != r->h; j++)
-      {
-        SDL_Point p = { i, j };
-        points.push_back(p);
-      }
-    }
-    results[h] = points;
-  }
-  return results;
-}
-
-template <typename F>
-void GameEngine::randomlyAccessAllTilesInChunk(SDL_Rect* chunkRect, F f)
-{
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
-    zMaxLevel, chunkRect->x, chunkRect->y, chunkRect->w, chunkRect->h
-  );
-  auto coordinates = getAllPointsInRect(chunkRect);
-  for (auto h = 0; h < zMaxLevel; h++)
-  {
-    while (coordinates[h].size())
-    {
-      int i = std::rand() % coordinates[h].size();
-      SDL_Point p = coordinates[h].at(i);
-      f(h, p.x, p.y);
-      coordinates[h].erase(coordinates[h].begin() + i);
-    }
-  }
-}
-
-int GameEngine::renderCopySprite(std::string spriteName, int x, int y)
-{
-  Sprite *s = &sprites[spriteName];
-  SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
-  SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
-  if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
-  {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Couldn't copy sprite to renderer: %s",
-      SDL_GetError()
-    );
-    return 3;
-  }
-  return 0;
-}
-
-
-template<class T>
-int GameEngine::renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y)
-{
-  Sprite *s = t->tileType->sprite; // gotta genericize tiles more; current tiles should be children of a generic tile object and called something else, i.e. Terrain
-  SDL_Rect src {s->tileMapX, s->tileMapY, spriteSize, spriteSize};
-  SDL_Rect dest {x*tileSize, y*tileSize, tileSize, tileSize};
-  if (SDL_RenderCopy(appRenderer, tilemapImage.texture, &src, &dest) < -1)
-  {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Couldn't copy sprite to renderer: %s",
-      SDL_GetError()
-    );
-    return 3;
-  }
-  return 0;
-}
-
-
-void GameEngine::applyUi()
-{
-  SDL_Rect viewportRect;
-  SDL_RenderGetViewport(appRenderer, &viewportRect);
-  SDL_Rect leftRect = {0, 0, tileSize, viewportRect.h};
-  SDL_Rect rightRect = {viewportRect.w-tileSize, 0, tileSize, viewportRect.h};
-  SDL_Rect topRect = {0, 0, viewportRect.w, tileSize};
-  SDL_Rect bottomRect = {0, viewportRect.h-tileSize*2, viewportRect.w, tileSize*2};
-  SDL_RenderFillRect(appRenderer, &leftRect);
-  SDL_RenderFillRect(appRenderer, &rightRect);
-  SDL_RenderFillRect(appRenderer, &topRect);
-  SDL_RenderFillRect(appRenderer, &bottomRect);
 }
 
 
@@ -668,7 +548,7 @@ void GameEngine::scrollGameSurface(int directions)
     }
     SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
     renderCopyPlayer();
-    applyUi();
+    gfxController.applyUi();
     SDL_RenderPresent(appRenderer);
     SDL_DestroyTexture(gameTexture);
   }
@@ -788,17 +668,17 @@ void GameEngine::renderCopyTiles()
       }
       if (t)
       {
-        renderCopySpriteFrom<TerrainObject>(t, x, y);
+        gfxController.renderCopySpriteFrom<TerrainObject>(t, x, y);
       }
       else
       {
-        renderCopySprite("Sprite 0x128", x, y);
+        gfxController.renderCopySprite("Sprite 0x128", x, y);
         SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
         generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {
-        renderCopySpriteFrom<WorldObject>(o, x, y);
+        gfxController.renderCopySpriteFrom<WorldObject>(o, x, y);
       }
       y++;
     }
@@ -829,7 +709,7 @@ int GameEngine::run ()
     SDL_RenderClear(appRenderer);
     renderCopyTiles();
     renderCopyPlayer();
-    applyUi();
+    gfxController.applyUi();
     SDL_RenderPresent(appRenderer);
   }
   return 1;
