@@ -44,7 +44,7 @@
       "solitary": true
     }
   ],
-  "tiles": [
+  "terrains": [
     {
       "name": "grass",
       "sprite": "Sprite 0x0",

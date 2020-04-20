@@ -9,7 +9,6 @@ struct GenericType
   std::string name;
 };
 
-struct TileType;
 struct ObjectType : GenericType
 {
   std::map<std::string, int> biomes;
@@ -18,6 +17,18 @@ struct ObjectType : GenericType
 struct TileType : GenericType
 {
   std::vector<std::string> objects;
+};
+
+struct TerrainType : GenericType
+{
+  std::vector<std::string> objects;
+  TerrainType () {}
+  TerrainType (Sprite* sprite, std::string name, std::vector<std::string> objects)
+  {
+    this->sprite = sprite;
+    this->name = name;
+    this->objects = objects;
+  }
 };
 
 struct BiomeType
@@ -33,6 +44,7 @@ struct Tile
   int x;
   int y;
   TileType* tileType;
+  std::shared_ptr<TerrainType> terrainType;
   Tile() {}
   Tile(int x, int y, TileType* tileType)
   {
@@ -40,6 +52,7 @@ struct Tile
     this->y = y;
     this->tileType = tileType;
   }
+  std::shared_ptr<TerrainType>* getTerrainType() { return &terrainType; }
 };
 
 struct TerrainObject : Tile

@@ -55,6 +55,7 @@ struct GameEngine
   MapGeneratorController mapGenerator;
   bool generatingChunk;
   std::map<int, BiomeType> biomeTypes;
+  std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<std::string, ObjectType> objectTypes;
   std::map<int, std::map<std::pair<int, int>, std::shared_ptr<TerrainObject>>> terrainMap;
@@ -74,6 +75,7 @@ struct GameEngine
   std::shared_ptr<std::map<int, std::map<std::string, int>>> getBiomesInRange (SDL_Rect*);
   std::map<std::string, std::map<std::string, int>> getCountsInRange (SDL_Rect*);
   std::shared_ptr<TerrainObject>* getTerrainObjectAt (int z, int x, int y) { return &terrainMap[z][{ x, y }]; };
+  std::shared_ptr<TerrainType>* getTerrainType (std::string terrainType) { return &terrainTypes[terrainType]; }
   //std::shared_ptr<WorldObject> getWolrdObjectsAt (int z, int x, int y) { return objectMap[z][{ x, y }]; };
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
