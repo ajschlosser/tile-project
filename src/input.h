@@ -1,3 +1,6 @@
+#ifndef INPUT_H
+#define INPUT_H
+
 #include "SDL2/SDL.h"
 #include <functional>
 
@@ -13,3 +16,5 @@ struct UserInputHandler
 {
   void handleKeyboardMovement (std::function<void(int)> f);
 };
+
+#endif

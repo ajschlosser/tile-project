@@ -1,3 +1,6 @@
+#ifndef OBJECTS_H
+#define OBJECTS_H
+
 #include <map>
 #include <string>
 #include <vector>
@@ -46,6 +49,7 @@ struct Tile
   TileType* tileType;
   std::shared_ptr<TerrainType> terrainType;
   Tile() {}
+  Tile (int x, int y) { this->x = x; this->y = y; }
   Tile(int x, int y, TileType* tileType)
   {
     this->x = x;
@@ -58,6 +62,7 @@ struct Tile
 struct TerrainObject : Tile
 {
   BiomeType* biomeType;
+  TerrainObject (int x, int y, BiomeType* b) { this->x = x; this->y = y; biomeType = b; }
 };
 
 struct WorldObject : Tile
@@ -77,3 +82,5 @@ struct Player {
   int y;
   TileType* tileType;
 };
+
+#endif

@@ -1,8 +1,12 @@
+#ifndef ENGINE_H
+#define ENGINE_H
+
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "json/json.h"
 #include "objects.h"
 #include "input.h"
+#include "map.h"
 
 #include <cmath>
 #include <array>
@@ -27,13 +31,6 @@ struct Sprite
   std::string tileName;
 };
 
-struct MapGeneratorController
-{
-  bool currentlyGenerating;
-  BiomeType* currentBiomeType;
-  MapGeneratorController () : currentlyGenerating(false) {}
-};
-
 struct GameEngine
 {
   UserInputHandler userInputHandler;
@@ -52,7 +49,7 @@ struct GameEngine
   const int spriteSize;
   int zLevel;
   int zMaxLevel;
-  MapGeneratorController mapGenerator;
+  MapController mapController;
   bool generatingChunk;
   std::map<int, BiomeType> biomeTypes;
   std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
@@ -86,3 +83,5 @@ struct GameEngine
   int run();
   GameEngine() : generatingChunk(false), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(4) {}
 };
+
+#endif

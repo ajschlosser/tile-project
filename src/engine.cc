@@ -4,6 +4,9 @@
 int GameEngine::init()
 {
   player = {gameSize/2, gameSize/2, &tileTypes["water"]};
+
+  mapController.maxDepth = zMaxLevel;
+
   std::srand(std::time(nullptr));
   if (!tileSize)
   {
@@ -212,7 +215,7 @@ std::pair<int, int> GameEngine::getWindowGridSize()
   SDL_GetWindowSize(appWindow, &_w, &_h);
   int width = static_cast <int> (std::floor(_w/tileSize));
   int height = static_cast <int> (std::floor(_h/tileSize));
-  return {width, height};
+  return { width, height };
 }
 
 void GameEngine::scrollCamera(int directions)
@@ -280,8 +283,7 @@ void GameEngine::processMap(int directions)
     chunkRect.h += gameSize*1.5;
   }
 
-  auto checkTerrainObject = &terrainMap[zLevel][{checkCoordinates.x, checkCoordinates.y}];
-  if (!checkTerrainObject->get())
+  if (!getTerrainObjectAt(zLevel, checkCoordinates.x, checkCoordinates.y)->get())
   {
     SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
     generateMapChunk(&chunkRect);
@@ -292,30 +294,26 @@ void GameEngine::processMap(int directions)
 
 int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
 {
-  if (mapGenerator.currentlyGenerating == true)
+
+  if (mapController.mapGenerator.currentlyGenerating())
   {
     return -1;
   }
-  mapGenerator.currentlyGenerating = true;
-  mapGenerator.currentBiomeType = &biomeTypes[std::rand() % biomeTypes.size()];
-  SDL_Log("Generating chunk: %s", mapGenerator.currentBiomeType->name.c_str());
+
+  mapController.mapGenerator.init(&biomeTypes[std::rand() % biomeTypes.size()]);
+  SDL_Log("Generating chunk: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
 
   auto createTerrainPlaceholders = [this](int h, int i, int j)
   {
     auto terrainObjectAtCoordinates = &terrainMap[h][{i, j}];
-    while (h > mapGenerator.currentBiomeType->maxDepth || h < mapGenerator.currentBiomeType->minDepth)
+    while (mapController.mapGenerator.isOutOfDepth(h))
     {
-      mapGenerator.currentBiomeType = &biomeTypes[std::rand() % biomeTypes.size()];
+      mapController.mapGenerator.currentBiomeType = &biomeTypes[std::rand() % biomeTypes.size()];
     }
-    auto b = mapGenerator.currentBiomeType;
+    auto b = mapController.mapGenerator.currentBiomeType;
     if (!terrainObjectAtCoordinates->get())
     {
-      std::shared_ptr<TerrainObject> nT = std::make_shared<TerrainObject>();
-      nT->x = i;
-      nT->y = j;
-      nT->biomeType = b;
-      terrainMap[h][{i, j}] = nT;
-
+      terrainMap[h][{i, j}] = std::make_shared<TerrainObject>(i, j, b);
     }
   };
 
@@ -337,14 +335,9 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
 
     if (t->get()->biomeType->name != top.first)
     {
-      SDL_Log("oops");
+      t->get()->tileType = &tileTypes["grass"];
     }
 
-    //auto biomesInRange = (*getBiomesInRange(&r));
-    // if (biomesInRange[h][t->get()->biomeType->name] < 2)
-    // {
-    //   SDL_Log("not much");
-    // }
   };
 
   auto setTerrainTypes = [this](int h, int i, int j)
@@ -380,11 +373,11 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   };
 
 
-  iterateOverChunk(chunkRect, createTerrainPlaceholders);
+  mapController.iterateOverChunk(chunkRect, createTerrainPlaceholders);
   randomlyAccessAllTilesInChunk(chunkRect, growBiomes);
   iterateOverChunk(chunkRect, setTerrainTypes);
   iterateOverChunk(chunkRect, addWorldObjects);
-  mapGenerator.currentlyGenerating = false;
+  mapController.mapGenerator.reset();
   SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
   return 0;
 }
