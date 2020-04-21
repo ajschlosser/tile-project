@@ -82,10 +82,15 @@ struct TerrainObject : Tile
 {
   bool incomplete;
   std::shared_ptr<BiomeType> biomeType;
-  TerrainObject () : incomplete(false) {}
+  TerrainObject () : incomplete(true) {}
   TerrainObject (int x, int y, std::shared_ptr<BiomeType> b)
   {
     this->x = x; this->y = y; biomeType = b;
+  }
+  void setTerrainType(std::shared_ptr<TerrainType> t)
+  {
+    terrainType = t;
+    incomplete = false;
   }
 };
 

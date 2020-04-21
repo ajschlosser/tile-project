@@ -18,6 +18,7 @@
 #include <thread>
 #include <fstream>
 #include <memory>
+#include <mutex>
 
 struct GameEngine
 {
