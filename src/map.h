@@ -4,14 +4,13 @@
 #include "SDL2/SDL.h"
 #include "objects.h"
 #include <functional>
-#include <memory>
 
 struct MapGenerator
 {
   bool processing;
-  std::shared_ptr<BiomeType> currentBiomeType;
-  MapGenerator () : processing(false) {}
-  void init(std::shared_ptr<BiomeType> b)
+  BiomeType* currentBiomeType;
+  MapGenerator () : processing(false), currentBiomeType(NULL) {}
+  void init(BiomeType* b)
   {
     processing = true;
     currentBiomeType = b;
@@ -19,7 +18,7 @@ struct MapGenerator
   void reset()
   {
     processing = false;
-    currentBiomeType = nullptr;
+    currentBiomeType = NULL;
   }
   bool currentlyGenerating () { return processing; }
   bool isOutOfDepth (int h) { return (h > currentBiomeType->maxDepth || h < currentBiomeType->minDepth); }

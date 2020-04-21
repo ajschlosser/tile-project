@@ -65,32 +65,33 @@ struct Tile
 {
   int x;
   int y;
-  std::shared_ptr<TileType> tileType;
-  std::shared_ptr<TerrainType> terrainType;
+  TileType* tileType;
+  TerrainType* terrainType;
   Tile() {}
   Tile (int x, int y) { this->x = x; this->y = y; }
-  Tile(int x, int y, std::shared_ptr<TileType> t)
+  Tile(int x, int y, TileType* t)
   {
     this->x = x;
     this->y = y;
     tileType = t;
   }
-  std::shared_ptr<TerrainType>* getTerrainType() { return &terrainType; }
 };
 
 struct TerrainObject : Tile
 {
-  bool incomplete;
-  std::shared_ptr<BiomeType> biomeType;
-  TerrainObject () : incomplete(true) {}
-  TerrainObject (int x, int y, std::shared_ptr<BiomeType> b)
+  BiomeType* biomeType;
+  TerrainObject () {}
+  TerrainObject (int x, int y, BiomeType* b)
   {
-    this->x = x; this->y = y; biomeType = b;
-  }
-  void setTerrainType(std::shared_ptr<TerrainType> t)
-  {
-    terrainType = t;
-    incomplete = false;
+    this->x = x;
+    this->y = y;
+    biomeType = b;
+    
+    // set terraintype so no fuckup
+    Sprite s = { 0, 0 };
+    std::vector<std::string> o;
+    TerrainType t = { &s, "fucko", o };
+    terrainType = &t;
   }
 };
 
@@ -98,7 +99,7 @@ struct WorldObject : Tile
 {
   ObjectType* objectType;
   WorldObject() {}
-  WorldObject(int x, int y, std::shared_ptr<TileType> t)
+  WorldObject(int x, int y, TileType* t)
   {
     this->x = x;
     this->y = y;
@@ -109,7 +110,7 @@ struct WorldObject : Tile
 struct Player {
   int x;
   int y;
-  std::shared_ptr<TileType> tileType;
+  TileType* tileType;
 };
 
 #endif

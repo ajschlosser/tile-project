@@ -3,7 +3,7 @@
 
 int GameEngine::init()
 {
-  player = {gameSize/2, gameSize/2, tileTypes["water"]};
+  player = {gameSize/2, gameSize/2, &tileTypes["water"]};
 
   mapController.maxDepth = zMaxLevel;
   gfxController.tileSize = &tileSize;
@@ -137,27 +137,27 @@ int GameEngine::init()
       relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
     }
     SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
-    auto tileType = std::make_shared<TileType> (&sprites[spriteName], tileTypeName);
-    auto terrainType = std::make_shared<TerrainType> (&sprites[spriteName], tileTypeName, relatedObjectTypes);
-    tileTypes[tileType->name] = tileType;
-    terrainTypes[terrainType->name] = terrainType;
+    TileType tileType { &sprites[spriteName], tileTypeName };
+    TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
+    tileTypes[tileType.name] = tileType;
+    terrainTypes[terrainType.name] = terrainType;
   }
   for (auto i = 0; i < tileConfigJson["biomes"].size(); ++i)
   {
-    auto b = std::make_shared<BiomeType>();
-    b->name = tileConfigJson["biomes"][i]["name"].asString();
-    b->maxDepth = tileConfigJson["biomes"][i]["maxDepth"].asInt();
-    b->minDepth = tileConfigJson["biomes"][i]["minDepth"].asInt();
+    BiomeType b;
+    b.name = tileConfigJson["biomes"][i]["name"].asString();
+    b.maxDepth = tileConfigJson["biomes"][i]["maxDepth"].asInt();
+    b.minDepth = tileConfigJson["biomes"][i]["minDepth"].asInt();
     const Json::Value& terrainsArray = tileConfigJson["biomes"][i]["terrains"];
     for (int i = 0; i < terrainsArray.size(); i++)
     {
       auto t = terrainsArray[i];
-      b->terrainTypes[b->terrainTypes.size()] = { t["name"].asString(), t["multiplier"].asFloat() };
+      b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), t["multiplier"].asFloat() };
     }
-    biomeTypes[b->name] = b;
-    biomeTypeKeys.push_back(b->name);
+    biomeTypes[b.name] = b;
+    biomeTypeKeys.push_back(b.name);
     
-    SDL_Log("- Loaded '%s' biome", b->name.c_str());
+    SDL_Log("- Loaded '%s' biome", b.name.c_str());
   }
   for (auto i = 0; i < tileConfigJson["objects"].size(); ++i)
   {
@@ -173,8 +173,8 @@ int GameEngine::init()
 
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
 
-    auto tileType = std::make_shared<TileType> (&sprites[spriteName], objectTypeName);
-    tileTypes[tileType->name] = tileType;
+    TileType tileType { &sprites[spriteName], objectTypeName };
+    tileTypes[tileType.name] = tileType;
 
     ObjectType o { &sprites[spriteName], objectTypeName, bM };
     objectTypes[objectTypeName] = o;
@@ -265,8 +265,8 @@ void GameEngine::processMap(int directions)
     chunkRect.h += gameSize*1.5;
   }
 
-  auto t = terrainMap[zLevel][{ checkCoordinates.x, checkCoordinates.y }];
-  if (!t)
+  auto it = terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
+  if (it == terrainMap[zLevel].end())
   {
     SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
     generateMapChunk(&chunkRect);
@@ -277,84 +277,87 @@ void GameEngine::processMap(int directions)
 
 int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
 {
-
   if (mapController.mapGenerator.currentlyGenerating())
   {
     return -1;
   }
 
-  mapController.mapGenerator.init(biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]);
+  auto map = terrainMap;
+
+  mapController.mapGenerator.init(&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]);
   SDL_Log("Generating chunk: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
 
-  auto createTerrainPlaceholders = [this](int h, int i, int j)
+  auto createTerrainPlaceholders = [this, &map](int h, int i, int j)
   {
     while (mapController.mapGenerator.isOutOfDepth(h))
     {
-      mapController.mapGenerator.currentBiomeType = biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
+      mapController.mapGenerator.currentBiomeType = &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
     }
     auto b = mapController.mapGenerator.currentBiomeType;
-    if (terrainMap[h].find({i, j}) == terrainMap[h].end())
+    if (map[h].find({i, j}) == map[h].end())
     {
-      terrainMap[h][{i, j}] = std::make_shared<TerrainObject>(i, j, b);
+      TerrainObject t { i, j, b };
+      map[h][{i, j}] = t;
     }
   };
 
   // TODO: Bad things happen if this takes too long
-  auto growBiomes = [this](int h, int i, int j)
+  auto growBiomes = [this, &map](int h, int i, int j)
   {
     // TODO: CHANGE ALL DUMBSHIT TO THIS
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+    if (map[h].find({ i, j }) != map[h].end())
     {
-      auto t = terrainMap[h][{ i, j }];
+      auto t = map[h][{ i, j }];
       SDL_Rect r { i-5, j-5, i+5, j+5 };
-      auto counts = getCountsInRange(&r);
+      // auto counts = getCountsInRange(&r);
 
-      std::pair<std::string, int> top;
-      for (const auto &pair : counts[h]["biome"])
-      {
-        if (pair.second > top.second)
-        {
-          top.second = pair.second;
-          top.first = pair.first;
-        }
-      }
+      // std::pair<std::string, int> top;
+      // for (const auto &pair : counts[h]["biome"])
+      // {
+      //   if (pair.second > top.second)
+      //   {
+      //     top.second = pair.second;
+      //     top.first = pair.first;
+      //   }
+      // }
 
-      if (t->biomeType->name != top.first)
-      { 
-        t->biomeType = biomeTypes[top.first];
-      }
+      // if (t->biomeType->name != top.first)
+      // { 
+      //   t->biomeType = biomeTypes[top.first];
+      // }
     }
 
   };
 
-  auto setTerrainTypes = [this](int h, int i, int j)
+  auto setTerrainTypes = [this, &map](int h, int i, int j)
   {
-    if (terrainMap[h].find({i, j}) != terrainMap[h].end())
+    SDL_Log("setting: %lu %d", map.size(), h);
+    auto it = map[h].find({ i, j });
+    if (it != map[h].end())
     {
-      auto t = getTerrainObjectAt(h, i, j);
-      t->terrainType = terrainTypes[t->biomeType->terrainTypes[0].first];
-      t->tileType = tileTypes[t->biomeType->terrainTypes[0].first];
-      t->incomplete = false;
+      it->second.terrainType = &terrainTypes[it->second.biomeType->terrainTypes[0].first];
+      it->second.tileType = &tileTypes[it->second.biomeType->terrainTypes[0].first];
     }
+    SDL_Log("set");
   };
 
-  auto addWorldObjects = [this](int h, int i, int j)
+  auto addWorldObjects = [this, &map](int h, int i, int j)
   {
-    if (terrainMap[h].find({i, j}) != terrainMap[h].end())
+    if (map[h].find({i, j}) != map[h].end())
     {
-      auto terrainObjectAtCoordinates = terrainMap[h][{i, j}];
+      auto terrainObjectAtCoordinates = map[h][{i, j}];
       int layer = 0;
-      for (auto relatedObjectType : terrainObjectAtCoordinates->terrainType->objects)
+      for (auto relatedObjectType : terrainObjectAtCoordinates.terrainType->objects)
       {
         int threshold = 1000;
-        if (!objectTypes[relatedObjectType].biomes[terrainObjectAtCoordinates->biomeType->name])
+        if (!objectTypes[relatedObjectType].biomes[terrainObjectAtCoordinates.biomeType->name])
         {
           continue;
         }
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, tileTypes[relatedObjectType]
+            i, j, &tileTypes[relatedObjectType]
           );
           objectMap[h][layer][{o->x, o->y}] = o;
           layer++;
@@ -371,6 +374,8 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   mapController.iterateOverChunk(chunkRect, setTerrainTypes);
   SDL_Log("adding world objects");
   mapController.iterateOverChunk(chunkRect, addWorldObjects);
+  terrainMap = map;
+  //mapController.write(map);
   mapController.mapGenerator.reset();
   SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
   return 0;
@@ -382,10 +387,9 @@ std::map<int, std::map<std::string, int>> GameEngine::getTilesInRange (SDL_Rect*
   std::map<int, std::map<std::string, int>> tilesInRange;
   auto lambda = [this, &tilesInRange](int h, int i, int j)
   {
-    std::shared_ptr<TerrainObject> terrainObjectAtCoordinates = terrainMap[h][{i, j}];
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
     {
-      tilesInRange[h][terrainMap[h][{i, j}]->tileType->name] += 1;
+      tilesInRange[h][terrainMap[h][{i, j}].tileType->name] += 1;
     }
   };
   mapController.iterateOverChunk(rangeRect, lambda);
@@ -401,9 +405,9 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::get
   {
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
     {
-      auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
+      //auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
       //if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
-      results[h]["biome"][t->biomeType->name] += 1;
+      results[h]["biome"][terrainMap[h][{i, j}].biomeType->name] += 1;
     }
   };
   mapController.iterateOverChunk(r, lambda);
@@ -418,7 +422,7 @@ std::map<int, std::map<std::string, int>> GameEngine::getBiomesInRange (SDL_Rect
   {
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
     {
-      results[h][terrainMap[h][{i, j}]->biomeType->name] += 1;
+      results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
     }
   };
   mapController.iterateOverChunk(rangeRect, lambda);
@@ -550,11 +554,8 @@ void GameEngine::handleEvents()
     auto lambda = [this](int directions)
     {
       std::thread th2([this](int d) { scrollCamera(d); }, directions);
-      if (!mapController.mapGenerator.currentlyGenerating())
-      {
-        std::thread th1([this](int d) { processMap(d); }, directions);
-        th1.detach();
-      } else SDL_Log("waiting");
+      std::thread th1([this](int d) { processMap(d); }, directions);
+      th1.detach();
       th2.join();
     };
     userInputHandler.handleKeyboardMovement(lambda);
@@ -565,7 +566,7 @@ void GameEngine::handleEvents()
   }
   else if (appEvent.type == SDL_KEYDOWN)
   {
-    std::shared_ptr<TerrainObject> currentTerrainObject = terrainMap[zLevel][{camera.x, camera.y}];
+    TerrainObject *currentTerrainObject = &terrainMap[zLevel][{camera.x, camera.y}];
     switch(appEvent.key.keysym.sym)
     {
       case SDLK_ESCAPE:
@@ -578,7 +579,7 @@ void GameEngine::handleEvents()
           camera.y,
           camera.w,
           camera.h,
-          currentTerrainObject->tileType->name.c_str(),
+          currentTerrainObject->terrainType->name.c_str(),
           currentTerrainObject->biomeType->name.c_str()
         );
         break;
@@ -653,7 +654,7 @@ void GameEngine::renderCopyTiles()
       }
       if (terrainMap[zLevel].find({ i, j }) != terrainMap[zLevel].end())
       {
-        gfxController.renderCopySpriteFrom<TerrainObject>(terrainMap[zLevel][{i, j}], x, y);
+        gfxController.renderCopySpriteFrom<TerrainObject>(&terrainMap[zLevel][{i, j}], x, y);
       }
       else
       {

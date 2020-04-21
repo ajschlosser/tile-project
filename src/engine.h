@@ -41,11 +41,11 @@ struct GameEngine
   int zMaxLevel;
   MapController mapController;
   std::map<std::string, ObjectType> objectTypes;
-  std::map<std::string, std::shared_ptr<BiomeType>> biomeTypes;
+  std::map<std::string, BiomeType> biomeTypes;
   std::vector<std::string> biomeTypeKeys;
-  std::map<std::string, std::shared_ptr<TerrainType>> terrainTypes;
-  std::map<std::string, std::shared_ptr<TileType>> tileTypes;
-  std::map<int, std::map<std::pair<int, int>, std::shared_ptr<TerrainObject>>> terrainMap;
+  std::map<std::string, TerrainType> terrainTypes;
+  std::map<std::string, TileType> tileTypes;
+  std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
   std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
@@ -55,7 +55,6 @@ struct GameEngine
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
-  std::shared_ptr<TerrainObject> getTerrainObjectAt (int z, int x, int y) { return terrainMap[z][{ x, y }]; }
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();

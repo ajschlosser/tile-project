@@ -22,6 +22,7 @@ struct GraphicsController
   void applyUi();
   int renderCopySprite(Sprite*, int, int);
   template<class T> int renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->tileType->sprite, x, y); }
+  template<class T> int renderCopySpriteFrom(T* t, int x, int y) { return renderCopySprite(t->tileType->sprite, x, y); }
   GraphicsController () {}
 };
 
