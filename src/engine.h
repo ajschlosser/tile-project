@@ -44,7 +44,7 @@ struct GameEngine
   std::map<std::string, TerrainType> terrainTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
-  std::map<int, std::map<int, std::map<std::pair<int, int>, std::shared_ptr<WorldObject>>>> objectMap;
+  std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
   int init();

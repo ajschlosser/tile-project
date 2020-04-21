@@ -1,3 +1,5 @@
+#include "SDL2/SDL.h"
+
 struct Timer {
   int last;
   int current;

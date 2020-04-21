@@ -22,7 +22,7 @@
     },
     {
       "name": "boulder",
-      "sprite": "Sprite 0x255",
+      "sprite": "Sprite 0x256",
       "biomes": ["wasteland", "underground"]
     },
     {
@@ -67,8 +67,7 @@
     },
     {
       "name": "water",
-      "sprite": "Sprite 0x96",
-      "objects": ["mud"]
+      "sprite": "Sprite 0x96"
     },
     {
       "name": "shadow",

@@ -269,19 +269,22 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   }
 
   mapController.mapGenerator.init(&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]);
-  SDL_Log("Generating chunk: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
+  SDL_Log("Generating chunk. Current biome: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
 
   auto createTerrainObjects = [this](int h, int i, int j)
   {
     while (mapController.mapGenerator.isOutOfDepth(h))
     {
+      SDL_Log("Can't generate biome %s on level %d", mapController.mapGenerator.currentBiomeType->name.c_str(), h);
       mapController.mapGenerator.currentBiomeType = &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
+      SDL_Log("Trying biome: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
     }
     auto b = mapController.mapGenerator.currentBiomeType;
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
-      TerrainObject t { i, j, b, &terrainTypes[b->terrainTypes[std::rand() % b->terrainTypes.size()].first], &tileTypes[b->terrainTypes[std::rand() % b->terrainTypes.size()].first] };
+      auto randomType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
+      TerrainObject t { i, j, b, &terrainTypes[randomType], &tileTypes[randomType] };
       terrainMap[h][{i, j}] = t;
     } //else { SDL_Log("shit: %s", it->second.terrainType->name.c_str()); }
   };
@@ -316,9 +319,9 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &tileTypes[relatedObjectType]
+            i, j, &objectTypes[relatedObjectType], &tileTypes[relatedObjectType]
           );
-          objectMap[h][layer][{o->x, o->y}] = o;
+          objectMap[h][{o->x, o->y}][layer] = o;
           layer++;
         }
       }
@@ -521,14 +524,19 @@ void GameEngine::handleEvents()
   else if (appEvent.type == SDL_KEYDOWN)
   {
     auto t = &terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
+    auto it = objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
+    std::string objs;
     switch(appEvent.key.keysym.sym)
     {
       case SDLK_ESCAPE:
         running = false;
         break;
       case SDLK_SPACE:
+        if (it != objectMap[zLevel].end())
+          for (auto [a, b] : it->second)
+            objs += b->objectType->name + " ";
         SDL_Log(
-          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s\nSeen: %d",
+          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent tile type sprite name: %s\nCurrent terrain type sprite name: %s\nObjects on tile: %s\nSeen: %d",
           gfxController.camera.x,
           gfxController.camera.y,
           gfxController.camera.w,
@@ -536,6 +544,9 @@ void GameEngine::handleEvents()
           t->tileType->name.c_str(),
           t->terrainType->name.c_str(),
           t->biomeType->name.c_str(),
+          t->tileType->sprite->tileName.c_str(),
+          t->terrainType->sprite->tileName.c_str(),
+          objs.c_str(),
           t->seen
         );
         break;
@@ -580,15 +591,8 @@ void GameEngine::renderCopyTiles()
     for (auto j = gfxController.camera.y - grid.second/2; j < gfxController.camera.y + grid.second/2 + 5; j++)
     {
       std::vector<std::shared_ptr<WorldObject>> objects;
-      int layer = 3;
-      while (layer >= 0)
-      {
-        std::shared_ptr<WorldObject> o = objectMap[zLevel][layer][{i, j}];
-        if (o) {
-          objects.push_back(o);
-        }
-        layer--;
-      }
+      for (auto [a, b] : objectMap[zLevel][{i, j}])
+        objects.push_back(b);
       auto mapLevel = terrainMap[zLevel].find({ i, j });
       if (mapLevel != terrainMap[zLevel].end())
       {

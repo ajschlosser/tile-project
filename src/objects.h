@@ -96,11 +96,12 @@ struct WorldObject : Tile
 {
   ObjectType* objectType;
   WorldObject() {}
-  WorldObject(int x, int y, TileType* t)
+  WorldObject(int x, int y, ObjectType* o, TileType* tt)
   {
     this->x = x;
     this->y = y;
-    tileType = t;
+    objectType = o;
+    tileType = tt;
   }
 };
 
