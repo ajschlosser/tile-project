@@ -402,7 +402,7 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::get
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
     {
       auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
-      results[h]["terrain"][t->terrainType->name] += 1;
+      //if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
       results[h]["biome"][t->biomeType->name] += 1;
     }
   };
