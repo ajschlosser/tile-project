@@ -28,15 +28,34 @@ struct MapGenerator
 struct MapController
 {
   int maxDepth;
+  std::map<std::string, ObjectType> objectTypes;
+  std::map<std::string, BiomeType> biomeTypes;
+  std::vector<std::string> biomeTypeKeys;
+  std::map<std::string, TerrainType> terrainTypes;
+  std::map<std::string, TileType> tileTypes;
+  std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
+  std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
   MapGenerator mapGenerator;
   MapController () : maxDepth(0) {}
-  MapController (int maxDepth)
+  MapController (
+      int d,
+      objects::objectTypesMap oT,
+      objects::biomeTypesMap bT,
+      std::vector<std::string> bTK,
+      objects::terrainTypesMap tT,
+      objects::tileTypesMap tTT
+  )
   {
-    this->maxDepth = maxDepth;
+    maxDepth = d; objectTypes = oT; biomeTypes = bT; biomeTypeKeys = bTK;
+    terrainTypes = tT; tileTypes = tTT;
   }
+  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect* rangeRect);
   void iterateOverChunk(SDL_Rect*, std::function<void(int, int, int)>);
   void randomlyAccessAllTilesInChunk(SDL_Rect*, std::function<void(int, int, int)>);
   std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
+  int generateMapChunk(SDL_Rect*);
 };
 
 #endif

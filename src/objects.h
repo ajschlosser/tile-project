@@ -111,4 +111,14 @@ struct Player {
   TileType* tileType;
 };
 
+namespace objects
+{
+  typedef std::map<std::string, ObjectType> objectTypesMap;
+  typedef std::map<std::string, BiomeType> biomeTypesMap;
+  typedef std::map<std::string, TerrainType> terrainTypesMap;
+  typedef std::map<std::string, TileType> tileTypesMap;
+  typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
+  typedef std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
+}
+
 #endif

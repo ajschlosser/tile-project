@@ -18,6 +18,8 @@
 #include <fstream>
 #include <memory>
 
+using namespace objects;
+
 struct GameEngine
 {
   GraphicsController gfxController;
@@ -38,13 +40,13 @@ struct GameEngine
   int zLevel;
   int zMaxLevel;
   MapController mapController;
-  std::map<std::string, ObjectType> objectTypes;
-  std::map<std::string, BiomeType> biomeTypes;
+  objectTypesMap objectTypes;
+  biomeTypesMap biomeTypes;
   std::vector<std::string> biomeTypeKeys;
-  std::map<std::string, TerrainType> terrainTypes;
-  std::map<std::string, TileType> tileTypes;
-  std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
-  std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
+  terrainTypesMap terrainTypes;
+  tileTypesMap tileTypes;
+  terrainMap* terrainMap;
+  objectMap* objectMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
   int init();

@@ -3,9 +3,7 @@
 
 int GameEngine::init()
 {
-  player = {gameSize/2, gameSize/2, &tileTypes["water"]};
-
-  mapController.maxDepth = zMaxLevel;
+  player = {gameSize/2, gameSize/2, &mapController.tileTypes["water"]};
   gfxController.tileSize = &tileSize;
   gfxController.spriteSize = const_cast<int*>(&spriteSize);
 
@@ -167,14 +165,19 @@ int GameEngine::init()
     objectTypes[objectTypeName] = o;
   }
 
+  mapController = MapController(
+    zMaxLevel, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes
+  );
+
   // Create default tilemap
   SDL_Log("Generating default tilemap...");
   SDL_Rect initialChunk = { 0 - gameSize, 0 - gameSize, gameSize, gameSize };
-  generateMapChunk(&initialChunk);
+  mapController.generateMapChunk(&initialChunk);
 
   SDL_Log("Tilemap of %d tiles created.",
     gameSize*gameSize*4
   );
+
   return 0;
 }
 
@@ -250,141 +253,14 @@ void GameEngine::processMap(int directions)
     chunkRect.h += gameSize*1.5;
   }
 
-  auto it = terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
-  if (it == terrainMap[zLevel].end())
+  auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
+  if (it == mapController.terrainMap[zLevel].end())
   {
     SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
-    generateMapChunk(&chunkRect);
+    mapController.generateMapChunk(&chunkRect);
   }
 
 };
-
-
-int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
-{
-  if (mapController.mapGenerator.currentlyGenerating())
-  {
-    SDL_Log("already generating; bailing");
-    return -1;
-  }
-
-  mapController.mapGenerator.init(&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]);
-  SDL_Log("Generating chunk. Current biome: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
-
-  auto createTerrainObjects = [this](int h, int i, int j)
-  {
-    while (mapController.mapGenerator.isOutOfDepth(h))
-    {
-      SDL_Log("Can't generate biome %s on level %d", mapController.mapGenerator.currentBiomeType->name.c_str(), h);
-      mapController.mapGenerator.currentBiomeType = &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
-      SDL_Log("Trying biome: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
-    }
-    auto b = mapController.mapGenerator.currentBiomeType;
-    auto it = terrainMap[h].find({i, j});
-    if (it == terrainMap[h].end())
-    {
-      auto randomType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
-      TerrainObject t { i, j, b, &terrainTypes[randomType], &tileTypes[randomType] };
-      terrainMap[h][{i, j}] = t;
-    } //else { SDL_Log("shit: %s", it->second.terrainType->name.c_str()); }
-  };
-
-  auto fudgeBiomes = [this](int h, int i, int j)
-  {
-    auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.seen != true)
-    {
-      SDL_Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
-      auto results = getCountsInRange(&r);
-      if (results[h]["biome"]["water"] > 2) {
-        TerrainObject t { i, j, &biomeTypes["water"], &terrainTypes["water"], &tileTypes["water"] };
-        terrainMap[h][{i, j}] = t;
-      }
-    }
-  };
-
-  auto addWorldObjects = [this](int h, int i, int j)
-  {
-    auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.seen != true)
-    {
-      int layer = 0;
-      for (auto relatedObjectType : it->second.terrainType->objects)
-      {
-        int threshold = 1000;
-        if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
-        {
-          continue;
-        }
-        if (std::rand() % 1000 > 825)
-        {
-          std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &objectTypes[relatedObjectType], &tileTypes[relatedObjectType]
-          );
-          objectMap[h][{o->x, o->y}][layer] = o;
-          layer++;
-        }
-      }
-    }
-  };
-
-  mapController.iterateOverChunk(chunkRect, createTerrainObjects);
-  mapController.randomlyAccessAllTilesInChunk(chunkRect, fudgeBiomes);
-  mapController.iterateOverChunk(chunkRect, addWorldObjects);
-
-
-  mapController.mapGenerator.reset();
-  SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
-  return 0;
-}
-
-
-std::map<int, std::map<std::string, int>> GameEngine::getTilesInRange (SDL_Rect* rangeRect)
-{
-  std::map<int, std::map<std::string, int>> tilesInRange;
-  auto lambda = [this, &tilesInRange](int h, int i, int j)
-  {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-    {
-      tilesInRange[h][terrainMap[h][{i, j}].tileType->name] += 1;
-    }
-  };
-  mapController.iterateOverChunk(rangeRect, lambda);
-  return tilesInRange;
-}
-
-
-std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::getCountsInRange (SDL_Rect* r)
-{
-  std::map<int, std::map<std::string, std::map<std::string, int>>> res;
-  auto lambda = [this, &res](int h, int i, int j)
-  {
-    auto it = terrainMap[h].find({ i, j });
-    if (it != terrainMap[h].end())
-    {
-      res[h]["terrain"][it->second.terrainType->name]++;
-      res[h]["biome"][it->second.biomeType->name]++;
-      //SDL_Log("%s %d",it->second.biomeType->name.c_str(), results[h]["biome"][it->second.biomeType->name]);
-    }
-  };
-  mapController.iterateOverChunk(r, lambda);
-  return res;
-}
-
-
-std::map<int, std::map<std::string, int>> GameEngine::getBiomesInRange (SDL_Rect* rangeRect)
-{
-  std::map<int, std::map<std::string, int>> results;
-  auto lambda = [this, &results](int h, int i, int j)
-  {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-    {
-      results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
-    }
-  };
-  mapController.iterateOverChunk(rangeRect, lambda);
-  return results;
-}
 
 
 void GameEngine::scrollGameSurface(int directions)
@@ -523,8 +399,8 @@ void GameEngine::handleEvents()
   }
   else if (appEvent.type == SDL_KEYDOWN)
   {
-    auto t = &terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
-    auto it = objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
+    auto t = &mapController.terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
+    auto it = mapController.objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
     std::string objs;
     switch(appEvent.key.keysym.sym)
     {
@@ -532,7 +408,7 @@ void GameEngine::handleEvents()
         running = false;
         break;
       case SDLK_SPACE:
-        if (it != objectMap[zLevel].end())
+        if (it != mapController.objectMap[zLevel].end())
           for (auto [a, b] : it->second)
             objs += b->objectType->name + " ";
         SDL_Log(
@@ -558,7 +434,7 @@ void GameEngine::handleEvents()
         }
         break;
       case SDLK_q:
-        if (std::abs(zLevel) < static_cast <int>(terrainMap.size()))
+        if (std::abs(zLevel) < static_cast <int>(mapController.terrainMap.size()))
         {
           if (zLevel < zMaxLevel - 1)
           {
@@ -591,10 +467,10 @@ void GameEngine::renderCopyTiles()
     for (auto j = gfxController.camera.y - grid.second/2; j < gfxController.camera.y + grid.second/2 + 5; j++)
     {
       std::vector<std::shared_ptr<WorldObject>> objects;
-      for (auto [a, b] : objectMap[zLevel][{i, j}])
+      for (auto [a, b] : mapController.objectMap[zLevel][{i, j}])
         objects.push_back(b);
-      auto mapLevel = terrainMap[zLevel].find({ i, j });
-      if (mapLevel != terrainMap[zLevel].end())
+      auto mapLevel = mapController.terrainMap[zLevel].find({ i, j });
+      if (mapLevel != mapController.terrainMap[zLevel].end())
       {
         gfxController.renderCopySpriteFrom<TerrainObject>(&mapLevel->second, x, y);
       }
@@ -603,7 +479,7 @@ void GameEngine::renderCopyTiles()
 
         gfxController.renderCopySprite("Sprite 0x128", x, y);
         SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
-        generateMapChunk(&fillChunkRect);
+        mapController.generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {
