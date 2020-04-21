@@ -4,25 +4,31 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "objects.h"
+#include <cmath>
 #include <map>
 #include <string>
 #include <memory>
 
 struct GraphicsController
 {
+  SDL_Window* appWindow;
   SDL_Renderer* appRenderer;
   SDL_Texture* tilemapTexture;
   Image* tilemapImage;
   SDL_DisplayMode displayMode;
+  SDL_Rect camera;
   std::map<std::string, Sprite> sprites;
+  int windowWidth;
+  int windowHeight;
   int* tileSize;
   int* spriteSize;
   int initializeSDL();
-  int renderCopySprite(std::string, int, int);
+  std::pair<int, int> getWindowGridDimensions();
   void applyUi();
+  int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
   template<class T> int renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->tileType->sprite, x, y); }
-  template<class T> int renderCopySpriteFrom(T* t, int x, int y) { return renderCopySprite(t->tileType->sprite, x, y); }
+  template<class T> int renderCopySpriteFrom(T* t, int x, int y) { return renderCopySprite(t->terrainType->sprite, x, y); }
   GraphicsController () {}
 };
 

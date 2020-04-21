@@ -21,20 +21,6 @@ int GameEngine::init()
 
   gfxController.initializeSDL();
 
-  // Create camera
-  auto windowSize = getWindowGridSize();
-  SDL_Log("Current window is %dx%dpx.",
-    windowSize.first,
-    windowSize.second
-  );
-  camera = { gameSize/2, gameSize/2, windowSize.first/tileSize, windowSize.first/tileSize };
-  SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.",
-    gameSize/2,
-    gameSize/2,
-    gfxController.displayMode.w/tileSize,
-    gfxController.displayMode.h/tileSize
-  );
-
   // Create app window and renderer
   appWindow = SDL_CreateWindow("tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE);
   if (appWindow == NULL)
@@ -51,6 +37,7 @@ int GameEngine::init()
       "Window created."
     );
   }
+  gfxController.appWindow = appWindow;
   appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
   if (appRenderer == NULL)
   {
@@ -182,7 +169,7 @@ int GameEngine::init()
 
   // Create default tilemap
   SDL_Log("Generating default tilemap...");
-  SDL_Rect initialChunk = { 0, 0, gameSize*2, gameSize*2 };
+  SDL_Rect initialChunk = { 0 - gameSize, 0 - gameSize, gameSize, gameSize };
   generateMapChunk(&initialChunk);
 
   SDL_Log("Tilemap of %d tiles created.",
@@ -191,33 +178,31 @@ int GameEngine::init()
   return 0;
 }
 
-std::pair<int, int> GameEngine::getWindowGridSize()
-{
-  int _w, _h;
-  SDL_GetWindowSize(appWindow, &_w, &_h);
-  int width = static_cast <int> (std::floor(_w/tileSize));
-  int height = static_cast <int> (std::floor(_h/tileSize));
-  return { width, height };
-}
-
 void GameEngine::scrollCamera(int directions)
 {
-  scrollGameSurface(directions);
+  if (tileSize > 8)
+  {
+    scrollGameSurface(directions);
+  }
+  else
+  {
+    SDL_Delay(10);
+  }
   if (directions & LEFT)
   {
-    camera.x -= 1;
+    gfxController.camera.x -= 1;
   }
   if (directions & RIGHT)
   {
-    camera.x += 1;
+    gfxController.camera.x += 1;
   }
   if (directions & DOWN)
   {
-    camera.y += 1;
+    gfxController.camera.y += 1;
   }
   if (directions & UP)
   {
-    camera.y -= 1;
+    gfxController.camera.y -= 1;
   }
 }
 
@@ -225,8 +210,8 @@ void GameEngine::scrollCamera(int directions)
 void GameEngine::processMap(int directions)
 {
 
-  SDL_Point checkCoordinates = { camera.x, camera.y };
-  SDL_Rect chunkRect = { camera.x-3, camera.y-3, camera.x+3, camera.y+3 };
+  SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
+  SDL_Rect chunkRect = { gfxController.camera.x-3, gfxController.camera.y-3, gfxController.camera.x+3, gfxController.camera.y+3 };
 
   if (directions & RIGHT)
   {
@@ -279,78 +264,38 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
 {
   if (mapController.mapGenerator.currentlyGenerating())
   {
+    SDL_Log("already generating; bailing");
     return -1;
   }
-
-  auto map = terrainMap;
 
   mapController.mapGenerator.init(&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]);
   SDL_Log("Generating chunk: %s", mapController.mapGenerator.currentBiomeType->name.c_str());
 
-  auto createTerrainPlaceholders = [this, &map](int h, int i, int j)
+  auto createTerrainObjects = [this](int h, int i, int j)
   {
     while (mapController.mapGenerator.isOutOfDepth(h))
     {
       mapController.mapGenerator.currentBiomeType = &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
     }
     auto b = mapController.mapGenerator.currentBiomeType;
-    if (map[h].find({i, j}) == map[h].end())
+    auto it = terrainMap[h].find({i, j});
+    if (it == terrainMap[h].end())
     {
-      TerrainObject t { i, j, b };
-      map[h][{i, j}] = t;
-    }
+      TerrainObject t { i, j, b, &terrainTypes[b->terrainTypes[std::rand() % b->terrainTypes.size()].first], &tileTypes[b->terrainTypes[std::rand() % b->terrainTypes.size()].first] };
+      terrainMap[h][{i, j}] = t;
+    } //else { SDL_Log("shit: %s", it->second.terrainType->name.c_str()); }
   };
 
-  // TODO: Bad things happen if this takes too long
-  auto growBiomes = [this, &map](int h, int i, int j)
+  auto addWorldObjects = [this](int h, int i, int j)
   {
-    // TODO: CHANGE ALL DUMBSHIT TO THIS
-    if (map[h].find({ i, j }) != map[h].end())
+    auto it = terrainMap[h].find({i, j});
+    if (it != terrainMap[h].end() && it->second.seen != true)
     {
-      auto t = map[h][{ i, j }];
-      SDL_Rect r { i-5, j-5, i+5, j+5 };
-      // auto counts = getCountsInRange(&r);
-
-      // std::pair<std::string, int> top;
-      // for (const auto &pair : counts[h]["biome"])
-      // {
-      //   if (pair.second > top.second)
-      //   {
-      //     top.second = pair.second;
-      //     top.first = pair.first;
-      //   }
-      // }
-
-      // if (t->biomeType->name != top.first)
-      // { 
-      //   t->biomeType = biomeTypes[top.first];
-      // }
-    }
-
-  };
-
-  auto setTerrainTypes = [this, &map](int h, int i, int j)
-  {
-    SDL_Log("setting: %lu %d", map.size(), h);
-    auto it = map[h].find({ i, j });
-    if (it != map[h].end())
-    {
-      it->second.terrainType = &terrainTypes[it->second.biomeType->terrainTypes[0].first];
-      it->second.tileType = &tileTypes[it->second.biomeType->terrainTypes[0].first];
-    }
-    SDL_Log("set");
-  };
-
-  auto addWorldObjects = [this, &map](int h, int i, int j)
-  {
-    if (map[h].find({i, j}) != map[h].end())
-    {
-      auto terrainObjectAtCoordinates = map[h][{i, j}];
       int layer = 0;
-      for (auto relatedObjectType : terrainObjectAtCoordinates.terrainType->objects)
+      for (auto relatedObjectType : it->second.terrainType->objects)
       {
         int threshold = 1000;
-        if (!objectTypes[relatedObjectType].biomes[terrainObjectAtCoordinates.biomeType->name])
+        if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
         {
           continue;
         }
@@ -366,16 +311,10 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
     }
   };
 
-  SDL_Log("Creating terrain placeholders for biome type '%s'", mapController.mapGenerator.currentBiomeType->name.c_str());
-  mapController.iterateOverChunk(chunkRect, createTerrainPlaceholders);
-  SDL_Log("growing biomes");
-  mapController.randomlyAccessAllTilesInChunk(chunkRect, growBiomes);
-  SDL_Log("setting terrain type");
-  mapController.iterateOverChunk(chunkRect, setTerrainTypes);
-  SDL_Log("adding world objects");
+  mapController.iterateOverChunk(chunkRect, createTerrainObjects);
   mapController.iterateOverChunk(chunkRect, addWorldObjects);
-  terrainMap = map;
-  //mapController.write(map);
+
+
   mapController.mapGenerator.reset();
   SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
   return 0;
@@ -400,14 +339,30 @@ std::map<int, std::map<std::string, int>> GameEngine::getTilesInRange (SDL_Rect*
 std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::getCountsInRange (SDL_Rect* r)
 {
   std::map<int, std::map<std::string, std::map<std::string, int>>> results;
-
   auto lambda = [this, &results](int h, int i, int j)
   {
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
     {
+      // auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
+      // if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
+      results[h]["biome"][terrainMap[h][{i, j}].biomeType->name] += 1;
+    }
+  };
+  mapController.iterateOverChunk(r, lambda);
+  return results;
+}
+
+
+std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::getCountsInRange (SDL_Rect* r, std::map<int, std::map<std::pair<int, int>, TerrainObject>> m)
+{
+  std::map<int, std::map<std::string, std::map<std::string, int>>> results;
+  auto lambda = [this, &results, &m](int h, int i, int j)
+  {
+    if (m[h].find({ i, j }) != m[h].end())
+    {
       //auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
       //if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
-      results[h]["biome"][terrainMap[h][{i, j}].biomeType->name] += 1;
+      results[h]["biome"][m[h][{i, j}].biomeType->name] += 1;
     }
   };
   mapController.iterateOverChunk(r, lambda);
@@ -551,14 +506,14 @@ void GameEngine::scrollGameSurface(int directions)
 
 void GameEngine::handleEvents()
 {
-    auto lambda = [this](int directions)
-    {
-      std::thread th2([this](int d) { scrollCamera(d); }, directions);
-      std::thread th1([this](int d) { processMap(d); }, directions);
-      th1.detach();
-      th2.join();
-    };
-    userInputHandler.handleKeyboardMovement(lambda);
+  auto f = [this](int directions)
+  {
+    std::thread graphicalThread([this](int d) { scrollCamera(d); }, directions);
+    std::thread mapProcessingThread([this](int d) { processMap(d); }, directions);
+    mapProcessingThread.detach();
+    graphicalThread.join();
+  };
+  userInputHandler.handleKeyboardMovement(f);
   SDL_PollEvent(&appEvent);
   if (appEvent.type == SDL_QUIT)
   {
@@ -566,7 +521,7 @@ void GameEngine::handleEvents()
   }
   else if (appEvent.type == SDL_KEYDOWN)
   {
-    TerrainObject *currentTerrainObject = &terrainMap[zLevel][{camera.x, camera.y}];
+    auto t = &terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
     switch(appEvent.key.keysym.sym)
     {
       case SDLK_ESCAPE:
@@ -574,13 +529,14 @@ void GameEngine::handleEvents()
         break;
       case SDLK_SPACE:
         SDL_Log(
-          "\nCamera: %dx%dx%dx%d\nCurrent terrain object: %s\nCurrent biome: %s",
-          camera.x,
-          camera.y,
-          camera.w,
-          camera.h,
-          currentTerrainObject->terrainType->name.c_str(),
-          currentTerrainObject->biomeType->name.c_str()
+          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s",
+          gfxController.camera.x,
+          gfxController.camera.y,
+          gfxController.camera.w,
+          gfxController.camera.h,
+          t->tileType->name.c_str(),
+          t->terrainType->name.c_str(),
+          t->biomeType->name.c_str()
         );
         break;
       case SDLK_w:
@@ -608,25 +564,6 @@ void GameEngine::handleEvents()
         break;
     }
   }
-  else if (appEvent.type == SDL_MOUSEBUTTONDOWN)
-  {
-    if (appEvent.button.button == SDL_BUTTON_LEFT)
-    {
-
-    }
-  }
-  else if (appEvent.type == SDL_WINDOWEVENT)
-  {
-    switch (appEvent.window.event)
-    {
-      case SDL_WINDOWEVENT_SIZE_CHANGED:
-        SDL_Log("Window %d size changed to %dx%d",
-          appEvent.window.windowID,
-          appEvent.window.data1,
-          appEvent.window.data2
-        );
-    }
-  }
 }
 
 
@@ -635,12 +572,12 @@ void GameEngine::renderCopyTiles()
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
     "renderCopyTiles() called"
   );
-  auto windowSize = getWindowGridSize();
+  auto grid = gfxController.getWindowGridDimensions();
   int x = 0;
   int y = 0;
-  for (auto i = camera.x - windowSize.first/2; i < camera.x + windowSize.first/2; i++)
+  for (auto i = gfxController.camera.x - grid.first/2; i < gfxController.camera.x + grid.first/2 + 5; i++)
   {
-    for (auto j = camera.y - windowSize.second/2; j < camera.y + windowSize.second/2; j++)
+    for (auto j = gfxController.camera.y - grid.second/2; j < gfxController.camera.y + grid.second/2 + 5; j++)
     {
       std::vector<std::shared_ptr<WorldObject>> objects;
       int layer = 3;
@@ -652,21 +589,16 @@ void GameEngine::renderCopyTiles()
         }
         layer--;
       }
-      if (terrainMap[zLevel].find({ i, j }) != terrainMap[zLevel].end())
+      auto mapLevel = terrainMap[zLevel].find({ i, j });
+      if (mapLevel != terrainMap[zLevel].end())
       {
-        gfxController.renderCopySpriteFrom<TerrainObject>(&terrainMap[zLevel][{i, j}], x, y);
+        gfxController.renderCopySpriteFrom<TerrainObject>(&mapLevel->second, x, y);
       }
       else
       {
-        // auto nT = std::make_shared<TerrainObject>(x, y, &biomeTypes[0]);
-        // nT->tileType = &tileTypes["grass"];
-        // terrainMap[zLevel][{i, j}] = nT;
-        // gfxController.renderCopySpriteFrom<TerrainObject>(nT, x, y);
-
-        // TODO: If the below takes too long, bad things happen
         gfxController.renderCopySprite("Sprite 0x128", x, y);
         SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
-        generateMapChunk(&fillChunkRect);
+        //generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {
@@ -685,9 +617,9 @@ void GameEngine::renderCopyTiles()
 
 int GameEngine::renderCopyPlayer()
 {
-  player.x = camera.x;
-  player.y = camera.y;
-  auto gridSize = getWindowGridSize();
+  player.x = gfxController.camera.x;
+  player.y = gfxController.camera.y;
+  auto gridSize = gfxController.getWindowGridDimensions();
   SDL_Rect playerRect = { gridSize.first/2*tileSize, gridSize.second/2*tileSize, tileSize, tileSize };
   return SDL_RenderFillRect(appRenderer, &playerRect);
 }

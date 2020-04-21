@@ -18,7 +18,7 @@
     {
       "name": "mud",
       "sprite": "Sprite 32x224",
-      "biomes": ["wasteland", "underground"]
+      "biomes": ["wasteland", "underground", "snowlands", "water"]
     },
     {
       "name": "boulder",
@@ -101,23 +101,23 @@
       ]
     },
     {
-      "name": "grassland",
+      "name": "snowlands",
       "maxDepth": 0,
       "minDepth": 0,
       "terrains": [
         {
-          "name": "grass",
+          "name": "snow",
           "multiplier": 1.0
         }
       ]
     },
     {
-      "name": "shrubland",
+      "name": "water",
       "maxDepth": 0,
       "minDepth": 0,
       "terrains": [
         {
-          "name": "grass",
+          "name": "water",
           "multiplier": 1.0
         }
       ]

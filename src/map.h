@@ -9,6 +9,7 @@ struct MapGenerator
 {
   bool processing;
   BiomeType* currentBiomeType;
+  std::vector<SDL_Rect*> rects;
   MapGenerator () : processing(false), currentBiomeType(NULL) {}
   void init(BiomeType* b)
   {

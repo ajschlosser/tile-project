@@ -67,7 +67,8 @@ struct Tile
   int y;
   TileType* tileType;
   TerrainType* terrainType;
-  Tile() {}
+  bool seen;
+  Tile() : seen(false) {}
   Tile (int x, int y) { this->x = x; this->y = y; }
   Tile(int x, int y, TileType* t)
   {
@@ -81,17 +82,13 @@ struct TerrainObject : Tile
 {
   BiomeType* biomeType;
   TerrainObject () {}
-  TerrainObject (int x, int y, BiomeType* b)
+  TerrainObject (int x, int y, BiomeType* b, TerrainType* t, TileType* tt)
   {
     this->x = x;
     this->y = y;
     biomeType = b;
-    
-    // set terraintype so no fuckup
-    Sprite s = { 0, 0 };
-    std::vector<std::string> o;
-    TerrainType t = { &s, "fucko", o };
-    terrainType = &t;
+    terrainType = t;
+    tileType = tt;
   }
 };
 

@@ -10,7 +10,6 @@
 #include "graphics.h"
 
 #include <cmath>
-#include <array>
 #include <map>
 #include <string>
 #include <utility>
@@ -18,7 +17,6 @@
 #include <thread>
 #include <fstream>
 #include <memory>
-#include <mutex>
 
 struct GameEngine
 {
@@ -50,11 +48,11 @@ struct GameEngine
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
   int init();
-  std::pair<int, int> getWindowGridSize();
   void scrollGameSurface(int);
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
+  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*, std::map<int, std::map<std::pair<int, int>, TerrainObject>>);
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();

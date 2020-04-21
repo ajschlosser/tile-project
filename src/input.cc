@@ -32,7 +32,6 @@ void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
     {
       directions += DOWN;
     }
-    SDL_Log("moving");
     f(directions);
     SDL_PumpEvents();
   }

@@ -33,7 +33,34 @@ int GraphicsController::initializeSDL ()
     displayMode.h
   );
   return 0;
+  // Create camera
+  auto windowSize = getWindowGridDimensions();
+  SDL_Log("Current window grid is %dx%d tiles.",
+    windowSize.first,
+    windowSize.second
+  );
+  int d = (*tileSize);
+  camera = { 0, 0, windowSize.first/d, windowSize.first/d };
+  SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.",
+    0,
+    0,
+    displayMode.w/d,
+    displayMode.h/d
+  );
 }
+
+std::pair<int, int> GraphicsController::getWindowGridDimensions()
+{
+  int d = (*tileSize);
+  SDL_GetWindowSize(appWindow, &windowWidth, &windowHeight);
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
+    "Got window size: %dx%d", windowWidth, windowHeight
+  );
+  int width = static_cast <int> (std::floor(windowWidth/d));
+  int height = static_cast <int> (std::floor(windowHeight/d));
+  return { width, height };
+}
+
 
 int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
 {
