@@ -293,7 +293,7 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
       mapController.mapGenerator.currentBiomeType = biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
     }
     auto b = mapController.mapGenerator.currentBiomeType;
-    if (terrainMap[h].find({i, j}) != terrainMap[h].end())
+    if (terrainMap[h].find({i, j}) == terrainMap[h].end())
     {
       terrainMap[h][{i, j}] = std::make_shared<TerrainObject>(i, j, b);
     }
