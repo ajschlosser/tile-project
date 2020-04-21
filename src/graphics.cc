@@ -32,8 +32,7 @@ int GraphicsController::initializeSDL ()
     displayMode.w,
     displayMode.h
   );
-  return 0;
-  // Create camera
+
   auto windowSize = getWindowGridDimensions();
   SDL_Log("Current window grid is %dx%d tiles.",
     windowSize.first,
@@ -47,6 +46,8 @@ int GraphicsController::initializeSDL ()
     displayMode.w/d,
     displayMode.h/d
   );
+
+  return 0;
 }
 
 std::pair<int, int> GraphicsController::getWindowGridDimensions()

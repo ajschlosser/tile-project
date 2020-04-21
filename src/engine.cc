@@ -286,6 +286,20 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
     } //else { SDL_Log("shit: %s", it->second.terrainType->name.c_str()); }
   };
 
+  auto fudgeBiomes = [this](int h, int i, int j)
+  {
+    auto it = terrainMap[h].find({i, j});
+    if (it != terrainMap[h].end() && it->second.seen != true)
+    {
+      SDL_Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
+      auto results = getCountsInRange(&r);
+      if (results[h]["biome"]["water"] > 2) {
+        TerrainObject t { i, j, &biomeTypes["water"], &terrainTypes["water"], &tileTypes["water"] };
+        terrainMap[h][{i, j}] = t;
+      }
+    }
+  };
+
   auto addWorldObjects = [this](int h, int i, int j)
   {
     auto it = terrainMap[h].find({i, j});
@@ -312,6 +326,7 @@ int GameEngine::generateMapChunk(SDL_Rect* chunkRect)
   };
 
   mapController.iterateOverChunk(chunkRect, createTerrainObjects);
+  mapController.randomlyAccessAllTilesInChunk(chunkRect, fudgeBiomes);
   mapController.iterateOverChunk(chunkRect, addWorldObjects);
 
 
@@ -338,35 +353,19 @@ std::map<int, std::map<std::string, int>> GameEngine::getTilesInRange (SDL_Rect*
 
 std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::getCountsInRange (SDL_Rect* r)
 {
-  std::map<int, std::map<std::string, std::map<std::string, int>>> results;
-  auto lambda = [this, &results](int h, int i, int j)
+  std::map<int, std::map<std::string, std::map<std::string, int>>> res;
+  auto lambda = [this, &res](int h, int i, int j)
   {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+    auto it = terrainMap[h].find({ i, j });
+    if (it != terrainMap[h].end())
     {
-      // auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
-      // if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
-      results[h]["biome"][terrainMap[h][{i, j}].biomeType->name] += 1;
+      res[h]["terrain"][it->second.terrainType->name]++;
+      res[h]["biome"][it->second.biomeType->name]++;
+      //SDL_Log("%s %d",it->second.biomeType->name.c_str(), results[h]["biome"][it->second.biomeType->name]);
     }
   };
   mapController.iterateOverChunk(r, lambda);
-  return results;
-}
-
-
-std::map<int, std::map<std::string, std::map<std::string, int>>> GameEngine::getCountsInRange (SDL_Rect* r, std::map<int, std::map<std::pair<int, int>, TerrainObject>> m)
-{
-  std::map<int, std::map<std::string, std::map<std::string, int>>> results;
-  auto lambda = [this, &results, &m](int h, int i, int j)
-  {
-    if (m[h].find({ i, j }) != m[h].end())
-    {
-      //auto t = getTerrainObjectAt(h, i, j); // TODO: This is fucked up
-      //if (!t->incomplete) results[h]["terrain"][t->terrainType->name] += 1;
-      results[h]["biome"][m[h][{i, j}].biomeType->name] += 1;
-    }
-  };
-  mapController.iterateOverChunk(r, lambda);
-  return results;
+  return res;
 }
 
 
@@ -529,14 +528,15 @@ void GameEngine::handleEvents()
         break;
       case SDLK_SPACE:
         SDL_Log(
-          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s",
+          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s\nSeen: %d",
           gfxController.camera.x,
           gfxController.camera.y,
           gfxController.camera.w,
           gfxController.camera.h,
           t->tileType->name.c_str(),
           t->terrainType->name.c_str(),
-          t->biomeType->name.c_str()
+          t->biomeType->name.c_str(),
+          t->seen
         );
         break;
       case SDLK_w:
@@ -596,9 +596,10 @@ void GameEngine::renderCopyTiles()
       }
       else
       {
+
         gfxController.renderCopySprite("Sprite 0x128", x, y);
         SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
-        //generateMapChunk(&fillChunkRect);
+        generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {

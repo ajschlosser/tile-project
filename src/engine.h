@@ -52,7 +52,6 @@ struct GameEngine
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
-  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*, std::map<int, std::map<std::pair<int, int>, TerrainObject>>);
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();
