@@ -420,8 +420,8 @@ void GameEngine::handleEvents()
           t->tileType->name.c_str(),
           t->terrainType->name.c_str(),
           t->biomeType->name.c_str(),
-          t->tileType->sprite->tileName.c_str(),
-          t->terrainType->sprite->tileName.c_str(),
+          t->tileType->sprite->name.c_str(),
+          t->terrainType->sprite->name.c_str(),
           objs.c_str(),
           t->seen
         );

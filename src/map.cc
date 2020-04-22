@@ -107,7 +107,7 @@ void MapController::randomlyAccessAllTilesInChunk(SDL_Rect* chunkRect, std::func
   }
 }
 
-
+// TODO: Parallelize this; lambdas should operate on minichunks of larger chunks, etc.
 int MapController::generateMapChunk(SDL_Rect* chunkRect)
 {
   if (mapGenerator.currentlyGenerating())
@@ -144,9 +144,16 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
     {
       SDL_Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getCountsInRange(&r);
+      if (it->second.biomeType->name == "wasteland" && results[h]["biome"]["snowlands"] > 2)
+      {
+        TerrainObject t { i, j, &biomeTypes["snow"], &terrainTypes["snow"], &tileTypes["snow"] };
+        terrainMap[h][{i, j}] = t;
+        objectMap[h].erase({ i, j });        
+      }
       if (results[h]["biome"]["water"] > 2) {
         TerrainObject t { i, j, &biomeTypes["water"], &terrainTypes["water"], &tileTypes["water"] };
         terrainMap[h][{i, j}] = t;
+        objectMap[h].erase({ i, j });
       }
     }
   };

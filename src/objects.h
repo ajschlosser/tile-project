@@ -16,7 +16,7 @@ struct Sprite
 {
   int tileMapX;
   int tileMapY;
-  std::string tileName;
+  std::string name;
 };
 
 struct GenericType
