@@ -214,43 +214,43 @@ void GameEngine::processMap(int directions)
 {
 
   SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
-  SDL_Rect chunkRect = { gfxController.camera.x-3, gfxController.camera.y-3, gfxController.camera.x+3, gfxController.camera.y+3 };
+  SDL_Rect chunkRect = { gfxController.camera.x-gameSize*2, gfxController.camera.y-gameSize*2, gfxController.camera.x+gameSize*2, gfxController.camera.y+gameSize*2 };
 
   if (directions & RIGHT)
   {
     checkCoordinates.x += gameSize;
 
-    chunkRect.x += gameSize/2;
-    chunkRect.y -= gameSize/2;
-    chunkRect.w += gameSize*1.5;
-    chunkRect.h += gameSize/2;
+    // chunkRect.x += gameSize;
+    // chunkRect.y -= gameSize;
+    // chunkRect.w += gameSize*1.5;
+    // chunkRect.h += gameSize;
   }
   if (directions & LEFT)
   {
     checkCoordinates.x -= gameSize;
 
-    chunkRect.x -= gameSize*1.5;
-    chunkRect.y -= gameSize/2;
-    chunkRect.w -= gameSize/2;
-    chunkRect.h += gameSize/2;
+    // chunkRect.x -= gameSize*1.5;
+    // chunkRect.y -= gameSize;
+    // chunkRect.w -= gameSize;
+    // chunkRect.h += gameSize;
   }
   if (directions & UP)
   {
     checkCoordinates.y -= gameSize;
 
-    chunkRect.x -= gameSize/2;
-    chunkRect.y -= gameSize*1.5;
-    chunkRect.w += gameSize/2;
-    chunkRect.h -= gameSize/2;
+    // chunkRect.x -= gameSize;
+    // chunkRect.y -= gameSize*1.5;
+    // chunkRect.w += gameSize;
+    // chunkRect.h -= gameSize;
   }
   if (directions & DOWN)
   {
     checkCoordinates.y += gameSize;
 
-    chunkRect.x -= gameSize/2;
-    chunkRect.y += gameSize/2;
-    chunkRect.w += gameSize/2;
-    chunkRect.h += gameSize*1.5;
+    // chunkRect.x -= gameSize;
+    // chunkRect.y += gameSize;
+    // chunkRect.w += gameSize;
+    // chunkRect.h += gameSize*1.5;
   }
 
   auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
@@ -402,6 +402,8 @@ void GameEngine::handleEvents()
     auto t = &mapController.terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
     auto it = mapController.objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
     std::string objs;
+    // SDL_Rect r = { gfxController.camera.x - 3, gfxController.camera.y - 3, gfxController.camera.x + 3, gfxController.camera.x + 3 };
+    // auto report = mapController.getChunkReport(&r);
     switch(appEvent.key.keysym.sym)
     {
       case SDLK_ESCAPE:
@@ -453,7 +455,6 @@ void GameEngine::handleEvents()
   }
 }
 
-
 void GameEngine::renderCopyTiles()
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
@@ -478,8 +479,8 @@ void GameEngine::renderCopyTiles()
       {
 
         gfxController.renderCopySprite("Sprite 0x128", x, y);
-        //SDL_Rect fillChunkRect = {i - 5, j - 5, i + 5, j + 5};
-        //mapController.generateMapChunk(&fillChunkRect);
+        // SDL_Rect fillChunkRect = {i - 2, j - 2, i + 2, j + 2};
+        // mapController.generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {

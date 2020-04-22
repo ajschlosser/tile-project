@@ -22,8 +22,8 @@ struct Rect
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
   std::vector<Rect>* getRects()
   {
-    int small_w = 10;
-    int small_h = 10;
+    int small_w = 15;
+    int small_h = 15;
     int w = getWidth();
     int h = getHeight();
     auto result_w = std::div(w, small_w);
@@ -103,7 +103,8 @@ struct Tile
   TileType* tileType;
   TerrainType* terrainType;
   bool seen;
-  Tile() : seen(false) {}
+  bool initialized;
+  Tile() : seen(false), initialized(false) {}
   Tile (int x, int y) { this->x = x; this->y = y; }
   Tile(int x, int y, TileType* t)
   {

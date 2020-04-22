@@ -1,6 +1,4 @@
 #include "map.h"
-#include <mutex>
-#include <thread>
 
 std::mutex mtx;
 
@@ -14,7 +12,10 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TileT
   t.terrainType = terrainType;
   mtx.lock();
   terrainMap[z][{ x, y }] = t;
-  objectMap[z].erase({ x, y });
+  // This causes segfaults
+  // auto it = objectMap[z][{ x, y }].begin();
+  // if (it != objectMap[z][{ x, y }].end()) objectMap[z].erase({ x, y });
+  //if (objectMap[z][{ x, y }].begin() != objectMap[z][{ x, y }].end()) objectMap[z].erase({ x, y });
   mtx.unlock();
 }
 
@@ -38,8 +39,8 @@ void MapController::processChunk(SDL_Rect* chunkRect, std::function<void(int, in
 
 }
 
-
-void MapController::iterateOverChunk(SDL_Rect* chunkRect, std::function<void(int, int, int)> f)
+template <typename F>
+void MapController::iterateOverChunk(SDL_Rect* chunkRect, F f)
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
     "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
@@ -52,14 +53,15 @@ void MapController::iterateOverChunk(SDL_Rect* chunkRect, std::function<void(int
   auto it = rects->begin();
   while (it != rects->end())
   {
-    std::thread t([this, f](int x1, int y1, int x2, int y2) {
+    BiomeType* b = getRandomBiomeType();
+    std::thread t([this, f, b](int x1, int y1, int x2, int y2) {
       for (auto h = 0; h < maxDepth; h++)
       {
         for (auto i = x1; i != x2; i++)
         {
           for (auto j = y1; j != y2; j++)
           {
-            f(h, i, j);
+            f(h, i, j, b);
           }
         }
       }
@@ -106,6 +108,34 @@ std::map<int, std::map<std::string, int>> MapController::getTilesInRange (SDL_Re
 }
 
 
+ChunkReport MapController::getChunkReport (SDL_Rect* r)
+{
+  ChunkReport report;
+  auto lambda = [this, &report](int h, int i, int j)
+  {
+    std::map<std::string, std::pair<int, std::string>> top;
+    auto it = terrainMap[h].find({ i, j });
+    if (it != terrainMap[h].end())
+    {
+      report.counts[h]["terrain"][it->second.terrainType->name]++;
+      report.counts[h]["biome"][it->second.biomeType->name]++;
+
+      int n = report.counts[h]["biome"][it->second.biomeType->name];
+
+      if (n > top["biome"].first )
+      {
+        top["biome"] = { n, it->second.terrainType->name };
+      }
+
+      report.top[h]["biome"] = top["biome"].second;
+
+    }
+  };
+  processChunk(r, lambda);
+  return report;
+}
+
+
 std::map<int, std::map<std::string, std::map<std::string, int>>> MapController::getCountsInRange (SDL_Rect* r)
 {
   std::map<int, std::map<std::string, std::map<std::string, int>>> res;
@@ -121,6 +151,7 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> MapController::
   processChunk(r, lambda);
   return res;
 }
+
 
 
 std::map<int, std::map<std::string, int>> MapController::getBiomesInRange (SDL_Rect* rangeRect)
@@ -163,12 +194,18 @@ void MapController::randomlyAccessAllTilesInChunk(SDL_Rect* chunkRect, std::func
 // ALMOST THERE: remove/lock all stuff that might be accessed by multiple threads. including "mapGenerator"
 int MapController::generateMapChunk(SDL_Rect* chunkRect)
 {
+  // if (mapGenerator.processing)
+  // {
+  //   SDL_Log("Already processing %s... Stopped.", mapGenerator.currentBiomeType->name.c_str());
+  //   return -1;
+  // }
 
-  SDL_Log("Generating chunk."); //Current biome: %s", mapGenerator.currentBiomeType->name.c_str());
+  mapGenerator.init(getRandomBiomeType(), &mtx);
+  SDL_Log("Generating chunk. Current biome: %s", mapGenerator.currentBiomeType->name.c_str());
 
-  auto createTerrainObjects = [this](int h, int i, int j)
+  auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
-    auto b = &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
+    //auto b = mapGenerator.currentBiomeType; //&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
@@ -177,10 +214,10 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
     }
   };
 
-  auto fudgeBiomes = [this](int h, int i, int j)
+  auto fudgeBiomes = [this](int h, int i, int j, BiomeType* b)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.seen != true)
+    if (it != terrainMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
     {
       SDL_Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getCountsInRange(&r);
@@ -188,7 +225,7 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
       {
         updateTile(h, i, j, &biomeTypes["snow"], &tileTypes["snow"], &terrainTypes["snow"]);
       }
-      if (results[h]["biome"]["water"] > 2)
+      else if (results[h]["biome"]["water"] > 15)
       {
         updateTile(h, i, j, &biomeTypes["water"], &tileTypes["water"], &terrainTypes["water"]);
       }
@@ -198,7 +235,7 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
   auto addWorldObjects = [this](int h, int i, int j)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end()) //&& it->second.seen != true)
+    if (it != terrainMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
     {
       int layer = 0;
       for (auto relatedObjectType : it->second.terrainType->objects)
@@ -213,17 +250,27 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
             i, j, &objectTypes[relatedObjectType], &tileTypes[relatedObjectType]
           );
+          mtx.lock();
           objectMap[h][{o->x, o->y}][layer] = o;
+          mtx.unlock();
           layer++;
         }
       }
+      mtx.lock();
+      it->second.initialized = true;
+      mtx.unlock();
     }
   };
 
+  SDL_Rect fudgeRect = { chunkRect->x - 15, chunkRect->y - 15, chunkRect->w + 15, chunkRect->h + 15}; // necessary to fudge edges of already processed chunks
+
   iterateOverChunk(chunkRect, createTerrainObjects);
-  randomlyAccessAllTilesInChunk(chunkRect, fudgeBiomes);
+  iterateOverChunk(&fudgeRect, fudgeBiomes);
   processChunk(chunkRect, addWorldObjects);
 
+  mapGenerator.reset(&mtx);
+  mtx.lock();
   SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
+  mtx.unlock();
   return 0;
 }
