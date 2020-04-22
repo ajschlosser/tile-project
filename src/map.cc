@@ -198,7 +198,7 @@ int MapController::generateMapChunk(SDL_Rect* chunkRect)
   auto addWorldObjects = [this](int h, int i, int j)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.seen != true)
+    if (it != terrainMap[h].end()) //&& it->second.seen != true)
     {
       int layer = 0;
       for (auto relatedObjectType : it->second.terrainType->objects)
