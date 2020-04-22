@@ -478,8 +478,8 @@ void GameEngine::renderCopyTiles()
       {
 
         gfxController.renderCopySprite("Sprite 0x128", x, y);
-        SDL_Rect fillChunkRect = {i - gameSize, j - gameSize, i + gameSize, j + gameSize};
-        mapController.generateMapChunk(&fillChunkRect);
+        //SDL_Rect fillChunkRect = {i - 5, j - 5, i + 5, j + 5};
+        //mapController.generateMapChunk(&fillChunkRect);
       }
       for (std::shared_ptr<WorldObject> o : objects)
       {

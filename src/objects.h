@@ -22,8 +22,8 @@ struct Rect
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
   std::vector<Rect>* getRects()
   {
-    int small_w = 5;
-    int small_h = 5;
+    int small_w = 10;
+    int small_h = 10;
     int w = getWidth();
     int h = getHeight();
     auto result_w = std::div(w, small_w);
@@ -152,6 +152,7 @@ namespace objects
   typedef std::map<std::string, BiomeType> biomeTypesMap;
   typedef std::map<std::string, TerrainType> terrainTypesMap;
   typedef std::map<std::string, TileType> tileTypesMap;
+  typedef std::vector<std::shared_ptr<WorldObject>> objectsVector;
   typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
   typedef std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
 }

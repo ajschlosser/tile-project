@@ -49,6 +49,7 @@ struct MapController
     maxDepth = d; objectTypes = oT; biomeTypes = bT; biomeTypeKeys = bTK;
     terrainTypes = tT; tileTypes = tTT;
   }
+  void updateTile (int, int, int, BiomeType*, TileType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect* rangeRect);
