@@ -1,10 +1,45 @@
 #ifndef GAME_OBJECTS_H
 #define GAME_OBJECTS_H
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
+
+struct Rect
+{
+  int x1;
+  int y1;
+  int x2;
+  int y2;
+  std::vector<Rect> rects;
+  Rect () {}
+  Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
+  SDL_Rect* getSDL_Rect () { SDL_Rect* r; r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
+  int getWidth () { return std::abs(x1) + std::abs(x2); }
+  int getHeight () { return std::abs(y1) + std::abs(y2); }
+  std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
+  std::vector<Rect>* getRects()
+  {
+    int small_w = 5;
+    int small_h = 5;
+    int w = getWidth();
+    int h = getHeight();
+    auto result_w = std::div(w, small_w);
+    auto result_h = std::div(h, small_h);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "found %dx%d rects in rect of %dx%d", result_w.quot, result_h.quot, w, h);
+    for (auto x = x1; x <= x2; x += result_w.quot)
+    {
+      for (auto y = y1; y <= y2; y += result_h.quot)
+      {
+        Rect r { x, y, x + result_w.quot, y + result_h.quot };
+        rects.push_back(r);
+      }
+    }
+    return &rects;
+  }
+};
 
 struct Image
 {

@@ -52,6 +52,7 @@ struct MapController
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect* rangeRect);
+  void processChunk(SDL_Rect*, std::function<void(int, int, int)>);
   void iterateOverChunk(SDL_Rect*, std::function<void(int, int, int)>);
   void randomlyAccessAllTilesInChunk(SDL_Rect*, std::function<void(int, int, int)>);
   std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
