@@ -213,12 +213,14 @@ void GameEngine::scrollCamera(int directions)
 void GameEngine::processMap(int directions)
 {
 
+  auto [_w, _h] = gfxController.getWindowDimensions();
+
   SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
   Rect chunkRect = { gfxController.camera.x-gameSize*2, gfxController.camera.y-gameSize*2, gfxController.camera.x+gameSize*2, gfxController.camera.y+gameSize*2 };
 
   if (directions & RIGHT)
   {
-    checkCoordinates.x += gameSize;
+    checkCoordinates.x += _w;
 
     // chunkRect.x += gameSize;
     // chunkRect.y -= gameSize;
@@ -227,7 +229,7 @@ void GameEngine::processMap(int directions)
   }
   if (directions & LEFT)
   {
-    checkCoordinates.x -= gameSize;
+    checkCoordinates.x -= _w;
 
     // chunkRect.x -= gameSize*1.5;
     // chunkRect.y -= gameSize;
@@ -236,7 +238,7 @@ void GameEngine::processMap(int directions)
   }
   if (directions & UP)
   {
-    checkCoordinates.y -= gameSize;
+    checkCoordinates.y -= _h;
 
     // chunkRect.x -= gameSize;
     // chunkRect.y -= gameSize*1.5;
@@ -245,7 +247,7 @@ void GameEngine::processMap(int directions)
   }
   if (directions & DOWN)
   {
-    checkCoordinates.y += gameSize;
+    checkCoordinates.y += _h;
 
     // chunkRect.x -= gameSize;
     // chunkRect.y += gameSize;

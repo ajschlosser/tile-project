@@ -8,6 +8,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <tuple>
 
 struct GraphicsController
 {
@@ -24,6 +25,7 @@ struct GraphicsController
   int* spriteSize;
   int initializeSDL();
   std::pair<int, int> getWindowGridDimensions();
+  std::tuple<int, int> getWindowDimensions();
   void applyUi();
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);

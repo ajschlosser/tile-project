@@ -62,6 +62,12 @@ std::pair<int, int> GraphicsController::getWindowGridDimensions()
   return { width, height };
 }
 
+std::tuple<int, int> GraphicsController::getWindowDimensions()
+{
+  auto p = getWindowGridDimensions();
+  return std::make_tuple(p.first, p.second);
+}
+
 
 int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
 {
