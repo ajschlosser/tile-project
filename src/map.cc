@@ -220,11 +220,11 @@ void MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::function
 // ALMOST THERE: remove/lock all stuff that might be accessed by multiple threads. including "mapGenerator"
 int MapController::generateMapChunk(Rect* chunkRect)
 {
-  // if (mapGenerator.processing)
-  // {
-  //   SDL_Log("Already processing %s... Stopped.", mapGenerator.currentBiomeType->name.c_str());
-  //   return -1;
-  // }
+  if (mapGenerator.processing)
+  {
+    SDL_Log("Already processing %s... Stopped.", mapGenerator.currentBiomeType->name.c_str());
+    return -1;
+  }
 
   mapGenerator.init(getRandomBiomeType(), &mtx);
   SDL_Log("Generating chunk. Current biome: %s", mapGenerator.currentBiomeType->name.c_str());
