@@ -6,6 +6,9 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <array>
+
+typedef std::function<void(int, int, int)> chunkFunctor;
 
 struct ChunkReport
 {
@@ -14,6 +17,65 @@ struct ChunkReport
   std::map<int, std::map<std::string, std::string>> bottom;
 };
 
+struct ChunkProcessor
+{
+  Rect* chunk;
+  std::vector<Rect>* smallchunks;
+  int zMax;
+  // std::vector<chunkFunctor>* tileFunctor;
+  // std::vector<chunkFunctor>* smallchunksFunctor;
+  ChunkProcessor (Rect* r, int zMax = 3) //, std::vector<chunkFunctor>* bf, std::vector<chunkFunctor>* sf = nullptr)
+  {
+    chunk = r;
+    smallchunks = r->getRects();
+    this->zMax = zMax;
+    // tileFunctor = bf;
+    // smallchunksFunctor = sf;
+  }
+  void process (Rect* r, std::vector<chunkFunctor> functors)
+  {
+    for (auto h = 0; h < zMax; h++)
+    {
+      for (auto i = r->x1; i != r->x2; i++)
+      {
+        for (auto j = r->y1; j != r->y2; j++)
+        {
+          // for (auto f : functors) f(h, i, j, b);
+          for (auto f : functors) f(h, i, j);
+        }
+      }
+    }
+  }
+  void processChunk (std::array<std::vector<chunkFunctor>, 2> functors)
+  {
+    process(chunk, functors[0]);
+  }
+  void multiProcessChunk (std::pair<std::vector<chunkFunctor>, std::vector<chunkFunctor>> functors) // std::vector<chunkFunctor> v1, std::vector<chunkFunctor> v2)
+  {
+
+    if (!functors.first.empty())
+    {
+
+    }
+
+    // process(chunk, v1);
+    // for (auto f : v1)
+    // {
+    //   process(chunk, v1);
+    // }
+    // if (!funcArr[0].empty())
+    // {
+    //   for (auto f : funcArr[0])
+    //   {
+    //     process(chunk, f);
+    //   }
+    // }
+    // if (!funcArr[1].empty())
+    // {
+
+    // }
+  }
+};
 
 struct MapGenerator
 {
@@ -66,16 +128,16 @@ struct MapController
   }
   BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
   void updateTile (int, int, int, BiomeType*, TileType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
-  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
-  ChunkReport getChunkReport (SDL_Rect*);
-  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
-  std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect* rangeRect);
-  void processChunk(SDL_Rect*, std::function<void(int, int, int)>);
-  template<typename F>
-  void iterateOverChunk(SDL_Rect*, F);
-  void randomlyAccessAllTilesInChunk(SDL_Rect*, std::function<void(int, int, int)>);
-  std::map<int, std::vector<SDL_Point>> getAllPointsInRect(SDL_Rect*);
-  int generateMapChunk(SDL_Rect*);
+  std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
+  ChunkReport getChunkReport (Rect*);
+  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);
+  std::map<int, std::map<std::string, int>> getBiomesInRange (Rect* rangeRect);
+  void processChunk(Rect*, std::function<void(int, int, int)>);
+  template<typename F> void iterateOverChunk(Rect*, F);
+  template<typename F> void iterateOverChunkEdges(Rect*, F);
+  void randomlyAccessAllTilesInChunk(Rect*, std::function<void(int, int, int)>);
+  std::map<int, std::vector<SDL_Point>> getAllPointsInRect(Rect*);
+  int generateMapChunk(Rect*);
 };
 
 #endif

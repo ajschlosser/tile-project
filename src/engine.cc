@@ -171,7 +171,7 @@ int GameEngine::init()
 
   // Create default tilemap
   SDL_Log("Generating default tilemap...");
-  SDL_Rect initialChunk = { 0 - gameSize, 0 - gameSize, gameSize, gameSize };
+  Rect initialChunk = { 0 - gameSize, 0 - gameSize, gameSize, gameSize };
   mapController.generateMapChunk(&initialChunk);
 
   SDL_Log("Tilemap of %d tiles created.",
@@ -214,7 +214,7 @@ void GameEngine::processMap(int directions)
 {
 
   SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
-  SDL_Rect chunkRect = { gfxController.camera.x-gameSize*2, gfxController.camera.y-gameSize*2, gfxController.camera.x+gameSize*2, gfxController.camera.y+gameSize*2 };
+  Rect chunkRect = { gfxController.camera.x-gameSize*2, gfxController.camera.y-gameSize*2, gfxController.camera.x+gameSize*2, gfxController.camera.y+gameSize*2 };
 
   if (directions & RIGHT)
   {
