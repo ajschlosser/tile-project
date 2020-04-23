@@ -184,29 +184,17 @@ int GameEngine::init()
 void GameEngine::scrollCamera(int directions)
 {
   if (tileSize > 8)
-  {
     scrollGameSurface(directions);
-  }
   else
-  {
-    SDL_Delay(10);
-  }
+    SDL_Delay(1);
   if (directions & LEFT)
-  {
     gfxController.camera.x -= 1;
-  }
   if (directions & RIGHT)
-  {
     gfxController.camera.x += 1;
-  }
   if (directions & DOWN)
-  {
     gfxController.camera.y += 1;
-  }
   if (directions & UP)
-  {
     gfxController.camera.y -= 1;
-  }
 }
 
 
@@ -244,56 +232,33 @@ void GameEngine::scrollGameSurface(int directions)
   SDL_Rect dest {0, 0, _w, _h};
   std::pair<int, int> offset = {0, 0};
   if (directions & RIGHT)
-  {
     offset.first -= tileSize;
-  }
   if (directions & LEFT)
-  {
     offset.first += tileSize;
-  }
   if (directions & UP)
-  {
     offset.second += tileSize;
-  }
   if (directions & DOWN)
-  {
     offset.second -= tileSize;
-  }
   while (dest.x != offset.first || dest.y != offset.second)
   {
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-      "scrollGameSurface: offset: %d %d \t dest: %d %d",
-      offset.first,
-      offset.second,
-      dest.x,
-      dest.y
+      "scrollGameSurface: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y
     );
     if (SDL_RenderClear(appRenderer) < 0)
     {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-        "Could not clear renderer: %s",
-        SDL_GetError()
-      );
+      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not clear renderer: %s", SDL_GetError());
       break;
     }
     renderCopyTiles();
     gameTexture = gfxController.getGameSurfaceTexture();
     if (directions & RIGHT)
-    {
       dest.x -= movementSpeed;
-    }
     if (directions & LEFT)
-    {
       dest.x += movementSpeed;
-    }
     if (directions & UP)
-    {
       dest.y += movementSpeed;
-    }
     if (directions & DOWN)
-    {
       dest.y -= movementSpeed;
-    }
     SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();
@@ -301,12 +266,7 @@ void GameEngine::scrollGameSurface(int directions)
     SDL_DestroyTexture(gameTexture);
   }
   if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
-  {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Could not reset render target: %s",
-      SDL_GetError()
-    );
-  }
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not reset render target: %s", SDL_GetError());
 }
 
 
