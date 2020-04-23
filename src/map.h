@@ -60,25 +60,32 @@ struct ChunkProcessor
       t.detach();
     }
   }
-  void multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, BiomeType*>>, 2> functors)
+  void multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors)
   {
     for (auto it = smallchunks->begin(); it != smallchunks->end(); ++it)
     {
-      std::thread t([this, functors](int x1, int y1, int x2, int y2) {
-        for (auto h = 0; h < zMax; h++)
-        {
-          for (auto i = x1; i != x2; i++)
+      for (auto f : functors[0])
+      {
+        BiomeType* b = f.second();
+        std::thread t([this, f, b, functors](int x1, int y1, int x2, int y2) {
+          for (auto h = 0; h < zMax; h++)
           {
-            for (auto j = y1; j != y2; j++)
+            for (auto i = x1; i != x2; i++)
             {
-              for (auto f : functors.at(0)) std::get<chunkProcessorFunctor>(f.first)(h, i, j, f.second);
+              for (auto j = y1; j != y2; j++)
+              {
+                std::get<chunkProcessorFunctor>(f.first)(h, i, j, b);
+              }
             }
           }
-        }
-      }, it->x1, it->y1, it->x2, it->y2);
-      t.detach();
+        }, it->x1, it->y1, it->x2, it->y2);
+        t.detach();
+      }
       // chunk postprocess
-      //for (auto f : functors[1]) f.first(chunk, f);
+      for (auto f : functors[1])
+      {
+        //std::get<chunkProcessorCallbackFunctor>(f.first)(&it, f);
+      }
     }
   }
   void process (Rect* r, std::vector<chunkFunctor> functors)
@@ -99,7 +106,7 @@ struct ChunkProcessor
   {
     process(chunk, functors);
   }
-  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, BiomeType*>>, 2> functors) // std::vector<chunkFunctor> v1, std::vector<chunkFunctor> v2)
+  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors) // std::vector<chunkFunctor> v1, std::vector<chunkFunctor> v2)
   {
 
     //for (auto f : functors) multiProcess(chunk, f);

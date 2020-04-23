@@ -300,9 +300,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
   };
 
   Rect fudgeRect = { chunkRect->x1 - 15, chunkRect->y1 - 15, chunkRect->x2 + 15, chunkRect->y2 + 15}; // necessary to fudge edges of already processed chunks
-
-  std::vector<std::pair<genericChunkFunctor, BiomeType*>> placers { { createTerrainObjects, getRandomBiomeType() } };
-  std::vector<std::pair<genericChunkFunctor, BiomeType*>> fuzzers { { fuzzIt, getRandomBiomeType() } };
+  typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
+  multiprocessChain placers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
+  multiprocessChain fuzzers { { fuzzIt, [this](){return &biomeTypes["water"];} } };
   std::vector<chunkFunctor> chonkers { addWorldObjects };
   //iterateOverChunk(chunkRect, createTerrainObjects);
   //iterateOverChunk(&fudgeRect, fudgeBiomes);
