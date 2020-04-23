@@ -212,53 +212,26 @@ void GameEngine::scrollCamera(int directions)
 
 void GameEngine::processMap(int directions)
 {
-
-  auto [_w, _h] = gfxController.getWindowDimensions();
-
+  auto [_w, _h] = gfxController.getWindowGridDimensions();
   SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
-  Rect chunkRect = { gfxController.camera.x-gameSize*2, gfxController.camera.y-gameSize*2, gfxController.camera.x+gameSize*2, gfxController.camera.y+gameSize*2 };
-
+  Rect chunkRect = {
+    gfxController.camera.x-gameSize*2,
+    gfxController.camera.y-gameSize*2,
+    gfxController.camera.x+gameSize*2,
+    gfxController.camera.y+gameSize*2
+  };
   if (directions & RIGHT)
-  {
     checkCoordinates.x += _w;
-
-    // chunkRect.x += gameSize;
-    // chunkRect.y -= gameSize;
-    // chunkRect.w += gameSize*1.5;
-    // chunkRect.h += gameSize;
-  }
   if (directions & LEFT)
-  {
     checkCoordinates.x -= _w;
-
-    // chunkRect.x -= gameSize*1.5;
-    // chunkRect.y -= gameSize;
-    // chunkRect.w -= gameSize;
-    // chunkRect.h += gameSize;
-  }
   if (directions & UP)
-  {
     checkCoordinates.y -= _h;
-
-    // chunkRect.x -= gameSize;
-    // chunkRect.y -= gameSize*1.5;
-    // chunkRect.w += gameSize;
-    // chunkRect.h -= gameSize;
-  }
   if (directions & DOWN)
-  {
     checkCoordinates.y += _h;
-
-    // chunkRect.x -= gameSize;
-    // chunkRect.y += gameSize;
-    // chunkRect.w += gameSize;
-    // chunkRect.h += gameSize*1.5;
-  }
-
   auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
   if (it == mapController.terrainMap[zLevel].end())
   {
-    SDL_Log("here: %d %d", checkCoordinates.x, checkCoordinates.y);
+    SDL_Log("Detected ungenerated map: %d %d", checkCoordinates.x, checkCoordinates.y);
     mapController.generateMapChunk(&chunkRect);
   }
 
@@ -267,37 +240,7 @@ void GameEngine::processMap(int directions)
 
 void GameEngine::scrollGameSurface(int directions)
 {
-  SDL_Rect viewportRect;
-  SDL_RenderGetViewport(appRenderer, &viewportRect);
-  int _w = viewportRect.w;
-  int _h = viewportRect.h;
-
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Current window is %dx%dpx.",
-    _w,
-    _h
-  );
-  Uint32 rmask, gmask, bmask, amask;
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-      rmask = 0xff000000;
-      gmask = 0x00ff0000;
-      bmask = 0x0000ff00;
-      amask = 0x000000ff;
-  #else
-      rmask = 0x000000ff;
-      gmask = 0x0000ff00;
-      bmask = 0x00ff0000;
-      amask = 0xff000000;
-  #endif
-  gameSurface = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
-  if (!gameSurface)
-  {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Could not create RGB surface: %s",
-      SDL_GetError()
-    );
-  }
-  
+  auto [_w, _h] = gfxController.getWindowDimensions();
   SDL_Rect dest {0, 0, _w, _h};
   std::pair<int, int> offset = {0, 0};
   if (directions & RIGHT)
@@ -334,24 +277,7 @@ void GameEngine::scrollGameSurface(int directions)
       break;
     }
     renderCopyTiles();
-    if (SDL_LockSurface(gameSurface) < 0)
-    {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-        "Could not lock surface for pixel access: %s",
-        SDL_GetError()
-      );
-      break;
-    }
-    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, gameSurface->pixels, gameSurface->pitch) < 0)
-    {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-        "Could not read pixels from renderer: %s",
-        SDL_GetError()
-      );
-      break;
-    }
-    SDL_UnlockSurface(gameSurface);
-    gameTexture = SDL_CreateTextureFromSurface(appRenderer, gameSurface);
+    gameTexture = gfxController.getGameSurfaceTexture();
     if (directions & RIGHT)
     {
       dest.x -= movementSpeed;
@@ -462,12 +388,12 @@ void GameEngine::renderCopyTiles()
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
     "renderCopyTiles() called"
   );
-  auto grid = gfxController.getWindowGridDimensions();
+  auto [_w, _h] = gfxController.getWindowGridDimensions();
   int x = 0;
   int y = 0;
-  for (auto i = gfxController.camera.x - grid.first/2; i < gfxController.camera.x + grid.first/2 + 5; i++)
+  for (auto i = gfxController.camera.x - _w/2; i < gfxController.camera.x + _w/2 + 5; i++)
   {
-    for (auto j = gfxController.camera.y - grid.second/2; j < gfxController.camera.y + grid.second/2 + 5; j++)
+    for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++)
     {
       std::vector<std::shared_ptr<WorldObject>> objects;
       for (auto [a, b] : mapController.objectMap[zLevel][{i, j}])
@@ -503,8 +429,8 @@ int GameEngine::renderCopyPlayer()
 {
   player.x = gfxController.camera.x;
   player.y = gfxController.camera.y;
-  auto gridSize = gfxController.getWindowGridDimensions();
-  SDL_Rect playerRect = { gridSize.first/2*tileSize, gridSize.second/2*tileSize, tileSize, tileSize };
+  auto [_w, _h] = gfxController.getWindowGridDimensions();
+  SDL_Rect playerRect = { _w/2*tileSize, _h/2*tileSize, tileSize, tileSize };
   return SDL_RenderFillRect(appRenderer, &playerRect);
 }
 

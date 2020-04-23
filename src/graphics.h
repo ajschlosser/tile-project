@@ -24,13 +24,16 @@ struct GraphicsController
   int* tileSize;
   int* spriteSize;
   int initializeSDL();
-  std::pair<int, int> getWindowGridDimensions();
+  std::tuple<int, int> getWindowGridDimensions();
   std::tuple<int, int> getWindowDimensions();
   void applyUi();
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
   template<class T> int renderCopySpriteFrom(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->tileType->sprite, x, y); }
   template<class T> int renderCopySpriteFrom(T* t, int x, int y) { return renderCopySprite(t->terrainType->sprite, x, y); }
+  SDL_Surface* getGameSurfaceFromWindow();
+  SDL_Texture* getTextureFromSurface (SDL_Surface* s);
+  SDL_Texture* getGameSurfaceTexture ();
   GraphicsController () {}
 };
 

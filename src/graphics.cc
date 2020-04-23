@@ -33,39 +33,34 @@ int GraphicsController::initializeSDL ()
     displayMode.h
   );
 
-  auto windowSize = getWindowGridDimensions();
-  SDL_Log("Current window grid is %dx%d tiles.",
-    windowSize.first,
-    windowSize.second
+  auto [_w, _h] = getWindowGridDimensions();
+  SDL_Log("Current window grid is %dx%d tiles.", _w, _h);
+  camera = { 0, 0, _w/(*tileSize), _h/(*tileSize) };
+  SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.", 0, 0,
+    displayMode.w/(*tileSize),
+    displayMode.h/(*tileSize)
   );
-  int d = (*tileSize);
-  camera = { 0, 0, windowSize.first/d, windowSize.first/d };
-  SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.",
-    0,
-    0,
-    displayMode.w/d,
-    displayMode.h/d
-  );
-
   return 0;
 }
 
-std::pair<int, int> GraphicsController::getWindowGridDimensions()
+std::tuple<int, int>GraphicsController::getWindowGridDimensions()
 {
-  int d = (*tileSize);
   SDL_GetWindowSize(appWindow, &windowWidth, &windowHeight);
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
     "Got window size: %dx%d", windowWidth, windowHeight
   );
-  int width = static_cast <int> (std::floor(windowWidth/d));
-  int height = static_cast <int> (std::floor(windowHeight/d));
-  return { width, height };
+  int _w = static_cast <int> (std::floor(windowWidth/(*tileSize)));
+  int _h = static_cast <int> (std::floor(windowHeight/(*tileSize)));
+  return std::make_tuple(_w, _h);
 }
 
 std::tuple<int, int> GraphicsController::getWindowDimensions()
 {
-  auto p = getWindowGridDimensions();
-  return std::make_tuple(p.first, p.second);
+  SDL_Rect viewportRect;
+  SDL_RenderGetViewport(appRenderer, &viewportRect);
+  int _w = viewportRect.w;
+  int _h = viewportRect.h;
+  return std::make_tuple(_w, _h);
 }
 
 
@@ -89,6 +84,50 @@ int GraphicsController::renderCopySprite(std::string spriteName, int x, int y)
 {
   Sprite *s = &sprites[spriteName];
   return renderCopySprite(s, x, y);
+}
+
+SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
+{
+  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
+      auto rmask = 0xff000000;
+      auto gmask = 0x00ff0000;
+      auto bmask = 0x0000ff00;
+      auto amask = 0x000000ff;
+  #else
+      auto rmask = 0x000000ff;
+      auto gmask = 0x0000ff00;
+      auto bmask = 0x00ff0000;
+      auto amask = 0xff000000;
+  #endif
+  auto [_w, _h] = getWindowDimensions();
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Current window is %dx%dpx.", _w, _h );
+  SDL_Surface* s = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
+  if (s == NULL)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not create RGB surface: %s", SDL_GetError());
+    return NULL;
+  }
+  return s;
+}
+
+SDL_Texture* GraphicsController::getTextureFromSurface (SDL_Surface* s)
+{
+  if (SDL_LockSurface(s) < 0)
+    return NULL;
+  if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
+    return NULL;
+  SDL_UnlockSurface(s);
+  SDL_Texture* t = SDL_CreateTextureFromSurface(appRenderer, s);
+  return t;
+}
+
+SDL_Texture* GraphicsController::getGameSurfaceTexture ()
+{
+  SDL_Surface* s = getGameSurfaceFromWindow();
+  if (s)
+    return getTextureFromSurface(s);
+  else
+    return NULL;
 }
 
 void GraphicsController::applyUi()
