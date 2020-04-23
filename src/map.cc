@@ -289,20 +289,27 @@ int MapController::generateMapChunk(Rect* chunkRect)
     }
   };
 
-  auto dingleTips = [this](int h, int i, int j, BiomeType* b)
+  auto fuzzIt = [this](Rect* r, std::vector<chunkProcessorFunctor> v)
   {
-    updateTile(h, i, j, &biomeTypes["snowlands"], &tileTypes["snow"], &terrainTypes["snow"] );
+    auto dingleTips = [this](int h, int i, int j)
+    {
+      updateTile(h, i, j, &biomeTypes["snowlands"], &tileTypes["snow"], &terrainTypes["snow"] );
+    };
+    //updateTile(h, i, j, &biomeTypes["snowlands"], &tileTypes["snow"], &terrainTypes["snow"] );
+    for (auto f : v) iterateOverChunkEdges(r, dingleTips);
   };
 
   Rect fudgeRect = { chunkRect->x1 - 15, chunkRect->y1 - 15, chunkRect->x2 + 15, chunkRect->y2 + 15}; // necessary to fudge edges of already processed chunks
 
-  std::vector<std::function<void(int, int, int, BiomeType*)>> fuckers { createTerrainObjects };
+  std::vector<std::pair<genericChunkFunctor, BiomeType*>> placers { { createTerrainObjects, getRandomBiomeType() } };
+  std::vector<std::pair<genericChunkFunctor, BiomeType*>> fuzzers { { fuzzIt, getRandomBiomeType() } };
   std::vector<chunkFunctor> chonkers { addWorldObjects };
-  iterateOverChunk(chunkRect, fuckers);
+  //iterateOverChunk(chunkRect, createTerrainObjects);
   //iterateOverChunk(&fudgeRect, fudgeBiomes);
 
   ChunkProcessor chunker ( chunkRect, maxDepth );
-  chunker.processChunk({ { chonkers } });
+  chunker.multiProcessChunk({ placers, fuzzers });
+  chunker.processChunk({ chonkers });
   //processChunk(chunkRect, addWorldObjects);
   //iterateOverChunkEdges(chunkRect, dingleTips);
 

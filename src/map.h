@@ -7,8 +7,12 @@
 #include <mutex>
 #include <thread>
 #include <array>
+#include <variant>
 
 typedef std::function<void(int, int, int)> chunkFunctor;
+typedef std::function<void(int, int, int, BiomeType*)> chunkProcessorFunctor;
+typedef std::function<void(Rect*, std::vector<chunkProcessorFunctor>)> chunkProcessorCallbackFunctor;
+typedef std::variant<chunkFunctor, chunkProcessorFunctor, chunkProcessorCallbackFunctor> genericChunkFunctor;
 
 struct ChunkReport
 {
@@ -32,6 +36,51 @@ struct ChunkProcessor
     // tileFunctor = bf;
     // smallchunksFunctor = sf;
   }
+  void processEdges(Rect* r, std::pair<chunkProcessorFunctor, BiomeType*> f)
+  {
+    Rect top { chunk->x1, chunk->y1, chunk->x2, chunk->y1 };
+    Rect bottom { chunk->x1, chunk->y2, chunk->x2, chunk->y2 };
+    Rect left { chunk->x1, chunk->y1, chunk->x1, chunk->y2 };
+    Rect right { chunk->x2, chunk->y1, chunk->x2, chunk->y2 };
+    std::vector<Rect> edges { top, bottom, left, right };
+    for (auto it = edges.begin(); it != edges.end(); ++it)
+    {
+      std::thread t([this, f](int x1, int y1, int x2, int y2) {
+        for (auto h = 0; h < zMax; h++)
+        {
+          for (auto i = x1; i <= x2; i++)
+          {
+            for (auto j = y1; j <= y2; j++)
+            {
+              f.first(h, i, j, f.second);
+            }
+          }
+        }
+      }, it->x1, it->y1, it->x2, it->y2);
+      t.detach();
+    }
+  }
+  void multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, BiomeType*>>, 2> functors)
+  {
+    for (auto it = smallchunks->begin(); it != smallchunks->end(); ++it)
+    {
+      std::thread t([this, functors](int x1, int y1, int x2, int y2) {
+        for (auto h = 0; h < zMax; h++)
+        {
+          for (auto i = x1; i != x2; i++)
+          {
+            for (auto j = y1; j != y2; j++)
+            {
+              for (auto f : functors.at(0)) std::get<chunkProcessorFunctor>(f.first)(h, i, j, f.second);
+            }
+          }
+        }
+      }, it->x1, it->y1, it->x2, it->y2);
+      t.detach();
+      // chunk postprocess
+      //for (auto f : functors[1]) f.first(chunk, f);
+    }
+  }
   void process (Rect* r, std::vector<chunkFunctor> functors)
   {
     for (auto h = 0; h < zMax; h++)
@@ -46,17 +95,15 @@ struct ChunkProcessor
       }
     }
   }
-  void processChunk (std::array<std::vector<chunkFunctor>, 2> functors)
+  void processChunk (std::vector<chunkFunctor> functors)
   {
-    process(chunk, functors[0]);
+    process(chunk, functors);
   }
-  void multiProcessChunk (std::pair<std::vector<chunkFunctor>, std::vector<chunkFunctor>> functors) // std::vector<chunkFunctor> v1, std::vector<chunkFunctor> v2)
+  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, BiomeType*>>, 2> functors) // std::vector<chunkFunctor> v1, std::vector<chunkFunctor> v2)
   {
 
-    if (!functors.first.empty())
-    {
-
-    }
+    //for (auto f : functors) multiProcess(chunk, f);
+    multiProcess(chunk, functors);
 
     // process(chunk, v1);
     // for (auto f : v1)
