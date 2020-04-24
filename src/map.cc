@@ -12,10 +12,6 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TileT
   t.terrainType = terrainType;
   mtx.lock();
   terrainMap[z][{ x, y }] = t;
-  // This causes segfaults
-  // auto it = objectMap[z][{ x, y }].begin();
-  // if (it != objectMap[z][{ x, y }].end()) objectMap[z].erase({ x, y });
-  //if (objectMap[z][{ x, y }].begin() != objectMap[z][{ x, y }].end()) objectMap[z].erase({ x, y });
   mtx.unlock();
 }
 
@@ -25,18 +21,10 @@ void MapController::processChunk(Rect* chunkRect, std::function<void(int, int, i
     "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
     maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2
   );
-
   for (auto h = 0; h < maxDepth; h++)
-  {
     for (auto i = chunkRect->x1; i != chunkRect->x2; i++)
-    {
       for (auto j = chunkRect->y1; j != chunkRect->y2; j++)
-      {
         f(h, i ,j);
-      }
-    }
-  }
-
 }
 
 template <typename F>
@@ -56,15 +44,9 @@ void MapController::iterateOverChunk(Rect* chunkRect, F functors)
     BiomeType* b = getRandomBiomeType();
     std::thread t([this, functors, b](int x1, int y1, int x2, int y2) {
       for (auto h = 0; h < maxDepth; h++)
-      {
         for (auto i = x1; i != x2; i++)
-        {
           for (auto j = y1; j != y2; j++)
-          {
             for (auto f : functors) f(h, i, j, b);
-          }
-        }
-      }
     }, it->x1, it->y1, it->x2, it->y2);
     t.detach();
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\t- (x1: %d, y1: %d) (x2: %d, y2: %d)", it->x1, it->x2, it->y1, it->y2);
@@ -84,15 +66,9 @@ void MapController::iterateOverChunkEdges(Rect* chunk, F f)
   {
     std::thread t([this, f](int x1, int y1, int x2, int y2) {
       for (auto h = 0; h < maxDepth; h++)
-      {
         for (auto i = x1; i <= x2; i++)
-        {
           for (auto j = y1; j <= y2; j++)
-          {
             f(h, i, j);
-          }
-        }
-      }
     }, it->x1, it->y1, it->x2, it->y2);
     t.detach();
   }
@@ -119,18 +95,16 @@ std::map<int, std::vector<SDL_Point>> MapController::getAllPointsInRect(Rect* r)
 }
 
 
-std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* rangeRect)
+std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* r)
 {
-  std::map<int, std::map<std::string, int>> tilesInRange;
-  auto lambda = [this, &tilesInRange](int h, int i, int j)
+  std::map<int, std::map<std::string, int>> t;
+  auto lambda = [this, &t](int h, int i, int j)
   {
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-    {
-      tilesInRange[h][terrainMap[h][{i, j}].tileType->name] += 1;
-    }
+      t[h][terrainMap[h][{i, j}].tileType->name] += 1;
   };
-  processChunk(rangeRect, lambda);
-  return tilesInRange;
+  processChunk(r, lambda);
+  return t;
 }
 
 
@@ -197,9 +171,7 @@ std::map<int, std::map<std::string, int>> MapController::getBiomesInRange (Rect*
   auto lambda = [this, &results](int h, int i, int j)
   {
     if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-    {
       results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
-    }
   };
   processChunk(rangeRect, lambda);
   return results;
@@ -226,9 +198,6 @@ void MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::function
 }
 
 
-// TODO: Parallelize this; e.g., lambdas should operate on minichunks of larger chunks, etc.
-
-// ALMOST THERE: remove/lock all stuff that might be accessed by multiple threads. including "mapGenerator"
 int MapController::generateMapChunk(Rect* chunkRect)
 {
   if (mapGenerator.processing)
@@ -242,7 +211,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
-    //auto b = mapGenerator.currentBiomeType; //&biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]];
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
@@ -260,13 +228,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
       auto results = getChunkReport(&r);
 
       if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
-      {
         updateTile(h, i, j, &biomeTypes["snow"], &tileTypes["snow"], &terrainTypes["snow"]);
-      }
       else if (results.counts[h]["biome"]["water"] > 15)
-      {
         updateTile(h, i, j, &biomeTypes["water"], &tileTypes["water"], &terrainTypes["water"]);
-      }
     }
   };
 

@@ -30,13 +30,11 @@ struct Rect
     auto result_h = std::div(h, small_h);
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "found %dx%d rects in rect of %dx%d", result_w.quot, result_h.quot, w, h);
     for (auto x = x1; x <= x2; x += result_w.quot)
-    {
       for (auto y = y1; y <= y2; y += result_h.quot)
       {
         Rect r { x, y, x + result_w.quot, y + result_h.quot };
         rects.push_back(r);
       }
-    }
     return &rects;
   }
 };

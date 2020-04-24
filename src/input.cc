@@ -12,26 +12,16 @@ void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
     if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
         || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
       )
-    {
       break;
-    }
     int directions = 0x00;
     if (ks[SDL_SCANCODE_LEFT])
-    {
       directions += LEFT;
-    }
     if (ks[SDL_SCANCODE_RIGHT])
-    {
       directions += RIGHT;
-    }
     if (ks[SDL_SCANCODE_UP])
-    {
       directions += UP;
-    }
     if (ks[SDL_SCANCODE_DOWN])
-    {
       directions += DOWN;
-    }
     f(directions);
     SDL_PumpEvents();
   }

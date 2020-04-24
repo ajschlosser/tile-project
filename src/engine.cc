@@ -186,7 +186,7 @@ void GameEngine::scrollCamera(int directions)
   if (tileSize > 8)
     scrollGameSurface(directions);
   else
-    SDL_Delay(1);
+    SDL_Delay(25);
   if (directions & LEFT)
     gfxController.camera.x -= 1;
   if (directions & RIGHT)

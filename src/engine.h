@@ -61,7 +61,7 @@ struct GameEngine
   void handleEvents();
   int renderCopyPlayer();
   int run();
-  GameEngine() : spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(150), zMaxLevel(2) {}
+  GameEngine() : tileSize(64), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(200), zMaxLevel(2) {}
 };
 
 #endif

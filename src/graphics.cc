@@ -71,10 +71,7 @@ int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
   SDL_Rect dest {x*tS, y*tS, tS, tS};
   if (SDL_RenderCopy(appRenderer, tilemapTexture, &src, &dest) < -1)
   {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Couldn't copy sprite to renderer: %s",
-      SDL_GetError()
-    );
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
     return 3;
   }
   return 0;
