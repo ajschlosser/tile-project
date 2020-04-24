@@ -38,23 +38,43 @@ void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject
   }
   if (m != nullptr)
   {
-    mobMap[z][{x, y}][m->id] = std::move(m);  // std::move versus copying saves on atomic counting
+    mobMap[z][{x, y}].push_back(std::move(m));  // std::move versus copying saves on atomic counting
   }
 }
 
-void MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
+std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
 {
   auto [z1, x1, y1] = origin;
   auto [z2, x2, y2] = destination;
 
   std::unique_lock lock(mtx);
-  if (mobMap[z1][{x1, y1}].find(id) != mobMap[z1][{x1, y1}].end())
+  int n = 0;
+  auto it = mobMap[z1][{x1, y1}].begin();
+  while (it != mobMap[z1][{x1, y1}].end())
   {
-    SDL_Log("found mob %s", id.c_str());
-    mobMap[z2][{ x2, y2 }][id] = std::move(mobMap[z1][{x1, y1}][id]);
-    SDL_Log("moved mob");
-    //mobMap[z1][{x1, y1}].erase(id);
+    if (it->get()->id == id)
+    {
+      SDL_Log("s %s", id.c_str());
+      //auto c = std::move(mobMap[z1][{x1, y1}].at(n));
+      mobMap[z2][{x2, y2}].push_back((*it));
+      SDL_Log("erasing %s", it->get()->id.c_str());
+      it = mobMap[z1][{x1, y1}].erase(it);
+      return it;
+    }
+    else
+      ++it;
+      ++n;
   }
+  return it;
+
+  // if (mobMap[z1][{x1, y1}].begin() != mobMap[z1][{x1, y1}].end())
+  // {
+
+  //   SDL_Log("found mob %s", id.c_str());
+  //   mobMap[z2][{ x2, y2 }][id] = std::move(mobMap[z1][{x1, y1}][id]);
+  //   SDL_Log("moved mob");
+  //   //mobMap[z1][{x1, y1}][id]->kill();
+  // }
 }
 
 void MapController::processChunk(Rect* chunkRect, std::function<void(int, int, int)> f)

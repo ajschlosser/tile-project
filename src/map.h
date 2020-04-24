@@ -72,7 +72,7 @@ struct MapController
   BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
   void updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
   void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
-  void moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
+  std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
   std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
   ChunkReport getChunkReport (Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);

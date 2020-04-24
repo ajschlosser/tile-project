@@ -351,13 +351,28 @@ void GameEngine::handleEvents()
           tileSize = tileSize * 2;
           break;
         case SDLK_r:
+        // SEGFAULT CAUSED HERE AS IT ITERATES OVER MAP IT IS ITSELF CHANGING
           iterateOverTilesInView([this](std::tuple<int, int, int, int> locationData){
             auto [x, y, i, j] = locationData;
-            for (auto it : mapController.mobMap[zLevel][{i, j}])
+
+            auto it = mapController.mobMap[zLevel][{i, j}].begin();
+            while (it != mapController.mobMap[zLevel][{i, j}].end())
             {
-              auto id = it.second->id;
-              mapController.moveMob(id, {zLevel, i, j}, {zLevel, i+1, j });
+              SDL_Log("%s ready to move: %d", it->get()->id.c_str(), it->get()->mobTimers["movement"].elapsed() );
+
+              if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
+              {
+                it->get()->mobTimers["movement"].stop();
+                it->get()->mobTimers["movement"].start();
+                it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i+1, j});
+              }
+              else ++it;
             }
+
+            // for (auto it : mapController.mobMap[zLevel][{i, j}])
+            // {
+            //   mapController.moveMob(it, {zLevel, i, j}, {zLevel, i+1, j });   // THIS WIK
+            // }
           });
           break;
       }
@@ -392,7 +407,7 @@ void GameEngine::renderCopyTiles()
     if (mobObject != mapController.mobMap[zLevel].end())
       for ( auto &w : mobObject->second )
       {
-        gfxController.renderCopyObject<MobObject>(w.second, x, y);
+        gfxController.renderCopyObject<MobObject>(w, x, y);
       }
     map::getMutex()->unlock();
   });

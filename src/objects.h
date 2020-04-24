@@ -177,7 +177,12 @@ struct TileObject : Tile
 struct SimulatedObject : Tile
 {
   std::map<std::string, Timer*> objectTimers;
-  SimulatedObject () {}
+  bool dead;
+  SimulatedObject () : dead(false) {}
+  void kill()
+  {
+    dead = true;
+  }
   void initSimulation()
   {
     Timer t;
@@ -249,7 +254,7 @@ namespace objects
   typedef std::map<int, std::map<std::pair<int, int>, BiomeObject>> biomeMap;
   typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
   typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<WorldObject>>>> worldMap;
-  typedef std::map<int, std::map<std::pair<int, int>, std::map<std::string, std::shared_ptr<MobObject>>>> mobMap;
+  typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<MobObject>>>> mobMap;
 }
 
 #endif

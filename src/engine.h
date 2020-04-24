@@ -49,6 +49,7 @@ struct GameEngine
   objects::terrainMap* terrainMap;
   objects::worldMap* worldMap;
   objects::mobMap* mobMap;
+  std::map<int, std::vector<std::shared_ptr<MobObject>>> mobs;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
   int init();
