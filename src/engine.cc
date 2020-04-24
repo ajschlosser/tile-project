@@ -254,16 +254,7 @@ void GameEngine::scrollGameSurface(int directions)
     offset.second -= tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-      "scrollGameSurface: offset: %d %d \t dest: %d %d", offset.first, offset.second, dest.x, dest.y
-    );
-    if (SDL_RenderClear(appRenderer) < 0)
-    {
-      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not clear renderer: %s", SDL_GetError());
-      break;
-    }
     renderCopyTiles();
-    gameTexture = gfxController.getGameSurfaceTexture();
     if (directions & RIGHT)
       dest.x -= movementSpeed;
     if (directions & LEFT)
@@ -272,11 +263,10 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
-    SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
+    SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();
     SDL_RenderPresent(appRenderer);
-    SDL_DestroyTexture(gameTexture);
   }
   if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not reset render target: %s", SDL_GetError());
@@ -298,7 +288,7 @@ void GameEngine::handleEvents()
   {
     if (event->type == SDL_QUIT)
     {
-      SDL_Delay(3000);
+      SDL_Delay(1500);
       running = false;
     }
     else if (event->type == SDL_KEYDOWN)
@@ -308,7 +298,7 @@ void GameEngine::handleEvents()
       switch(event->key.keysym.sym)
       {
         case SDLK_ESCAPE:
-          SDL_Delay(3000);
+          SDL_Delay(1500);
           running = false;
           break;
         case SDLK_SPACE:
@@ -350,25 +340,6 @@ void GameEngine::handleEvents()
         case SDLK_o:
           tileSize = tileSize * 2;
           break;
-        case SDLK_r:
-          iterateOverTilesInView([this](std::tuple<int, int, int, int> locationData){
-            auto [x, y, i, j] = locationData;
-
-            auto it = mapController.mobMap[zLevel][{i, j}].begin();
-            while (it != mapController.mobMap[zLevel][{i, j}].end())
-            {
-              SDL_Log("%s ready to move: %d", it->get()->id.c_str(), it->get()->mobTimers["movement"].elapsed() );
-
-              if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
-              {
-                it->get()->mobTimers["movement"].stop();
-                it->get()->mobTimers["movement"].start();
-                it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i+1, j});
-              }
-              else ++it;
-            }
-          });
-          break;
       }
     }
   };
@@ -382,7 +353,7 @@ void GameEngine::renderCopyTiles()
     "renderCopyTiles() called"
   );
 
-  iterateOverTilesInView([this](std::tuple<int, int, int, int> locationData){
+  auto renderer = [this](std::tuple<int, int, int, int> locationData){
     auto [x, y, i, j] = locationData;
     auto terrainObject = mapController.terrainMap[zLevel].find({ i, j });
     auto worldObject = mapController.worldMap[zLevel].find({ i, j });
@@ -399,7 +370,35 @@ void GameEngine::renderCopyTiles()
       {
         gfxController.renderCopyObject<MobObject>(w, x, y);
       }
-  });
+  };
+  std::thread r (
+    [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, renderer
+  );
+
+  auto processor = [this](std::tuple<int, int, int, int> locationData){
+    auto [x, y, i, j] = locationData;
+    auto it = mapController.mobMap[zLevel][{i, j}].begin();
+    while (it != mapController.mobMap[zLevel][{i, j}].end())
+    {
+      if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
+      {
+        it->get()->mobTimers["movement"].stop();
+        it->get()->mobTimers["movement"].start();
+        int n = std::rand() % 100;
+        if (n > 75) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i+1, j});
+        else if (n > 50) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i-1, j});
+        else if (n > 25) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i, j+1});
+        else it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i, j-1});
+      }
+      else ++it;
+    }
+  };
+  std::thread p (
+    [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, processor
+  );
+
+  r.join();
+  p.detach();
 
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
     "renderCopyTiles() completed. Screen refreshed."

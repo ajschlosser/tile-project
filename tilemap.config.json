@@ -3,7 +3,7 @@
     {
       "name": "slime",
       "sprite": "Sprite 0x160",
-      "biomes": ["wasteland"]
+      "biomes": ["wasteland", "meadow", "water"]
     }
   ],
   "objects": [

@@ -208,7 +208,7 @@ struct MobObject : SimulatedObject
     mobType = m;
     biomeType = b;
     sprite = m.sprite;
-    speed = std::rand() % 12000 + 4000;
+    speed = std::rand() % 4000 + 1000;
     Timer t;
     t.start();
     mobTimers["movement"] = t;
