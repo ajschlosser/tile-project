@@ -1,17 +1,25 @@
 #include "map.h"
 
+#ifndef GMTX
+#define GMTX
 std::mutex mtx;
+#endif
 
 void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TileType* tileType = NULL, TerrainType* terrainType = NULL, objects::objectsVector worldObjects = objects::objectsVector ())
 {
+  mtx.lock();
   TerrainObject t;
   t.x = x;
   t.y = y;
   t.tileType = tileType;
   t.biomeType = biomeType;
   t.terrainType = terrainType;
-  mtx.lock();
+  TileObject tile;
+  tile.x = x;
+  tile.y = y;
+  tile.setTerrainObject(t);
   terrainMap[z][{ x, y }] = t;
+  tileMap[z][{ x, y }] = tile;
   mtx.unlock();
 }
 
@@ -100,8 +108,8 @@ std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* 
   std::map<int, std::map<std::string, int>> t;
   auto lambda = [this, &t](int h, int i, int j)
   {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-      t[h][terrainMap[h][{i, j}].tileType->name] += 1;
+    if (tileMap[h].find({ i, j }) != tileMap[h].end())
+      t[h][tileMap[h][{i, j}].getTerrainType()->name] += 1;
   };
   processChunk(r, lambda);
   return t;
@@ -117,13 +125,13 @@ ChunkReport MapController::getChunkReport (Rect* r)
     std::map<std::string, std::tuple<std::string, int>> top;
     top["biome"] = {"none", 0};
     top["terrain"] = {"none", 0};
-    auto it = terrainMap[h].find({ i, j });
-    if (it != terrainMap[h].end() && it->second.initialized == true)
+    auto it = tileMap[h].find({ i, j });
+    if (it != tileMap[h].end() && it->second.initialized == true)
     {
       report.counts[h]["terrain"][it->second.terrainType->name]++;
-      report.counts[h]["biome"][it->second.biomeType->name]++;
+      report.counts[h]["biome"][it->second.getBiomeType()->name]++;
 
-      int bn = report.counts[h]["biome"][it->second.biomeType->name];
+      int bn = report.counts[h]["biome"][it->second.getBiomeType()->name];
       int tn = report.counts[h]["terrain"][it->second.terrainType->name];
 
       auto [ topBiomeName, topBiomeCount ] = top["biome"];
@@ -131,8 +139,8 @@ ChunkReport MapController::getChunkReport (Rect* r)
 
       if (bn > topBiomeCount)
       {
-        top["biome"] = { it->second.biomeType->name, bn };
-        report.top[h]["biome"] = it->second.biomeType->name;
+        top["biome"] = { it->second.getBiomeType()->name, bn };
+        report.top[h]["biome"] = it->second.getBiomeType()->name;
       }
       if (tn > topTerrainCount)
       {
@@ -152,11 +160,11 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> MapController::
   std::map<int, std::map<std::string, std::map<std::string, int>>> res;
   auto lambda = [this, &res](int h, int i, int j)
   {
-    auto it = terrainMap[h].find({ i, j });
-    if (it != terrainMap[h].end())
+    auto it = tileMap[h].find({ i, j });
+    if (it != tileMap[h].end())
     {
-      res[h]["terrain"][it->second.terrainType->name]++;
-      res[h]["biome"][it->second.biomeType->name]++;
+      res[h]["terrain"][it->second.getTerrainType()->name]++;
+      res[h]["biome"][it->second.getBiomeType()->name]++;
     }
   };
   processChunk(r, lambda);
@@ -170,8 +178,8 @@ std::map<int, std::map<std::string, int>> MapController::getBiomesInRange (Rect*
   std::map<int, std::map<std::string, int>> results;
   auto lambda = [this, &results](int h, int i, int j)
   {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
-      results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
+    if (tileMap[h].find({ i, j }) != tileMap[h].end())
+      results[h][tileMap[h][{i, j}].getBiomeType()->name] += 1;
   };
   processChunk(rangeRect, lambda);
   return results;
@@ -211,8 +219,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
-    auto it = terrainMap[h].find({i, j});
-    if (it == terrainMap[h].end())
+    auto it = tileMap[h].find({i, j});
+    if (it == tileMap[h].end())
     {
       auto randomType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
       updateTile(h, i, j, b, &tileTypes[randomType], &terrainTypes[randomType]);
@@ -221,13 +229,13 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto fudgeBiomes = [this](int h, int i, int j, BiomeType* b)
   {
-    auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
+    auto it = tileMap[h].find({i, j});
+    if (it != tileMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
     {
       Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getChunkReport(&r);
 
-      if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
+      if (it->second.getBiomeType()->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
         updateTile(h, i, j, &biomeTypes["snow"], &tileTypes["snow"], &terrainTypes["snow"]);
       else if (results.counts[h]["biome"]["water"] > 15)
         updateTile(h, i, j, &biomeTypes["water"], &tileTypes["water"], &terrainTypes["water"]);
@@ -236,14 +244,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto addWorldObjects = [this](int h, int i, int j)
   {
-    auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
+    auto it = tileMap[h].find({i, j});
+    if (it != tileMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
     {
       int layer = 0;
-      for (auto relatedObjectType : it->second.terrainType->objects)
+      for (auto relatedObjectType : it->second.getTerrainType()->objects)
       {
         int threshold = 1000;
-        if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
+        if (!objectTypes[relatedObjectType].biomes[it->second.getBiomeType()->name])
         {
           continue;
         }
@@ -279,18 +287,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
   multiprocessChain placers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
   multiprocessChain fuzzers { { fuzzIt, [this](){return &biomeTypes["water"];} } };
   std::vector<chunkFunctor> chonkers { addWorldObjects };
-  //iterateOverChunk(chunkRect, createTerrainObjects);
-  //iterateOverChunk(&fudgeRect, fudgeBiomes);
 
   ChunkProcessor chunker ( chunkRect, maxDepth );
   chunker.multiProcessChunk({ placers, fuzzers });
   chunker.processChunk({ chonkers });
-  //processChunk(chunkRect, addWorldObjects);
-  //iterateOverChunkEdges(chunkRect, dingleTips);
 
   mapGenerator.reset(&mtx);
   mtx.lock();
-  SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size());
+  SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
   mtx.unlock();
   return 0;
 }

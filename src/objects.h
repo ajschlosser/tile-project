@@ -139,6 +139,19 @@ struct WorldObject : Tile
   }
 };
 
+
+struct TileObject : Tile
+{
+  std::vector<TerrainObject> terrainObjects;
+  std::vector<std::shared_ptr<WorldObject>> worldObjects;
+  void setTerrainObject (TerrainObject t) { if (!terrainObjects.size()) terrainObjects.push_back(t); else terrainObjects.at(0) = t; }
+  BiomeType* getBiomeType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).biomeType; }
+  TerrainType* getTerrainType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType; }
+  Sprite* getTerrainTypeSprite () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType->sprite; }
+  TerrainObject* getTerrainObject () { if (!terrainObjects.size()) return nullptr; else return &terrainObjects.at(0); }
+  std::vector<std::shared_ptr<WorldObject>>* getWorldObjects () { if (!worldObjects.size()) return nullptr; else return &worldObjects; }
+};
+
 struct Player {
   int x;
   int y;
@@ -152,6 +165,7 @@ namespace objects
   typedef std::map<std::string, TerrainType> terrainTypesMap;
   typedef std::map<std::string, TileType> tileTypesMap;
   typedef std::vector<std::shared_ptr<WorldObject>> objectsVector;
+  typedef std::map<int, std::map<std::pair<int, int>, TileObject>> tileMap;
   typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
   typedef std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
 }

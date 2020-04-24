@@ -43,6 +43,7 @@ struct MapController
   std::map<std::string, TerrainType> terrainTypes;
   std::map<std::string, TileType> tileTypes;
   std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
+  objects::tileMap tileMap;
   std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
   MapGenerator mapGenerator;
   MapController () : maxDepth(0) {}
