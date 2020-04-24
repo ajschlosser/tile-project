@@ -137,23 +137,34 @@ std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* 
 ChunkReport MapController::getChunkReport (Rect* r)
 {
   ChunkReport report;
+
   auto lambda = [this, &report](int h, int i, int j)
   {
-    std::map<std::string, std::pair<int, std::string>> top;
+    std::map<std::string, std::tuple<std::string, int>> top;
+    top["biome"] = {"none", 0};
+    top["terrain"] = {"none", 0};
     auto it = terrainMap[h].find({ i, j });
-    if (it != terrainMap[h].end())
+    if (it != terrainMap[h].end() && it->second.initialized == true)
     {
       report.counts[h]["terrain"][it->second.terrainType->name]++;
       report.counts[h]["biome"][it->second.biomeType->name]++;
 
-      int n = report.counts[h]["biome"][it->second.biomeType->name];
+      int bn = report.counts[h]["biome"][it->second.biomeType->name];
+      int tn = report.counts[h]["terrain"][it->second.terrainType->name];
 
-      if (n > top["biome"].first )
+      auto [ topBiomeName, topBiomeCount ] = top["biome"];
+      auto [ topTerrainName, topTerrainCount ] = top["terrain"];
+
+      if (bn > topBiomeCount)
       {
-        top["biome"] = { n, it->second.terrainType->name };
+        top["biome"] = { it->second.biomeType->name, bn };
+        report.top[h]["biome"] = it->second.biomeType->name;
       }
-
-      report.top[h]["biome"] = top["biome"].second;
+      if (tn > topTerrainCount)
+      {
+        top["terrain"] = { it->second.terrainType->name, bn };
+        report.top[h]["terrain"] = it->second.terrainType->name;
+      }
 
     }
   };

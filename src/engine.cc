@@ -272,75 +272,78 @@ void GameEngine::scrollGameSurface(int directions)
 
 void GameEngine::handleEvents()
 {
-  auto f = [this](int directions)
+  auto keyboardMovementHandler = [this](int directions)
   {
     std::thread graphicalThread([this](int d) { scrollCamera(d); }, directions);
     std::thread mapProcessingThread([this](int d) { processMap(d); }, directions);
     mapProcessingThread.detach();
     graphicalThread.join();
   };
-  userInputHandler.handleKeyboardMovement(f);
-  SDL_PollEvent(&appEvent);
-  if (appEvent.type == SDL_QUIT)
+  userInputHandler.handleKeyboardMovement(keyboardMovementHandler);
+
+  auto eventHandler = [this](SDL_Event* event)
   {
-    running = false;
-  }
-  else if (appEvent.type == SDL_KEYDOWN)
-  {
-    auto t = &mapController.terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
-    auto it = mapController.objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
-    std::string objs;
-    // SDL_Rect r = { gfxController.camera.x - 3, gfxController.camera.y - 3, gfxController.camera.x + 3, gfxController.camera.x + 3 };
-    // auto report = mapController.getChunkReport(&r);
-    switch(appEvent.key.keysym.sym)
+    if (event->type == SDL_QUIT)
     {
-      case SDLK_ESCAPE:
-        running = false;
-        break;
-      case SDLK_SPACE:
-        if (it != mapController.objectMap[zLevel].end())
-          for (auto [a, b] : it->second)
-            objs += b->objectType->name + " ";
-        SDL_Log(
-          "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent tile type sprite name: %s\nCurrent terrain type sprite name: %s\nObjects on tile: %s\nSeen: %d",
-          gfxController.camera.x,
-          gfxController.camera.y,
-          gfxController.camera.w,
-          gfxController.camera.h,
-          t->tileType->name.c_str(),
-          t->terrainType->name.c_str(),
-          t->biomeType->name.c_str(),
-          t->tileType->sprite->name.c_str(),
-          t->terrainType->sprite->name.c_str(),
-          objs.c_str(),
-          t->seen
-        );
-        break;
-      case SDLK_w:
-        if (zLevel > 0)
-        {
-          zLevel--;
-          SDL_Log("You are at level %d", zLevel);
-        }
-        break;
-      case SDLK_q:
-        if (std::abs(zLevel) < static_cast <int>(mapController.terrainMap.size()))
-        {
-          if (zLevel < zMaxLevel - 1)
-          {
-            zLevel++;
-          }
-          SDL_Log("You are at level %d", zLevel);
-        }
-        break;
-      case SDLK_p:
-        tileSize = tileSize / 2;
-        break;
-      case SDLK_o:
-        tileSize = tileSize * 2;
-        break;
+      running = false;
     }
-  }
+    else if (event->type == SDL_KEYDOWN)
+    {
+      auto t = &mapController.terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
+      auto it = mapController.objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
+      std::string objs;
+      switch(event->key.keysym.sym)
+      {
+        case SDLK_ESCAPE:
+          running = false;
+          break;
+        case SDLK_SPACE:
+          if (it != mapController.objectMap[zLevel].end())
+            for (auto [a, b] : it->second)
+              objs += b->objectType->name + " ";
+          SDL_Log(
+            "\nCamera: %dx%dx%dx%d\nCurrent tile type: %s\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent tile type sprite name: %s\nCurrent terrain type sprite name: %s\nObjects on tile: %s\nInitialized: %d",
+            gfxController.camera.x,
+            gfxController.camera.y,
+            gfxController.camera.w,
+            gfxController.camera.h,
+            t->tileType->name.c_str(),
+            t->terrainType->name.c_str(),
+            t->biomeType->name.c_str(),
+            t->tileType->sprite->name.c_str(),
+            t->terrainType->sprite->name.c_str(),
+            objs.c_str(),
+            t->initialized
+          );
+          break;
+        case SDLK_w:
+          if (zLevel > 0)
+          {
+            zLevel--;
+            SDL_Log("You are at level %d", zLevel);
+          }
+          break;
+        case SDLK_q:
+          if (std::abs(zLevel) < static_cast <int>(mapController.terrainMap.size()))
+          {
+            if (zLevel < zMaxLevel - 1)
+            {
+              zLevel++;
+            }
+            SDL_Log("You are at level %d", zLevel);
+          }
+          break;
+        case SDLK_p:
+          tileSize = tileSize / 2;
+          break;
+        case SDLK_o:
+          tileSize = tileSize * 2;
+          break;
+      }
+    }
+  };
+  userInputHandler.handleAppEvents(eventHandler);
+
 }
 
 void GameEngine::renderCopyTiles()
@@ -360,20 +363,11 @@ void GameEngine::renderCopyTiles()
         objects.push_back(b);
       auto mapLevel = mapController.terrainMap[zLevel].find({ i, j });
       if (mapLevel != mapController.terrainMap[zLevel].end())
-      {
         gfxController.renderCopySpriteFrom<TerrainObject>(&mapLevel->second, x, y);
-      }
       else
-      {
-
         gfxController.renderCopySprite("Sprite 0x128", x, y);
-        // SDL_Rect fillChunkRect = {i - 2, j - 2, i + 2, j + 2};
-        // mapController.generateMapChunk(&fillChunkRect);
-      }
       for (std::shared_ptr<WorldObject> o : objects)
-      {
         gfxController.renderCopySpriteFrom<WorldObject>(o, x, y);
-      }
       y++;
     }
     y = 0;
@@ -397,6 +391,7 @@ int GameEngine::renderCopyPlayer()
 
 int GameEngine::run ()
 {
+  init();
   while (running)
   {
     handleEvents();

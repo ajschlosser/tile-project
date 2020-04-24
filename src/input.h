@@ -6,15 +6,17 @@
 
 enum directions
 {
-  UP      = 0x01,
-  DOWN    = 0x02,
-  LEFT    = 0x04,
-  RIGHT   = 0x08
+  UP        = 0x01,
+  DOWN      = 0x02,
+  LEFT      = 0x04,
+  RIGHT     = 0x08
 };
 
 struct UserInputHandler
 {
-  void handleKeyboardMovement (std::function<void(int)> f);
+  SDL_Event appEvent;
+  void handleKeyboardMovement (std::function<void(int)>);
+  void handleAppEvents (std::function<void(SDL_Event*)>);
 };
 
 #endif

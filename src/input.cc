@@ -36,3 +36,9 @@ void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
     SDL_PumpEvents();
   }
 };
+
+void UserInputHandler::handleAppEvents (std::function<void(SDL_Event*)> f)
+{
+  SDL_PollEvent(&appEvent);
+  f(&appEvent);
+};
