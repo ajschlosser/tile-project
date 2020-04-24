@@ -2,6 +2,7 @@
 #define GAME_OBJECTS_H
 
 #include "timer.h"
+#include "uuid.h"
 
 #include <cmath>
 #include <map>
@@ -98,6 +99,13 @@ struct BiomeType
   BiomeType () {}
 };
 
+struct BiomeObject
+{
+  int x;
+  int y;
+  BiomeType* biomeType;
+};
+
 struct Tile
 {
   int x;
@@ -139,52 +147,7 @@ struct WorldObject : Tile
   }
 };
 
-
-struct SimulatedObject : Tile
-{
-  std::map<std::string, Timer*> objectTimers;
-  SimulatedObject () {}
-  void initSimulation()
-  {
-    Timer t;
-    t.start();
-    objectTimers["lifetime"] = &t;
-  }
-};
-
-struct TileObject;
-struct MobObject : SimulatedObject
-{
-  int speed;
-  MobType* mobType;
-  std::map<std::string, Timer*> mobTimers;
-  MobObject (int x, int y, MobType* m, BiomeType* b)
-  {
-    this->initSimulation();
-    this->x = x;
-    this->y = y;
-    mobType = m;
-    biomeType = b;
-    sprite = m->sprite;
-    speed = std::rand() % 5000 + 15000;
-    Timer t;
-    t.start();
-    mobTimers["movement"] = &t;
-    SDL_Log("created %s", mobType->name.c_str());
-  }
-  void simulate()
-  {
-    if (mobTimers.find("movement")->second->elapsed() > speed)
-    {
-      SDL_Log("%s at (%d, %d) moving", mobType->name.c_str(), x, y );
-      x += 1;
-      mobTimers.find("movement")->second->stop();
-      mobTimers.find("movement")->second->start();
-    }
-  }
-};
-
-
+struct MobObject;
 struct TileObject : Tile
 {
   std::vector<TerrainObject> terrainObjects;
@@ -210,6 +173,64 @@ struct TileObject : Tile
   std::vector<std::shared_ptr<MobObject>>* getMobObjects () { if (!mobObjects.size()) return nullptr; else return &mobObjects; }
 };
 
+
+struct SimulatedObject : Tile
+{
+  std::map<std::string, Timer*> objectTimers;
+  SimulatedObject () {}
+  void initSimulation()
+  {
+    Timer t;
+    t.start();
+    objectTimers["lifetime"] = &t;
+  }
+};
+
+
+struct MobObject : SimulatedObject
+{
+  std::string id;
+  int speed;
+  MobType mobType;
+  std::map<std::pair<int, int>, std::shared_ptr<MobObject>>* mobMapLayerRef;
+  std::map<std::string, Timer> mobTimers;
+  MobObject (int x, int y, MobType m, BiomeType* b)
+  {
+    id = uuid::generate_uuid_v4();
+    this->initSimulation();
+    this->x = x;
+    this->y = y;
+    mobType = m;
+    biomeType = b;
+    sprite = m.sprite;
+    speed = std::rand() % 12000 + 4000;
+    Timer t;
+    t.start();
+    mobTimers["movement"] = t;
+  }
+  
+  void simulate()
+  {
+    //auto tileRef = tileMapLayerRef->find({ x, y });
+    if (mobTimers.find("movement")->second.elapsed() > speed)
+    {
+      SDL_Log("%s at (%d, %d) moving at rate of %d", mobType.sprite->name.c_str(), x, y, mobTimers.find("movement")->second.elapsed() );
+      //mobMapLayerRef-> //erase({ x, y });
+      // TODO:
+      // Need a custom data type for maps. Maps need methods for managing the location of objects.
+      // That's the next step!
+      mobTimers.find("movement")->second.stop();
+      mobTimers.find("movement")->second.start();
+      // tileMapLayerRef->at({ x+1, y }).addMobObject
+    }
+  }
+};
+
+
+// TODO:
+// Go back to classic map layering per z-level. Each distinct object type needs its own layer
+// TileObjects were a bad idea for a reason--kill them with fire
+
 struct Player {
   int x;
   int y;
@@ -225,6 +246,10 @@ namespace objects
   typedef std::map<std::string, TileType> tileTypesMap;
   typedef std::vector<std::shared_ptr<WorldObject>> objectsVector;
   typedef std::map<int, std::map<std::pair<int, int>, TileObject>> tileMap;
+  typedef std::map<int, std::map<std::pair<int, int>, BiomeObject>> biomeMap;
+  typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
+  typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<WorldObject>>>> worldMap;
+  typedef std::map<int, std::map<std::pair<int, int>, std::map<std::string, std::shared_ptr<MobObject>>>> mobMap;
 }
 
 #endif

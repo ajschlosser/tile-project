@@ -45,6 +45,10 @@ struct GameEngine
   objects::terrainTypesMap terrainTypes;
   objects::tileTypesMap tileTypes;
   objects::tileMap* tileMap;
+  objects::biomeMap* biomeMap;
+  objects::terrainMap* terrainMap;
+  objects::worldMap* worldMap;
+  objects::mobMap* mobMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;
   int init();
@@ -59,6 +63,21 @@ struct GameEngine
   void handleEvents();
   int renderCopyPlayer();
   int run();
+  void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)> f)
+  {
+    auto [_w, _h] = gfxController.getWindowGridDimensions();
+    int x = 0;
+    int y = 0;
+    for (auto i = gfxController.camera.x - _w/2; i < gfxController.camera.x + _w/2 + 5; i++)
+    {
+      for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++) {
+        f({x, y, i, j});
+        y++;
+      }
+      y = 0;
+      x++;
+    }
+  }
   GameEngine() : tileSize(64), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(200), zMaxLevel(2) {}
 };
 

@@ -43,6 +43,10 @@ struct MapController
   objects::terrainTypesMap terrainTypes;
   objects::tileTypesMap tileTypes;
   objects::tileMap tileMap;
+  objects::biomeMap biomeMap;
+  objects::terrainMap terrainMap;
+  objects::worldMap worldMap;
+  objects::mobMap mobMap;
   MapGenerator mapGenerator;
   MapController () : maxDepth(0) {}
   MapController (
@@ -58,8 +62,11 @@ struct MapController
     maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
     terrainTypes = tnTypes; tileTypes = tlTypes;
   }
+
   BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
   void updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
+  void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
+  void moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
   std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
   ChunkReport getChunkReport (Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);

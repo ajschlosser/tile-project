@@ -13,11 +13,48 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, Terra
   t.y = y;
   t.biomeType = biomeType;
   t.terrainType = terrainType;
+  terrainMap[z][{ x, y }] = t;
+  BiomeObject b;
+  b.biomeType = biomeType;
+  b.x = x;
+  b.y = y;
+  terrainMap[z][{ x, y }] = t;
+  biomeMap[z][{ x, y }] = b;
   TileObject tile;
   tile.x = x;
   tile.y = y;
   tile.setTerrainObject(t);
   tileMap[z][{ x, y }] = tile;
+  mtx.unlock();
+}
+
+void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject> w = nullptr, std::shared_ptr<MobObject> m = nullptr)
+{
+  mtx.lock();
+  if (w != nullptr)
+  {
+    worldMap[z][{x, y}].push_back(w);
+  }
+  if (m != nullptr)
+  {
+    mobMap[z][{x, y}][m->id] = std::move(m);  // std::move versus copying saves on atomic counting
+  }
+  mtx.unlock();
+}
+
+void MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
+{
+  auto [z1, x1, y1] = origin;
+  auto [z2, x2, y2] = destination;
+
+  mtx.lock();
+  if (mobMap[z1][{x1, y1}].find(id) != mobMap[z1][{x1, y1}].end())
+  {
+    SDL_Log("found mob %s", id.c_str());
+    mobMap[z2][{ x2, y2 }][id] = std::move(mobMap[z1][{x1, y1}][id]);
+    SDL_Log("moved mob");
+    //mobMap[z1][{x1, y1}].erase(id);
+  }
   mtx.unlock();
 }
 
@@ -220,8 +257,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
     auto it = tileMap[h].find({i, j});
     if (it == tileMap[h].end())
     {
-      auto randomType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
-      updateTile(h, i, j, b, &terrainTypes[randomType]);
+      auto randomTerrainType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
+      updateTile(h, i, j, b, &terrainTypes[randomTerrainType]);
     }
   };
 
@@ -256,9 +293,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
             i, j, &objectTypes[relatedObjectType], &biomeTypes[it->second.getBiomeType()->name]
           );
-          mtx.lock();
-          tileMap[h][{o->x, o->y}].addWorldObject(o);
-          mtx.unlock();
+          updateTile(h, i, j, o, nullptr);
         }
       }
       if (std::rand() % 1000 > 900)
@@ -268,11 +303,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
           if (mob.second.biomes.find(it->second.getBiomeType()->name) != mob.second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, &mob.second, &biomeTypes[it->second.getBiomeType()->name]
+              i, j, mob.second, &biomeTypes[it->second.getBiomeType()->name]
             );
-            mtx.lock();
-            tileMap[h][{m->x, m->y}].addMobObject(m);
-            mtx.unlock();
+            updateTile(h, i, j, nullptr, m);
           }
         }
       }
