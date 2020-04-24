@@ -59,6 +59,7 @@ struct GenericType
 {
   Sprite* sprite;
   std::string name;
+  bool impassable;
 };
 
 struct ObjectType : GenericType

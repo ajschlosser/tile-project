@@ -47,15 +47,19 @@ std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::s
   auto [z1, x1, y1] = origin;
   auto [z2, x2, y2] = destination;
 
+  auto terrainIt = terrainMap[z2].find({ x2, y2 });
+  if (terrainIt == terrainMap[z2].end())
+    return mobMap[z1][{x1, y1}].begin();
+  else if (terrainIt->second.terrainType->impassable)
+    return mobMap[z1][{x1, y1}].begin();
+
   std::unique_lock lock(mtx);
   auto it = mobMap[z1][{x1, y1}].begin();
   while (it != mobMap[z1][{x1, y1}].end())
   {
     if (it->get()->id == id)
     {
-      //SDL_Log("s %s", id.c_str());
       mobMap[z2][{x2, y2}].push_back((*it));
-      //SDL_Log("erasing %s", it->get()->id.c_str());
       it = mobMap[z1][{x1, y1}].erase(it);
       return it;
     }

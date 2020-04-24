@@ -3,7 +3,7 @@
     {
       "name": "slime",
       "sprite": "Sprite 0x160",
-      "biomes": ["wasteland", "meadow", "water"]
+      "biomes": ["wasteland", "underground", "meadow"]
     }
   ],
   "objects": [
@@ -30,7 +30,8 @@
     {
       "name": "boulder",
       "sprite": "Sprite 0x256",
-      "biomes": ["wasteland", "underground"]
+      "biomes": ["wasteland", "underground"],
+      "impassable": 1
     },
     {
       "name": "yellow flower",
@@ -74,7 +75,8 @@
     },
     {
       "name": "water",
-      "sprite": "Sprite 0x96"
+      "sprite": "Sprite 0x96",
+      "impassable": 1
     },
     {
       "name": "shadow",
@@ -103,6 +105,17 @@
         {
           "name": "rock",
           "multiplier": 0.25
+        }
+      ]
+    },
+    {
+      "name": "shrublands",
+      "maxDepth": 0,
+      "minDepth": 0,
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1.0
         }
       ]
     },

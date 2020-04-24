@@ -115,17 +115,19 @@ int GameEngine::init()
   {
     std::string spriteName = tileConfigJson["terrains"][i]["sprite"].asString();
     std::string tileTypeName = tileConfigJson["terrains"][i]["name"].asString();
+    bool impassable = tileConfigJson["terrains"][i]["impassable"].asBool();
     std::vector<std::string> relatedObjectTypes;
     const Json::Value& relatedObjectsArray = tileConfigJson["terrains"][i]["objects"];
     for (int i = 0; i < relatedObjectsArray.size(); i++)
     {
       relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
     }
-    SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
     TileType tileType { &sprites[spriteName], tileTypeName };
     TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
+    terrainType.impassable = impassable;
     tileTypes[tileType.name] = tileType;
     terrainTypes[terrainType.name] = terrainType;
+    SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
   }
   for (auto i = 0; i < tileConfigJson["biomes"].size(); ++i)
   {
@@ -148,17 +150,18 @@ int GameEngine::init()
   {
     std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
     std::string objectTypeName = tileConfigJson["objects"][i]["name"].asString();
+    bool impassable = tileConfigJson["objects"][i]["impassable"].asBool();
     const Json::Value& biomesArray = tileConfigJson["objects"][i]["biomes"];
     std::map<std::string, int> bM;
     for (int i = 0; i < biomesArray.size(); i++)
     {
       bM[biomesArray[i].asString()] = 1;
     }
-    SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
     TileType tileType { &sprites[spriteName], objectTypeName };
     tileTypes[tileType.name] = tileType;
-    ObjectType o { &sprites[spriteName], objectTypeName, bM };
+    ObjectType o { &sprites[spriteName], objectTypeName, impassable, bM };
     objectTypes[objectTypeName] = o;
+    SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
   for (auto i = 0; i < tileConfigJson["mobs"].size(); ++i)
   {
@@ -173,7 +176,7 @@ int GameEngine::init()
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
     TileType tileType { &sprites[spriteName], mobTypeName };
     tileTypes[tileType.name] = tileType;
-    MobType mobType { &sprites[spriteName], mobTypeName, bM };
+    MobType mobType { &sprites[spriteName], mobTypeName, false, bM };
     mobTypes[mobType.name] = mobType;
   }
 
