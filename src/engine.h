@@ -74,8 +74,6 @@ struct GameEngine
       for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++) {
         std::tuple<int, int, int, int> locationData = {x, y, i, j};
         f(locationData);
-        //std::thread tileThread([this, &f](std::tuple<int, int, int, int> d) { f(d); }, locationData);
-        //tileThread.join();
         y++;
       }
       y = 0;

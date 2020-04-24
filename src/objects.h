@@ -213,28 +213,7 @@ struct MobObject : SimulatedObject
     t.start();
     mobTimers["movement"] = t;
   }
-  
-  void simulate()
-  {
-    //auto tileRef = tileMapLayerRef->find({ x, y });
-    if (mobTimers.find("movement")->second.elapsed() > speed)
-    {
-      SDL_Log("%s at (%d, %d) moving at rate of %d", mobType.sprite->name.c_str(), x, y, mobTimers.find("movement")->second.elapsed() );
-      //mobMapLayerRef-> //erase({ x, y });
-      // TODO:
-      // Need a custom data type for maps. Maps need methods for managing the location of objects.
-      // That's the next step!
-      mobTimers.find("movement")->second.stop();
-      mobTimers.find("movement")->second.start();
-      // tileMapLayerRef->at({ x+1, y }).addMobObject
-    }
-  }
 };
-
-
-// TODO:
-// Go back to classic map layering per z-level. Each distinct object type needs its own layer
-// TileObjects were a bad idea for a reason--kill them with fire
 
 struct Player {
   int x;
