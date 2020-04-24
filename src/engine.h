@@ -45,8 +45,6 @@ struct GameEngine
   std::vector<std::string> biomeTypeKeys;
   terrainTypesMap terrainTypes;
   tileTypesMap tileTypes;
-  terrainMap* terrainMap;
-  objectMap* objectMap;
   tileMap* tileMap;
   std::map<std::string, Sprite> sprites;
   SDL_Rect camera;

@@ -98,44 +98,37 @@ struct Tile
 {
   int x;
   int y;
-  TileType* tileType;
   TerrainType* terrainType;
   bool seen;
   bool initialized;
   Tile() : seen(false), initialized(false) {}
   Tile (int x, int y) { this->x = x; this->y = y; }
-  Tile(int x, int y, TileType* t)
-  {
-    this->x = x;
-    this->y = y;
-    tileType = t;
-  }
 };
 
 struct TerrainObject : Tile
 {
   BiomeType* biomeType;
   TerrainObject () {}
-  TerrainObject (int x, int y, BiomeType* b, TerrainType* t, TileType* tt)
+  TerrainObject (int x, int y, BiomeType* b, TerrainType* t)
   {
     this->x = x;
     this->y = y;
     biomeType = b;
     terrainType = t;
-    tileType = tt;
   }
 };
 
 struct WorldObject : Tile
 {
   ObjectType* objectType;
+  BiomeType* biomeType;
   WorldObject() {}
-  WorldObject(int x, int y, ObjectType* o, TileType* tt)
+  WorldObject(int x, int y, ObjectType* o, BiomeType* b)
   {
     this->x = x;
     this->y = y;
     objectType = o;
-    tileType = tt;
+    biomeType = b;
   }
 };
 
@@ -149,6 +142,16 @@ struct TileObject : Tile
   TerrainType* getTerrainType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType; }
   Sprite* getTerrainTypeSprite () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType->sprite; }
   TerrainObject* getTerrainObject () { if (!terrainObjects.size()) return nullptr; else return &terrainObjects.at(0); }
+  void addWorldObject (std::shared_ptr<WorldObject> o) { worldObjects.push_back(o); }
+  void pruneWorldObjects ()
+  {
+    for (auto &&it = worldObjects.begin(); it != worldObjects.end();) {
+      if (it->get()->biomeType->name != getBiomeType()->name)
+        it = worldObjects.erase(it);
+      else
+        ++it;
+    }
+  }
   std::vector<std::shared_ptr<WorldObject>>* getWorldObjects () { if (!worldObjects.size()) return nullptr; else return &worldObjects; }
 };
 
@@ -166,8 +169,6 @@ namespace objects
   typedef std::map<std::string, TileType> tileTypesMap;
   typedef std::vector<std::shared_ptr<WorldObject>> objectsVector;
   typedef std::map<int, std::map<std::pair<int, int>, TileObject>> tileMap;
-  typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
-  typedef std::map<int, std::map<std::pair<int, int>, std::map<int, std::shared_ptr<WorldObject>>>> objectMap;
 }
 
 #endif

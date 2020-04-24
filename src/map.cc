@@ -5,20 +5,18 @@
 std::mutex mtx;
 #endif
 
-void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TileType* tileType = NULL, TerrainType* terrainType = NULL, objects::objectsVector worldObjects = objects::objectsVector ())
+void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TerrainType* terrainType, objects::objectsVector worldObjects = objects::objectsVector ())
 {
   mtx.lock();
   TerrainObject t;
   t.x = x;
   t.y = y;
-  t.tileType = tileType;
   t.biomeType = biomeType;
   t.terrainType = terrainType;
   TileObject tile;
   tile.x = x;
   tile.y = y;
   tile.setTerrainObject(t);
-  terrainMap[z][{ x, y }] = t;
   tileMap[z][{ x, y }] = tile;
   mtx.unlock();
 }
@@ -223,7 +221,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     if (it == tileMap[h].end())
     {
       auto randomType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
-      updateTile(h, i, j, b, &tileTypes[randomType], &terrainTypes[randomType]);
+      updateTile(h, i, j, b, &terrainTypes[randomType]);
     }
   };
 
@@ -236,9 +234,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
       auto results = getChunkReport(&r);
 
       if (it->second.getBiomeType()->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
-        updateTile(h, i, j, &biomeTypes["snow"], &tileTypes["snow"], &terrainTypes["snow"]);
+        updateTile(h, i, j, &biomeTypes["snow"], &terrainTypes["snow"]);
       else if (results.counts[h]["biome"]["water"] > 15)
-        updateTile(h, i, j, &biomeTypes["water"], &tileTypes["water"], &terrainTypes["water"]);
+        updateTile(h, i, j, &biomeTypes["water"], &terrainTypes["water"]);
     }
   };
 
@@ -258,10 +256,10 @@ int MapController::generateMapChunk(Rect* chunkRect)
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &objectTypes[relatedObjectType], &tileTypes[relatedObjectType]
+            i, j, &objectTypes[relatedObjectType], &biomeTypes[it->second.getBiomeType()->name]
           );
           mtx.lock();
-          objectMap[h][{o->x, o->y}][layer] = o;
+          tileMap[h][{o->x, o->y}].addWorldObject(o);
           mtx.unlock();
           layer++;
         }
@@ -276,9 +274,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
   {
     auto dingleTips = [this](int h, int i, int j)
     {
-      updateTile(h, i, j, &biomeTypes["snowlands"], &tileTypes["snow"], &terrainTypes["snow"] );
+      updateTile(h, i, j, &biomeTypes["snowlands"], &terrainTypes["snow"] );
     };
-    //updateTile(h, i, j, &biomeTypes["snowlands"], &tileTypes["snow"], &terrainTypes["snow"] );
     for (auto f : v) iterateOverChunkEdges(r, dingleTips);
   };
 

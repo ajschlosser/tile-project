@@ -285,22 +285,22 @@ void GameEngine::handleEvents()
   {
     if (event->type == SDL_QUIT)
     {
+      SDL_Delay(3000);
       running = false;
     }
     else if (event->type == SDL_KEYDOWN)
     {
       auto t = &mapController.tileMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
-      auto it = mapController.objectMap[zLevel].find({ gfxController.camera.x, gfxController.camera.y });
       std::string objs;
       switch(event->key.keysym.sym)
       {
         case SDLK_ESCAPE:
+          SDL_Delay(3000);
           running = false;
           break;
         case SDLK_SPACE:
-          if (it != mapController.objectMap[zLevel].end())
-            for (auto [a, b] : it->second)
-              objs += b->objectType->name + " ";
+          for (auto o : t->worldObjects)
+            objs += o->objectType->name + " ";
           SDL_Log(
             "\nCamera: %dx%dx%dx%d\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent terrain type sprite name: %s\nObjects on tile: %s\nInitialized: %d",
             gfxController.camera.x,
@@ -356,16 +356,15 @@ void GameEngine::renderCopyTiles()
   {
     for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++)
     {
-      std::vector<std::shared_ptr<WorldObject>> objects;
-      for (auto [a, b] : mapController.objectMap[zLevel][{i, j}])
-        objects.push_back(b);
       auto mapLevel = mapController.tileMap[zLevel].find({ i, j });
       if (mapLevel != mapController.tileMap[zLevel].end())
+      {
         gfxController.renderCopyTile(&mapLevel->second, { x, y });
+        for (auto o : mapLevel->second.worldObjects)
+          gfxController.renderCopyWorldObject(o, x, y);
+      }
       else
         gfxController.renderCopySprite("Sprite 0x128", x, y);
-      for (std::shared_ptr<WorldObject> o : objects)
-        gfxController.renderCopySpriteFrom<WorldObject>(o, x, y);
       y++;
     }
     y = 0;
