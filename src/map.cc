@@ -245,10 +245,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
     auto it = tileMap[h].find({i, j});
     if (it != tileMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
     {
-      int layer = 0;
       for (auto relatedObjectType : it->second.getTerrainType()->objects)
       {
-        int threshold = 1000;
         if (!objectTypes[relatedObjectType].biomes[it->second.getBiomeType()->name])
         {
           continue;
@@ -261,7 +259,21 @@ int MapController::generateMapChunk(Rect* chunkRect)
           mtx.lock();
           tileMap[h][{o->x, o->y}].addWorldObject(o);
           mtx.unlock();
-          layer++;
+        }
+      }
+      if (std::rand() % 1000 > 900)
+      {
+        for ( auto mob : mobTypes )
+        {
+          if (mob.second.biomes.find(it->second.getBiomeType()->name) != mob.second.biomes.end())
+          {
+            std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
+              i, j, &mob.second, &biomeTypes[it->second.getBiomeType()->name]
+            );
+            mtx.lock();
+            tileMap[h][{m->x, m->y}].addMobObject(m);
+            mtx.unlock();
+          }
         }
       }
       mtx.lock();
@@ -291,7 +303,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   mapGenerator.reset(&mtx);
   mtx.lock();
-  SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size());
+  SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size()*2);
   mtx.unlock();
   return 0;
 }

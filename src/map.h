@@ -36,6 +36,7 @@ struct MapGenerator
 struct MapController
 {
   int maxDepth;
+  objects::mobTypesMap mobTypes;
   objects::objectTypesMap objectTypes;
   std::map<std::string, BiomeType> biomeTypes;
   std::vector<std::string> biomeTypeKeys;
@@ -46,6 +47,7 @@ struct MapController
   MapController () : maxDepth(0) {}
   MapController (
       int d,
+      objects::mobTypesMap mTypes,
       objects::objectTypesMap oTypes,
       objects::biomeTypesMap bTypes,
       std::vector<std::string> bTypeKeys,
@@ -53,7 +55,7 @@ struct MapController
       objects::tileTypesMap tlTypes
   )
   {
-    maxDepth = d; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
+    maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
     terrainTypes = tnTypes; tileTypes = tlTypes;
   }
   BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }

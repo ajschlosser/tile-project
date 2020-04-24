@@ -29,7 +29,7 @@ struct GraphicsController
   void applyUi();
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
-  int renderCopyWorldObject(std::shared_ptr<WorldObject> t, int x, int y) { return renderCopySprite(t->objectType->sprite, x, y); }
+  template<class T> int renderCopyObject(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->sprite, x, y); }
   template<class T> int renderCopySpriteFrom(T* t, int x, int y) { return renderCopySprite(t->terrainType->sprite, x, y); }
   int renderCopyTile(TileObject* t, std::tuple<int, int> coords) { auto [x, y] = coords; return renderCopySprite(t->getTerrainTypeSprite(), x, y); }
   SDL_Surface* getGameSurfaceFromWindow();

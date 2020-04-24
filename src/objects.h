@@ -1,6 +1,8 @@
 #ifndef GAME_OBJECTS_H
 #define GAME_OBJECTS_H
 
+#include "timer.h"
+
 #include <cmath>
 #include <map>
 #include <string>
@@ -63,6 +65,8 @@ struct ObjectType : GenericType
   std::map<std::string, int> biomes;
 };
 
+struct MobType : ObjectType {};
+
 struct TileType : GenericType
 {
   TileType () {}
@@ -98,7 +102,9 @@ struct Tile
 {
   int x;
   int y;
+  BiomeType* biomeType;
   TerrainType* terrainType;
+  Sprite* sprite;
   bool seen;
   bool initialized;
   Tile() : seen(false), initialized(false) {}
@@ -107,7 +113,7 @@ struct Tile
 
 struct TerrainObject : Tile
 {
-  BiomeType* biomeType;
+  TerrainType* terrainType;
   TerrainObject () {}
   TerrainObject (int x, int y, BiomeType* b, TerrainType* t)
   {
@@ -115,13 +121,13 @@ struct TerrainObject : Tile
     this->y = y;
     biomeType = b;
     terrainType = t;
+    sprite = t->sprite;
   }
 };
 
 struct WorldObject : Tile
 {
   ObjectType* objectType;
-  BiomeType* biomeType;
   WorldObject() {}
   WorldObject(int x, int y, ObjectType* o, BiomeType* b)
   {
@@ -129,6 +135,52 @@ struct WorldObject : Tile
     this->y = y;
     objectType = o;
     biomeType = b;
+    sprite = o->sprite;
+  }
+};
+
+
+struct SimulatedObject : Tile
+{
+  std::map<std::string, Timer*> objectTimers;
+  SimulatedObject () {}
+  void initSimulation()
+  {
+    Timer t;
+    t.start();
+    objectTimers["lifetime"] = &t;
+  }
+};
+
+struct TileObject;
+struct MobObject : SimulatedObject
+{
+  int speed;
+  MobType* mobType;
+  std::map<std::string, Timer*> mobTimers;
+  MobObject (int x, int y, MobType* m, BiomeType* b)
+  {
+    this->initSimulation();
+    this->x = x;
+    this->y = y;
+    mobType = m;
+    biomeType = b;
+    sprite = m->sprite;
+    speed = std::rand() % 5000 + 15000;
+    Timer t;
+    t.start();
+    mobTimers["movement"] = &t;
+    SDL_Log("created %s", mobType->name.c_str());
+  }
+  void simulate()
+  {
+    if (mobTimers.find("movement")->second->elapsed() > speed)
+    {
+      SDL_Log("%s at (%d, %d) moving", mobType->name.c_str(), x, y );
+      x += 1;
+      mobTimers.find("movement")->second->stop();
+      mobTimers.find("movement")->second->start();
+    }
   }
 };
 
@@ -137,12 +189,14 @@ struct TileObject : Tile
 {
   std::vector<TerrainObject> terrainObjects;
   std::vector<std::shared_ptr<WorldObject>> worldObjects;
+  std::vector<std::shared_ptr<MobObject>> mobObjects;
   void setTerrainObject (TerrainObject t) { if (!terrainObjects.size()) terrainObjects.push_back(t); else terrainObjects.at(0) = t; }
   BiomeType* getBiomeType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).biomeType; }
   TerrainType* getTerrainType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType; }
   Sprite* getTerrainTypeSprite () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType->sprite; }
   TerrainObject* getTerrainObject () { if (!terrainObjects.size()) return nullptr; else return &terrainObjects.at(0); }
   void addWorldObject (std::shared_ptr<WorldObject> o) { worldObjects.push_back(o); }
+  void addMobObject (std::shared_ptr<MobObject> m) { mobObjects.push_back(m); }
   void pruneWorldObjects ()
   {
     for (auto &&it = worldObjects.begin(); it != worldObjects.end();) {
@@ -153,6 +207,7 @@ struct TileObject : Tile
     }
   }
   std::vector<std::shared_ptr<WorldObject>>* getWorldObjects () { if (!worldObjects.size()) return nullptr; else return &worldObjects; }
+  std::vector<std::shared_ptr<MobObject>>* getMobObjects () { if (!mobObjects.size()) return nullptr; else return &mobObjects; }
 };
 
 struct Player {
@@ -163,6 +218,7 @@ struct Player {
 
 namespace objects
 {
+  typedef std::map<std::string, MobType> mobTypesMap;
   typedef std::map<std::string, ObjectType> objectTypesMap;
   typedef std::map<std::string, BiomeType> biomeTypesMap;
   typedef std::map<std::string, TerrainType> terrainTypesMap;

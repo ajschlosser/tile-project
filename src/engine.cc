@@ -149,24 +149,37 @@ int GameEngine::init()
     std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
     std::string objectTypeName = tileConfigJson["objects"][i]["name"].asString();
     const Json::Value& biomesArray = tileConfigJson["objects"][i]["biomes"];
-
     std::map<std::string, int> bM;
     for (int i = 0; i < biomesArray.size(); i++)
     {
       bM[biomesArray[i].asString()] = 1;
     }
-
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
-
     TileType tileType { &sprites[spriteName], objectTypeName };
     tileTypes[tileType.name] = tileType;
-
     ObjectType o { &sprites[spriteName], objectTypeName, bM };
     objectTypes[objectTypeName] = o;
   }
+  for (auto i = 0; i < tileConfigJson["mobs"].size(); ++i)
+  {
+    std::string spriteName = tileConfigJson["mobs"][i]["sprite"].asString();
+    std::string mobTypeName = tileConfigJson["mobs"][i]["name"].asString();
+    const Json::Value& biomesArray = tileConfigJson["mobs"][i]["biomes"];
+    std::map<std::string, int> bM;
+    for (int i = 0; i < biomesArray.size(); i++)
+    {
+      bM[biomesArray[i].asString()] = 1;
+    }
+    SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
+    TileType tileType { &sprites[spriteName], mobTypeName };
+    tileTypes[tileType.name] = tileType;
+    MobType mobType { &sprites[spriteName], mobTypeName, bM };
+    mobTypes[mobType.name] = mobType;
+  }
+
 
   mapController = MapController(
-    zMaxLevel, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes
+    zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes
   );
 
   // Create default tilemap
@@ -361,7 +374,12 @@ void GameEngine::renderCopyTiles()
       {
         gfxController.renderCopyTile(&mapLevel->second, { x, y });
         for (auto o : mapLevel->second.worldObjects)
-          gfxController.renderCopyWorldObject(o, x, y);
+          gfxController.renderCopyObject<WorldObject>(o, x, y);
+        for (auto m : mapLevel->second.mobObjects)
+        {
+          m->simulate();
+          gfxController.renderCopyObject<MobObject>(m, x, y);
+        }
       }
       else
         gfxController.renderCopySprite("Sprite 0x128", x, y);
