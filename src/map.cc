@@ -1,13 +1,15 @@
 #include "map.h"
 
-#ifndef GMTX
-#define GMTX
-std::mutex mtx;
-#endif
+std::shared_mutex mtx;
+
+std::shared_mutex* map::getMutex ()
+{
+  return &mtx;
+}
 
 void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TerrainType* terrainType, objects::objectsVector worldObjects = objects::objectsVector ())
 {
-  mtx.lock();
+  std::unique_lock lock(mtx);
   TerrainObject t;
   t.x = x;
   t.y = y;
@@ -25,12 +27,11 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, Terra
   tile.y = y;
   tile.setTerrainObject(t);
   tileMap[z][{ x, y }] = tile;
-  mtx.unlock();
 }
 
 void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject> w = nullptr, std::shared_ptr<MobObject> m = nullptr)
 {
-  mtx.lock();
+  std::unique_lock lock(mtx);
   if (w != nullptr)
   {
     worldMap[z][{x, y}].push_back(w);
@@ -39,7 +40,6 @@ void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject
   {
     mobMap[z][{x, y}][m->id] = std::move(m);  // std::move versus copying saves on atomic counting
   }
-  mtx.unlock();
 }
 
 void MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
@@ -47,7 +47,7 @@ void MapController::moveMob (std::string id, std::tuple<int, int, int> origin, s
   auto [z1, x1, y1] = origin;
   auto [z2, x2, y2] = destination;
 
-  mtx.lock();
+  std::unique_lock lock(mtx);
   if (mobMap[z1][{x1, y1}].find(id) != mobMap[z1][{x1, y1}].end())
   {
     SDL_Log("found mob %s", id.c_str());
@@ -55,7 +55,6 @@ void MapController::moveMob (std::string id, std::tuple<int, int, int> origin, s
     SDL_Log("moved mob");
     //mobMap[z1][{x1, y1}].erase(id);
   }
-  mtx.unlock();
 }
 
 void MapController::processChunk(Rect* chunkRect, std::function<void(int, int, int)> f)
@@ -309,9 +308,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
           }
         }
       }
-      mtx.lock();
+      std::unique_lock lock(mtx);
       it->second.initialized = true;
-      mtx.unlock();
     }
   };
 
@@ -335,8 +333,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
   chunker.processChunk({ chonkers });
 
   mapGenerator.reset(&mtx);
-  mtx.lock();
+  std::unique_lock lock(mtx);
   SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size()*2);
-  mtx.unlock();
   return 0;
 }

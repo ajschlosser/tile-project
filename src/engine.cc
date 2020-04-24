@@ -351,18 +351,14 @@ void GameEngine::handleEvents()
           tileSize = tileSize * 2;
           break;
         case SDLK_r:
-          auto [_w, _h] = gfxController.getWindowGridDimensions();
-          for (auto i = gfxController.camera.x - _w/2; i < gfxController.camera.x + _w/2 + 5; i++)
-          {
-            for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++)
+          iterateOverTilesInView([this](std::tuple<int, int, int, int> locationData){
+            auto [x, y, i, j] = locationData;
+            for (auto it : mapController.mobMap[zLevel][{i, j}])
             {
-              for (auto it : mapController.mobMap[zLevel][{i, j}])
-              {
-                auto id = it.second->id;
-                mapController.moveMob(id, {zLevel, i, j}, {zLevel, i+1, j });
-              }
+              auto id = it.second->id;
+              mapController.moveMob(id, {zLevel, i, j}, {zLevel, i+1, j });
             }
-          }
+          });
           break;
       }
     }
@@ -378,10 +374,11 @@ void GameEngine::renderCopyTiles()
   );
 
   iterateOverTilesInView([this](std::tuple<int, int, int, int> locationData){
+    
     auto [x, y, i, j] = locationData;
     auto terrainObject = mapController.terrainMap[zLevel].find({ i, j });
     auto worldObject = mapController.worldMap[zLevel].find({ i, j });
-    // auto mobObject = mapController.mobMap[zLevel].find({ i, j });
+    //gamemap::mtx.lock();
     if (terrainObject != mapController.terrainMap[zLevel].end())
       gfxController.renderCopyTerrain(&terrainObject->second, x, y);
     else
@@ -389,11 +386,15 @@ void GameEngine::renderCopyTiles()
     if (worldObject != mapController.worldMap[zLevel].end())
       for ( auto w : worldObject->second )
         gfxController.renderCopyObject<WorldObject>(w, x, y);
-    // if (mobObject != mapController.mobMap[zLevel].end())
-    //   for ( auto &w : mobObject->second )
-    //   {
-    //     gfxController.renderCopyObject<MobObject>(w.second, x, y);
-    //   }
+    //map::getMutex()->unlock();
+    //gamemap::mtx.unlock();
+    auto mobObject = mapController.mobMap[zLevel].find({ i, j });
+    if (mobObject != mapController.mobMap[zLevel].end())
+      for ( auto &w : mobObject->second )
+      {
+        gfxController.renderCopyObject<MobObject>(w.second, x, y);
+      }
+    map::getMutex()->unlock();
   });
 
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,

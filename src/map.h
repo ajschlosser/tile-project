@@ -7,7 +7,13 @@
 
 #include <functional>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
+
+namespace map
+{
+  std::shared_mutex* getMutex();
+}
 
 struct MapGenerator
 {
@@ -15,14 +21,14 @@ struct MapGenerator
   BiomeType* currentBiomeType;
   std::vector<SDL_Rect*> rects;
   MapGenerator () : processing(false), currentBiomeType(NULL) {}
-  void init(BiomeType* b, std::mutex* mtx)
+  void init(BiomeType* b, std::shared_mutex* mtx)
   {
     mtx->lock();
     processing = true;
     currentBiomeType = b;
     mtx->unlock();
   }
-  void reset(std::mutex* mtx)
+  void reset(std::shared_mutex* mtx)
   {
     mtx->lock();
     processing = false;
