@@ -331,7 +331,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
   std::vector<chunkFunctor> objectAdders { addWorldObjects };
 
   ChunkProcessor chunker ( chunkRect, maxDepth );
-  SDL_Log("Adding terring objects...");
+  SDL_Log("Adding terrain objects...");
   chunker.multiProcessChunk({ objectPlacers, chunkFuzzers });
   SDL_Log("Adding world and mob objects...");
   chunker.processChunk({ objectAdders });

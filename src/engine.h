@@ -79,7 +79,7 @@ struct GameEngine
       x++;
     }
   }
-  GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(50), zMaxLevel(2) {}
+  GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(200), zMaxLevel(2) {}
 };
 
 #endif

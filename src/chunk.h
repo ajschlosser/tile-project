@@ -31,6 +31,11 @@ struct ChunkProcessor
     chunk = r;
     smallchunks = r->getRects();
     this->zMax = zMax;
+    SDL_Log("Chunk processor created for 1 %dx%d chunk of %lu???mp small 15x15 chunks",
+      r->getWidth(),
+      r->getHeight(),
+      smallchunks->size()
+    );
   }
   void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
   void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2>);

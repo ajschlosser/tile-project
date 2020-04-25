@@ -27,7 +27,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     for (auto f : functors[0])
     {
       BiomeType* b = f.second();
-      SDL_Log("Generating '%s' chunk", b->name.c_str());
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
       std::thread t([this, f, b, functors](int x1, int y1, int x2, int y2) {
         for (auto h = 0; h < zMax; h++)
           for (auto i = x1; i != x2; i++)
@@ -40,7 +40,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     for (auto f : functors[1])
     {
       BiomeType* b = f.second();
-      SDL_Log("Post-processing chunk (%d, %d)", it->x1, it->x2);
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Post-processing chunk (%d, %d)", it->x1, it->x2);
       std::thread t([this, &f, &b, it]() {
         std::get<chunkProcessorCallbackFunctor>(f.first)(&(*it), b);
       });
