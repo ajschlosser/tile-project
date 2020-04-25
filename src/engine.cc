@@ -9,13 +9,9 @@ int GameEngine::init()
 
   std::srand(std::time(nullptr));
   if (!tileSize)
-  {
     tileSize = spriteSize;
-  }
   if (movementSpeed > tileSize)
-  {
     movementSpeed = tileSize;
-  }
 
   gfxController.initializeSDL();
 

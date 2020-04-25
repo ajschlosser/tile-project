@@ -11,7 +11,7 @@
 
 typedef std::function<void(int, int, int)> chunkFunctor;
 typedef std::function<void(int, int, int, BiomeType*)> chunkProcessorFunctor;
-typedef std::function<void(Rect*, std::vector<chunkProcessorFunctor>)> chunkProcessorCallbackFunctor;
+typedef std::function<void(Rect*, BiomeType* b)> chunkProcessorCallbackFunctor;
 typedef std::variant<chunkFunctor, chunkProcessorFunctor, chunkProcessorCallbackFunctor> genericChunkFunctor;
 
 struct ChunkReport

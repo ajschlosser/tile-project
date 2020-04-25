@@ -251,12 +251,11 @@ int MapController::generateMapChunk(Rect* chunkRect)
 {
   if (mapGenerator.processing)
   {
-    SDL_Log("Already processing %s... Stopped.", mapGenerator.currentBiomeType->name.c_str());
+    SDL_Log("Already processing chunk.");
     return -1;
   }
 
   mapGenerator.init(getRandomBiomeType(), &mtx);
-  SDL_Log("Generating chunk. Current biome: %s", mapGenerator.currentBiomeType->name.c_str());
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
@@ -271,11 +270,10 @@ int MapController::generateMapChunk(Rect* chunkRect)
   auto fudgeBiomes = [this](int h, int i, int j, BiomeType* b)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
+    if (it != terrainMap[h].end() && it->second.initialized == false)
     {
       Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getChunkReport(&r);
-
       if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
         updateTile(h, i, j, &biomeTypes["snow"], &terrainTypes["snow"]);
       else if (results.counts[h]["biome"]["water"] > 15)
@@ -286,14 +284,12 @@ int MapController::generateMapChunk(Rect* chunkRect)
   auto addWorldObjects = [this](int h, int i, int j)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
+    if (it != terrainMap[h].end() && it->second.initialized == false)
     {
       for (auto relatedObjectType : it->second.terrainType->objects)
       {
         if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
-        {
           continue;
-        }
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
@@ -320,27 +316,34 @@ int MapController::generateMapChunk(Rect* chunkRect)
     }
   };
 
-  auto fuzzIt = [this](Rect* r, std::vector<chunkProcessorFunctor> v)
+  auto fuzzIt = [this](Rect* r, BiomeType* b)
   {
     auto dingleTips = [this](int h, int i, int j)
     {
-      updateTile(h, i, j, &biomeTypes["snowlands"], &terrainTypes["snow"] );
+      updateTile(h, i, j, &biomeTypes["water"], &terrainTypes["water"] );
     };
-    for (auto f : v) iterateOverChunkEdges(r, dingleTips);
+    iterateOverChunkEdges(r, dingleTips);
   };
 
-  Rect fudgeRect = { chunkRect->x1 - 15, chunkRect->y1 - 15, chunkRect->x2 + 15, chunkRect->y2 + 15}; // necessary to fudge edges of already processed chunks
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
-  multiprocessChain placers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
-  multiprocessChain fuzzers { { fuzzIt, [this](){return &biomeTypes["water"];} } };
-  std::vector<chunkFunctor> chonkers { addWorldObjects };
+  multiprocessChain objectPlacers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
+  multiprocessChain chunkFuzzers { { fuzzIt, [this](){return &biomeTypes["water"];} } };
+  std::vector<chunkFunctor> objectAdders { addWorldObjects };
 
   ChunkProcessor chunker ( chunkRect, maxDepth );
-  chunker.multiProcessChunk({ placers, fuzzers });
-  chunker.processChunk({ chonkers });
+  SDL_Log("Adding terring objects...");
+  chunker.multiProcessChunk({ objectPlacers, chunkFuzzers });
+  SDL_Log("Adding world and mob objects...");
+  chunker.processChunk({ objectAdders });
+  SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);
   std::unique_lock lock(mtx);
-  SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size()*2);
+  SDL_Log("Created chunk. Map now has %lu terrain objects, %lu world objects, and %lu mob objects for a total of %lu",
+    terrainMap[0].size()*2,
+    worldMap[0].size()*2,
+    terrainMap[0].size()*2,
+    terrainMap[0].size()*2+worldMap[0].size()*2+mobMap[0].size()*2
+  );
   return 0;
 }
