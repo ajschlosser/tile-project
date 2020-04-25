@@ -148,32 +148,6 @@ struct WorldObject : Tile
   }
 };
 
-struct MobObject;
-struct TileObject : Tile
-{
-  std::vector<TerrainObject> terrainObjects;
-  std::vector<std::shared_ptr<WorldObject>> worldObjects;
-  std::vector<std::shared_ptr<MobObject>> mobObjects;
-  void setTerrainObject (TerrainObject t) { if (!terrainObjects.size()) terrainObjects.push_back(t); else terrainObjects.at(0) = t; }
-  BiomeType* getBiomeType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).biomeType; }
-  TerrainType* getTerrainType () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType; }
-  Sprite* getTerrainTypeSprite () { if (!terrainObjects.size()) return nullptr; else return terrainObjects.at(0).terrainType->sprite; }
-  TerrainObject* getTerrainObject () { if (!terrainObjects.size()) return nullptr; else return &terrainObjects.at(0); }
-  void addWorldObject (std::shared_ptr<WorldObject> o) { worldObjects.push_back(o); }
-  void addMobObject (std::shared_ptr<MobObject> m) { mobObjects.push_back(m); }
-  void pruneWorldObjects ()
-  {
-    for (auto &&it = worldObjects.begin(); it != worldObjects.end();) {
-      if (it->get()->biomeType->name != biomeType->name)
-        it = worldObjects.erase(it);
-      else
-        ++it;
-    }
-  }
-  std::vector<std::shared_ptr<WorldObject>>* getWorldObjects () { if (!worldObjects.size()) return nullptr; else return &worldObjects; }
-  std::vector<std::shared_ptr<MobObject>>* getMobObjects () { if (!mobObjects.size()) return nullptr; else return &mobObjects; }
-};
-
 
 struct SimulatedObject : Tile
 {

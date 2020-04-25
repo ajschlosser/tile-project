@@ -31,7 +31,6 @@ struct GraphicsController
   int renderCopySprite(Sprite*, int, int);
   template<class T> int renderCopyObject(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->sprite, x, y); }
   int renderCopyTerrain(TerrainObject* t, int x, int y) { return renderCopySprite(t->terrainType->sprite, x, y); }
-  int renderCopyTile(TileObject* t, std::tuple<int, int> coords) { auto [x, y] = coords; return renderCopySprite(t->getTerrainTypeSprite(), x, y); }
   SDL_Surface* getGameSurfaceFromWindow();
   SDL_Texture* getTextureFromSurface (SDL_Surface* s);
   SDL_Texture* getGameSurfaceTexture ();
