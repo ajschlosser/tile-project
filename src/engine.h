@@ -44,7 +44,6 @@ struct GameEngine
   std::vector<std::string> biomeTypeKeys;
   objects::terrainTypesMap terrainTypes;
   objects::tileTypesMap tileTypes;
-  objects::tileMap* tileMap;
   objects::biomeMap* biomeMap;
   objects::terrainMap* terrainMap;
   objects::worldMap* worldMap;

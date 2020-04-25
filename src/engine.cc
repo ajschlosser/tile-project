@@ -232,8 +232,8 @@ void GameEngine::processMap(int directions)
     checkCoordinates.y -= _h;
   if (directions & DOWN)
     checkCoordinates.y += _h;
-  auto it = mapController.tileMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
-  if (it == mapController.tileMap[zLevel].end())
+  auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
+  if (it == mapController.terrainMap[zLevel].end())
   {
     SDL_Log("Detected ungenerated map: %d %d", checkCoordinates.x, checkCoordinates.y);
     mapController.generateMapChunk(&chunkRect);
@@ -296,7 +296,7 @@ void GameEngine::handleEvents()
     }
     else if (event->type == SDL_KEYDOWN)
     {
-      auto t = &mapController.tileMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
+      auto t = &mapController.terrainMap[zLevel][{gfxController.camera.x, gfxController.camera.y}];
       std::string objs;
       switch(event->key.keysym.sym)
       {
@@ -305,18 +305,15 @@ void GameEngine::handleEvents()
           running = false;
           break;
         case SDLK_SPACE:
-          for (auto o : t->worldObjects)
-            objs += o->objectType->name + " ";
           SDL_Log(
-            "\nCamera: %dx%dx%dx%d\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent terrain type sprite name: %s\nObjects on tile: %s\nInitialized: %d",
+            "\nCamera: %dx%dx%dx%d\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent terrain type sprite name: %s\nInitialized: %d",
             gfxController.camera.x,
             gfxController.camera.y,
             gfxController.camera.w,
             gfxController.camera.h,
-            t->getTerrainType()->name.c_str(),
-            t->getBiomeType()->name.c_str(),
-            t->getTerrainType()->sprite->name.c_str(),
-            objs.c_str(),
+            t->terrainType->name.c_str(),
+            t->biomeType->name.c_str(),
+            t->terrainType->sprite->name.c_str(),
             t->initialized
           );
           break;
@@ -328,7 +325,7 @@ void GameEngine::handleEvents()
           }
           break;
         case SDLK_q:
-          if (std::abs(zLevel) < static_cast <int>(mapController.tileMap.size()))
+          if (std::abs(zLevel) < static_cast <int>(mapController.terrainMap.size()))
           {
             if (zLevel < zMaxLevel - 1)
             {

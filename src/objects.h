@@ -164,7 +164,7 @@ struct TileObject : Tile
   void pruneWorldObjects ()
   {
     for (auto &&it = worldObjects.begin(); it != worldObjects.end();) {
-      if (it->get()->biomeType->name != getBiomeType()->name)
+      if (it->get()->biomeType->name != biomeType->name)
         it = worldObjects.erase(it);
       else
         ++it;
@@ -230,7 +230,6 @@ namespace objects
   typedef std::map<std::string, TerrainType> terrainTypesMap;
   typedef std::map<std::string, TileType> tileTypesMap;
   typedef std::vector<std::shared_ptr<WorldObject>> objectsVector;
-  typedef std::map<int, std::map<std::pair<int, int>, TileObject>> tileMap;
   typedef std::map<int, std::map<std::pair<int, int>, BiomeObject>> biomeMap;
   typedef std::map<int, std::map<std::pair<int, int>, TerrainObject>> terrainMap;
   typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<WorldObject>>>> worldMap;

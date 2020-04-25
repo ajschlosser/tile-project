@@ -22,11 +22,6 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, Terra
   b.y = y;
   terrainMap[z][{ x, y }] = t;
   biomeMap[z][{ x, y }] = b;
-  TileObject tile;
-  tile.x = x;
-  tile.y = y;
-  tile.setTerrainObject(t);
-  tileMap[z][{ x, y }] = tile;
 }
 
 void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject> w = nullptr, std::shared_ptr<MobObject> m = nullptr)
@@ -154,8 +149,8 @@ std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* 
   std::map<int, std::map<std::string, int>> t;
   auto lambda = [this, &t](int h, int i, int j)
   {
-    if (tileMap[h].find({ i, j }) != tileMap[h].end())
-      t[h][tileMap[h][{i, j}].getTerrainType()->name] += 1;
+    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+      t[h][terrainMap[h][{i, j}].terrainType->name] += 1;
   };
   processChunk(r, lambda);
   return t;
@@ -171,13 +166,13 @@ ChunkReport MapController::getChunkReport (Rect* r)
     std::map<std::string, std::tuple<std::string, int>> top;
     top["biome"] = {"none", 0};
     top["terrain"] = {"none", 0};
-    auto it = tileMap[h].find({ i, j });
-    if (it != tileMap[h].end() && it->second.initialized == true)
+    auto it = terrainMap[h].find({ i, j });
+    if (it != terrainMap[h].end() && it->second.initialized == true)
     {
       report.counts[h]["terrain"][it->second.terrainType->name]++;
-      report.counts[h]["biome"][it->second.getBiomeType()->name]++;
+      report.counts[h]["biome"][it->second.biomeType->name]++;
 
-      int bn = report.counts[h]["biome"][it->second.getBiomeType()->name];
+      int bn = report.counts[h]["biome"][it->second.biomeType->name];
       int tn = report.counts[h]["terrain"][it->second.terrainType->name];
 
       auto [ topBiomeName, topBiomeCount ] = top["biome"];
@@ -185,8 +180,8 @@ ChunkReport MapController::getChunkReport (Rect* r)
 
       if (bn > topBiomeCount)
       {
-        top["biome"] = { it->second.getBiomeType()->name, bn };
-        report.top[h]["biome"] = it->second.getBiomeType()->name;
+        top["biome"] = { it->second.biomeType->name, bn };
+        report.top[h]["biome"] = it->second.biomeType->name;
       }
       if (tn > topTerrainCount)
       {
@@ -206,11 +201,11 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> MapController::
   std::map<int, std::map<std::string, std::map<std::string, int>>> res;
   auto lambda = [this, &res](int h, int i, int j)
   {
-    auto it = tileMap[h].find({ i, j });
-    if (it != tileMap[h].end())
+    auto it = terrainMap[h].find({ i, j });
+    if (it != terrainMap[h].end())
     {
-      res[h]["terrain"][it->second.getTerrainType()->name]++;
-      res[h]["biome"][it->second.getBiomeType()->name]++;
+      res[h]["terrain"][it->second.terrainType->name]++;
+      res[h]["biome"][it->second.biomeType->name]++;
     }
   };
   processChunk(r, lambda);
@@ -224,8 +219,8 @@ std::map<int, std::map<std::string, int>> MapController::getBiomesInRange (Rect*
   std::map<int, std::map<std::string, int>> results;
   auto lambda = [this, &results](int h, int i, int j)
   {
-    if (tileMap[h].find({ i, j }) != tileMap[h].end())
-      results[h][tileMap[h][{i, j}].getBiomeType()->name] += 1;
+    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+      results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
   };
   processChunk(rangeRect, lambda);
   return results;
@@ -265,8 +260,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
-    auto it = tileMap[h].find({i, j});
-    if (it == tileMap[h].end())
+    auto it = terrainMap[h].find({i, j});
+    if (it == terrainMap[h].end())
     {
       auto randomTerrainType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
       updateTile(h, i, j, b, &terrainTypes[randomTerrainType]);
@@ -275,13 +270,13 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto fudgeBiomes = [this](int h, int i, int j, BiomeType* b)
   {
-    auto it = tileMap[h].find({i, j});
-    if (it != tileMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
+    auto it = terrainMap[h].find({i, j});
+    if (it != terrainMap[h].end() && it->second.initialized == false) // && it->second.seen != true)
     {
       Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getChunkReport(&r);
 
-      if (it->second.getBiomeType()->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
+      if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
         updateTile(h, i, j, &biomeTypes["snow"], &terrainTypes["snow"]);
       else if (results.counts[h]["biome"]["water"] > 15)
         updateTile(h, i, j, &biomeTypes["water"], &terrainTypes["water"]);
@@ -290,19 +285,19 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto addWorldObjects = [this](int h, int i, int j)
   {
-    auto it = tileMap[h].find({i, j});
-    if (it != tileMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
+    auto it = terrainMap[h].find({i, j});
+    if (it != terrainMap[h].end() && it->second.initialized == false) //&& it->second.seen != true)
     {
-      for (auto relatedObjectType : it->second.getTerrainType()->objects)
+      for (auto relatedObjectType : it->second.terrainType->objects)
       {
-        if (!objectTypes[relatedObjectType].biomes[it->second.getBiomeType()->name])
+        if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
         {
           continue;
         }
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &objectTypes[relatedObjectType], &biomeTypes[it->second.getBiomeType()->name]
+            i, j, &objectTypes[relatedObjectType], &biomeTypes[it->second.biomeType->name]
           );
           updateTile(h, i, j, o, nullptr);
         }
@@ -311,10 +306,10 @@ int MapController::generateMapChunk(Rect* chunkRect)
       {
         for ( auto mob : mobTypes )
         {
-          if (mob.second.biomes.find(it->second.getBiomeType()->name) != mob.second.biomes.end())
+          if (mob.second.biomes.find(it->second.biomeType->name) != mob.second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, mob.second, &biomeTypes[it->second.getBiomeType()->name]
+              i, j, mob.second, &biomeTypes[it->second.biomeType->name]
             );
             updateTile(h, i, j, nullptr, m);
           }
@@ -346,6 +341,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   mapGenerator.reset(&mtx);
   std::unique_lock lock(mtx);
-  SDL_Log("Created chunk. Map now has %lu tiles", tileMap[0].size()*2);
+  SDL_Log("Created chunk. Map now has %lu tiles", terrainMap[0].size()*2);
   return 0;
 }
