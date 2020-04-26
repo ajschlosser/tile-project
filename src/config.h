@@ -13,6 +13,7 @@ struct ConfigurationController
   int gameSize;
   int tileSize;
   int spriteSize;
+  int chunkFuzz;
   objects::mobTypesMap mobTypes;
   objects::objectTypesMap objectTypes;
   objects::biomeTypesMap biomeTypes;

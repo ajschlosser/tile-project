@@ -38,10 +38,12 @@ struct ChunkProcessor
     );
   }
   void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
-  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2>);
-  void process (Rect*, std::vector<chunkFunctor> functors);
+  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2>, int);
+  void lazyProcess (Rect* r, std::vector<chunkFunctor>, int);
+  void process (Rect*, std::vector<chunkFunctor>);
   void processChunk (std::vector<chunkFunctor> functors) { process(chunk, functors); }
-  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors) { multiProcess(chunk, functors); }
+  void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
+  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
 };
 
 #endif

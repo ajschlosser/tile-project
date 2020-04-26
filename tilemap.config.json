@@ -1,7 +1,12 @@
 {
-  "gameSize": 250,
+  "gameSize": 100,
   "tileSize": 16,
   "spriteSize": 32,
+  "map": {
+    "chunks": {
+      "fuzz": 3
+    }
+  },
   "mobs": [
     {
       "name": "slime",

@@ -7,6 +7,8 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
   std::ifstream configFile(configFilePath.c_str());
   configFile >> configJson;
 
+  chunkFuzz = configJson["map"]["chunks"]["fuzz"].asInt();
+
   gameSize = configJson["gameSize"].asInt();
   tileSize = configJson["tileSize"].asInt();
   spriteSize = configJson["spriteSize"].asInt();

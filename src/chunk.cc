@@ -18,7 +18,7 @@ void ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, Biom
     t.detach();
   }
 }
-void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors)
+void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors, int fuzz = 1)
 {
   // Process every tile in every chunk
   for (auto it = smallchunks->begin(); it != smallchunks->end(); ++it)
@@ -28,10 +28,10 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     {
       BiomeType* b = f.second();
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
-      std::thread t([this, f, b, functors](int x1, int y1, int x2, int y2) {
-        for (auto h = 0; h < zMax; h++)
-          for (auto i = x1; i != x2; i++)
-            for (auto j = y1; j != y2; j++)
+      std::thread t([this, f, b, functors, fuzz](int x1, int y1, int x2, int y2) {
+        for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
+          for (auto i = x1; i < x2; i += std::rand() % fuzz + 1)
+            for (auto j = y1; j < y2; j += std::rand() % fuzz + 1)
               std::get<chunkProcessorFunctor>(f.first)(h, i, j, b);
       }, it->x1, it->y1, it->x2, it->y2);
       t.join();
@@ -47,6 +47,13 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
       t.join();
     }
   }
+}
+void ChunkProcessor::lazyProcess (Rect* r, std::vector<chunkFunctor> functors, int fuzz = 1)
+{
+  for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
+    for (auto i = r->x1; i < r->x2; i += std::rand() % fuzz + 1)
+      for (auto j = r->y1; j < r->y2; j += std::rand() % fuzz + 1)
+        for (auto f : functors) f(h, i, j);
 }
 void ChunkProcessor::process (Rect* r, std::vector<chunkFunctor> functors)
 {

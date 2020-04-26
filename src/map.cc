@@ -337,7 +337,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
   // t.join();
   chunker.multiProcessChunk({ objectPlacers, chunkFuzzers });
   SDL_Log("Adding world and mob objects...");
-  chunker.multiProcessChunk({ objectAdders, chunkFuzzers });
+  chunker.multiProcessChunk({ objectAdders, chunkFuzzers }, cfg->chunkFuzz);
   SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);
