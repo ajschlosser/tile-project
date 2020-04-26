@@ -1,4 +1,7 @@
 {
+  "gameSize": 100,
+  "tileSize": 32,
+  "spriteSize": 32,
   "mobs": [
     {
       "name": "slime",

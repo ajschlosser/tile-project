@@ -1,11 +1,15 @@
 #include "config.h"
 
-ConfigurationController::ConfigurationController (std::string configFilePath, std::map<std::string, Sprite*> s)
+ConfigurationController::ConfigurationController (std::string configFilePath, std::map<std::string, Sprite> s)
 {
 
   sprites = s;
   std::ifstream configFile(configFilePath.c_str());
   configFile >> configJson;
+
+  gameSize = configJson["gameSize"].asInt();
+  tileSize = configJson["tileSize"].asInt();
+  spriteSize = configJson["spriteSize"].asInt();
 
   for (auto i = 0; i < configJson["terrains"].size(); ++i)
   {
@@ -18,8 +22,8 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     {
       relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
     }
-    TileType tileType { sprites[spriteName], tileTypeName };
-    TerrainType terrainType { sprites[spriteName], tileTypeName, relatedObjectTypes };
+    TileType tileType { &sprites[spriteName], tileTypeName };
+    TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
     terrainType.impassable = impassable;
     tileTypes[tileType.name] = tileType;
     terrainTypes[terrainType.name] = terrainType;
@@ -53,9 +57,9 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     {
       bM[biomesArray[i].asString()] = 1;
     }
-    TileType tileType { sprites[spriteName], objectTypeName };
+    TileType tileType { &sprites[spriteName], objectTypeName };
     tileTypes[tileType.name] = tileType;
-    ObjectType o { sprites[spriteName], objectTypeName, impassable, bM };
+    ObjectType o { &sprites[spriteName], objectTypeName, impassable, bM };
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -70,9 +74,9 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       bM[biomesArray[i].asString()] = 1;
     }
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
-    TileType tileType { sprites[spriteName], mobTypeName };
+    TileType tileType { &sprites[spriteName], mobTypeName };
     tileTypes[tileType.name] = tileType;
-    MobType mobType { sprites[spriteName], mobTypeName, false, bM };
+    MobType mobType { &sprites[spriteName], mobTypeName, false, bM };
     mobTypes[mobType.name] = mobType;
   }
 }

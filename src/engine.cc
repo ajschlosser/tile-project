@@ -84,37 +84,38 @@ int GameEngine::init()
   tilemapImage = { surface, texture };
   gfxController.tilemapImage = &tilemapImage;
   gfxController.tilemapTexture = texture;
+  std::map<std::string, Sprite> spriteMap;
   for (auto i = 0; i < surface->w; i += spriteSize)
   {
     for (auto j = 0; j < surface->h; j += spriteSize)
     {
       std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
       Sprite s { i, j, name };
-      sprites[name] = &s;
+      spriteMap[name] = s;
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
         "Created sprite: %s",
         name.c_str()
       );
     }
   }
-  gfxController.sprites = sprites;
+  gfxController.sprites = spriteMap;
   SDL_Log("Spritesheet processed.");
 
   SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
-  configController = ConfigurationController("tilemap.config.json", sprites);
+  configController = ConfigurationController("tilemap.config.json", spriteMap);
   auto [biomeTypes, biomeTypeKeys, terrainTypes, mobTypes, objectTypes, tileTypes] = configController.getTypeMaps();
-  player = {gameSize/2, gameSize/2, &configController.tileTypes["water"]};
+  player = {configController.gameSize/2, configController.gameSize/2, &configController.tileTypes["water"]};
   mapController = MapController(
     zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes, &configController
   );
 
   // Create default tilemap
   SDL_Log("Generating default tilemap...");
-  Rect initialChunk = { 0 - gameSize, 0 - gameSize, gameSize, gameSize };
+  Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
 
   SDL_Log("Tilemap of %d tiles created.",
-    gameSize*gameSize*4
+    configController.gameSize*configController.gameSize*4
   );
 
   return 0;
@@ -142,10 +143,10 @@ void GameEngine::processMap(int directions)
   auto [_w, _h] = gfxController.getWindowGridDimensions();
   SDL_Point checkCoordinates = { gfxController.camera.x, gfxController.camera.y };
   Rect chunkRect = {
-    gfxController.camera.x-gameSize*2,
-    gfxController.camera.y-gameSize*2,
-    gfxController.camera.x+gameSize*2,
-    gfxController.camera.y+gameSize*2
+    gfxController.camera.x-configController.gameSize*2,
+    gfxController.camera.y-configController.gameSize*2,
+    gfxController.camera.x+configController.gameSize*2,
+    gfxController.camera.y+configController.gameSize*2
   };
   if (directions & RIGHT)
     checkCoordinates.x += _w;

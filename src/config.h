@@ -10,6 +10,9 @@
 
 struct ConfigurationController
 {
+  int gameSize;
+  int tileSize;
+  int spriteSize;
   objects::mobTypesMap mobTypes;
   objects::objectTypesMap objectTypes;
   objects::biomeTypesMap biomeTypes;
@@ -17,9 +20,9 @@ struct ConfigurationController
   objects::terrainTypesMap terrainTypes;
   objects::tileTypesMap tileTypes;
   Json::Value configJson;
-  std::map<std::string, Sprite*> sprites;
+  std::map<std::string, Sprite> sprites;
   ConfigurationController () {}
-  ConfigurationController (std::string, std::map<std::string, Sprite*>);
+  ConfigurationController (std::string, std::map<std::string, Sprite>);
   std::tuple<
     objects::biomeTypesMap*,
     std::vector<std::string>*,

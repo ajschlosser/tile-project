@@ -33,7 +33,6 @@ struct GameEngine
   SDL_DisplayMode displayMode;
   Player player;
   int tileSize;
-  int gameSize;
   const int spriteSize;
   int zLevel;
   int zMaxLevel;
@@ -49,7 +48,7 @@ struct GameEngine
   objects::worldMap* worldMap;
   objects::mobMap* mobMap;
   std::map<int, std::vector<std::shared_ptr<MobObject>>> mobs;
-  std::map<std::string, Sprite*> sprites;
+  std::map<std::string, Sprite>* sprites;
   SDL_Rect camera;
   int init();
   void scrollGameSurface(int);
@@ -79,7 +78,7 @@ struct GameEngine
       x++;
     }
   }
-  GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), gameSize(200), zMaxLevel(2) {}
+  GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
 };
 
 #endif

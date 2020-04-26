@@ -79,8 +79,12 @@ int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
 
 int GraphicsController::renderCopySprite(std::string spriteName, int x, int y)
 {
-  Sprite *s = sprites[spriteName];
-  return renderCopySprite(s, x, y);
+  auto it = sprites.find(spriteName);
+  if (it != sprites.end())
+    return renderCopySprite(&it->second, x, y);
+  else
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not render sprite: %s", spriteName.c_str());
+    return -1;
 }
 
 SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
