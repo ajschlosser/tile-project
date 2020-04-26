@@ -79,7 +79,7 @@ int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
 
 int GraphicsController::renderCopySprite(std::string spriteName, int x, int y)
 {
-  Sprite *s = &sprites[spriteName];
+  Sprite *s = sprites[spriteName];
   return renderCopySprite(s, x, y);
 }
 

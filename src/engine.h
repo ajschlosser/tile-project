@@ -3,8 +3,8 @@
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
-#include "json/json.h"
 #include "objects.h"
+#include "config.h"
 #include "input.h"
 #include "map.h"
 #include "graphics.h"
@@ -15,11 +15,11 @@
 #include <utility>
 #include <vector>
 #include <thread>
-#include <fstream>
 #include <memory>
 
 struct GameEngine
 {
+  ConfigurationController configController;
   GraphicsController gfxController;
   UserInputHandler userInputHandler;
   bool running;
@@ -38,18 +38,18 @@ struct GameEngine
   int zLevel;
   int zMaxLevel;
   MapController mapController;
-  objects::mobTypesMap mobTypes;
-  objects::objectTypesMap objectTypes;
-  objects::biomeTypesMap biomeTypes;
-  std::vector<std::string> biomeTypeKeys;
-  objects::terrainTypesMap terrainTypes;
-  objects::tileTypesMap tileTypes;
+  objects::mobTypesMap* mobTypes;
+  objects::objectTypesMap* objectTypes;
+  objects::biomeTypesMap* biomeTypes;
+  std::vector<std::string>* biomeTypeKeys;
+  objects::terrainTypesMap* terrainTypes;
+  objects::tileTypesMap* tileTypes;
   objects::biomeMap* biomeMap;
   objects::terrainMap* terrainMap;
   objects::worldMap* worldMap;
   objects::mobMap* mobMap;
   std::map<int, std::vector<std::shared_ptr<MobObject>>> mobs;
-  std::map<std::string, Sprite> sprites;
+  std::map<std::string, Sprite*> sprites;
   SDL_Rect camera;
   int init();
   void scrollGameSurface(int);

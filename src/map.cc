@@ -263,7 +263,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     if (it == terrainMap[h].end())
     {
       auto randomTerrainType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
-      updateTile(h, i, j, b, &terrainTypes[randomTerrainType]);
+      updateTile(h, i, j, b, &cfg->terrainTypes[randomTerrainType]);
     }
   };
 
@@ -275,9 +275,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
       Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
       auto results = getChunkReport(&r);
       if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
-        updateTile(h, i, j, &biomeTypes["snow"], &terrainTypes["snow"]);
+        updateTile(h, i, j, &cfg->biomeTypes["snow"], &cfg->terrainTypes["snow"]);
       else if (results.counts[h]["biome"]["water"] > 15)
-        updateTile(h, i, j, &biomeTypes["water"], &terrainTypes["water"]);
+        updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"]);
     }
   };
 
@@ -288,24 +288,24 @@ int MapController::generateMapChunk(Rect* chunkRect)
     {
       for (auto relatedObjectType : it->second.terrainType->objects)
       {
-        if (!objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
+        if (!cfg->objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
           continue;
         if (std::rand() % 1000 > 825)
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &objectTypes[relatedObjectType], &biomeTypes[it->second.biomeType->name]
+            i, j, &cfg->objectTypes[relatedObjectType], &cfg->biomeTypes[it->second.biomeType->name]
           );
           updateTile(h, i, j, o, nullptr);
         }
       }
       if (std::rand() % 1000 > 900)
       {
-        for ( auto mob : mobTypes )
+        for ( auto mob : cfg->mobTypes )
         {
           if (mob.second.biomes.find(it->second.biomeType->name) != mob.second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, mob.second, &biomeTypes[it->second.biomeType->name]
+              i, j, mob.second, &cfg->biomeTypes[it->second.biomeType->name]
             );
             updateTile(h, i, j, nullptr, m);
           }
@@ -320,14 +320,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
   {
     auto dingleTips = [this](int h, int i, int j)
     {
-      updateTile(h, i, j, &biomeTypes["water"], &terrainTypes["water"] );
+      updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"] );
     };
     iterateOverChunkEdges(r, dingleTips);
   };
 
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
   multiprocessChain objectPlacers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
-  multiprocessChain chunkFuzzers { { fuzzIt, [this](){return &biomeTypes["water"];} } };
+  multiprocessChain chunkFuzzers { { fuzzIt, [this](){return &cfg->biomeTypes["water"];} } };
   std::vector<chunkFunctor> objectAdders { addWorldObjects };
 
   ChunkProcessor chunker ( chunkRect, maxDepth );

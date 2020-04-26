@@ -4,6 +4,7 @@
 #include "SDL2/SDL.h"
 #include "objects.h"
 #include "chunk.h"
+#include "config.h"
 
 #include <functional>
 #include <mutex>
@@ -42,33 +43,35 @@ struct MapGenerator
 struct MapController
 {
   int maxDepth;
-  objects::mobTypesMap mobTypes;
-  objects::objectTypesMap objectTypes;
-  std::map<std::string, BiomeType> biomeTypes;
-  std::vector<std::string> biomeTypeKeys;
-  objects::terrainTypesMap terrainTypes;
-  objects::tileTypesMap tileTypes;
+  objects::mobTypesMap* mobTypes;
+  objects::objectTypesMap* objectTypes;
+  std::map<std::string, BiomeType>* biomeTypes;
+  std::vector<std::string>* biomeTypeKeys;
+  objects::terrainTypesMap* terrainTypes;
+  objects::tileTypesMap* tileTypes;
   objects::biomeMap biomeMap;
   objects::terrainMap terrainMap;
   objects::worldMap worldMap;
   objects::mobMap mobMap;
+  ConfigurationController* cfg;
   MapGenerator mapGenerator;
   MapController () : maxDepth(0) {}
   MapController (
       int d,
-      objects::mobTypesMap mTypes,
-      objects::objectTypesMap oTypes,
-      objects::biomeTypesMap bTypes,
-      std::vector<std::string> bTypeKeys,
-      objects::terrainTypesMap tnTypes,
-      objects::tileTypesMap tlTypes
+      objects::mobTypesMap* mTypes,
+      objects::objectTypesMap* oTypes,
+      objects::biomeTypesMap* bTypes,
+      std::vector<std::string>* bTypeKeys,
+      objects::terrainTypesMap* tnTypes,
+      objects::tileTypesMap* tlTypes,
+      ConfigurationController* c
   )
   {
     maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
-    terrainTypes = tnTypes; tileTypes = tlTypes;
+    terrainTypes = tnTypes; tileTypes = tlTypes; cfg = c;
   }
 
-  BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
+  BiomeType* getRandomBiomeType() { return cfg->getRandomBiomeType(); }
   void updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
   void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
   std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);

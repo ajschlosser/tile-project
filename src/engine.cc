@@ -3,7 +3,6 @@
 
 int GameEngine::init()
 {
-  player = {gameSize/2, gameSize/2, &mapController.tileTypes["water"]};
   gfxController.tileSize = &tileSize;
   gfxController.spriteSize = const_cast<int*>(&spriteSize);
 
@@ -91,7 +90,7 @@ int GameEngine::init()
     {
       std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
       Sprite s { i, j, name };
-      sprites[name] = s;
+      sprites[name] = &s;
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
         "Created sprite: %s",
         name.c_str()
@@ -102,83 +101,11 @@ int GameEngine::init()
   SDL_Log("Spritesheet processed.");
 
   SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
-  std::ifstream tileConfigJsonFile("tilemap.config.json");
-
-  Json::Value tileConfigJson;
-  tileConfigJsonFile >> tileConfigJson;
-
-  for (auto i = 0; i < tileConfigJson["terrains"].size(); ++i)
-  {
-    std::string spriteName = tileConfigJson["terrains"][i]["sprite"].asString();
-    std::string tileTypeName = tileConfigJson["terrains"][i]["name"].asString();
-    bool impassable = tileConfigJson["terrains"][i]["impassable"].asBool();
-    std::vector<std::string> relatedObjectTypes;
-    const Json::Value& relatedObjectsArray = tileConfigJson["terrains"][i]["objects"];
-    for (int i = 0; i < relatedObjectsArray.size(); i++)
-    {
-      relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
-    }
-    TileType tileType { &sprites[spriteName], tileTypeName };
-    TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
-    terrainType.impassable = impassable;
-    tileTypes[tileType.name] = tileType;
-    terrainTypes[terrainType.name] = terrainType;
-    SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
-  }
-  for (auto i = 0; i < tileConfigJson["biomes"].size(); ++i)
-  {
-    BiomeType b;
-    b.name = tileConfigJson["biomes"][i]["name"].asString();
-    b.maxDepth = tileConfigJson["biomes"][i]["maxDepth"].asInt();
-    b.minDepth = tileConfigJson["biomes"][i]["minDepth"].asInt();
-    const Json::Value& terrainsArray = tileConfigJson["biomes"][i]["terrains"];
-    for (int i = 0; i < terrainsArray.size(); i++)
-    {
-      auto t = terrainsArray[i];
-      b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), t["multiplier"].asFloat() };
-    }
-    biomeTypes[b.name] = b;
-    biomeTypeKeys.push_back(b.name);
-    
-    SDL_Log("- Loaded '%s' biome", b.name.c_str());
-  }
-  for (auto i = 0; i < tileConfigJson["objects"].size(); ++i)
-  {
-    std::string spriteName = tileConfigJson["objects"][i]["sprite"].asString();
-    std::string objectTypeName = tileConfigJson["objects"][i]["name"].asString();
-    bool impassable = tileConfigJson["objects"][i]["impassable"].asBool();
-    const Json::Value& biomesArray = tileConfigJson["objects"][i]["biomes"];
-    std::map<std::string, int> bM;
-    for (int i = 0; i < biomesArray.size(); i++)
-    {
-      bM[biomesArray[i].asString()] = 1;
-    }
-    TileType tileType { &sprites[spriteName], objectTypeName };
-    tileTypes[tileType.name] = tileType;
-    ObjectType o { &sprites[spriteName], objectTypeName, impassable, bM };
-    objectTypes[objectTypeName] = o;
-    SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
-  }
-  for (auto i = 0; i < tileConfigJson["mobs"].size(); ++i)
-  {
-    std::string spriteName = tileConfigJson["mobs"][i]["sprite"].asString();
-    std::string mobTypeName = tileConfigJson["mobs"][i]["name"].asString();
-    const Json::Value& biomesArray = tileConfigJson["mobs"][i]["biomes"];
-    std::map<std::string, int> bM;
-    for (int i = 0; i < biomesArray.size(); i++)
-    {
-      bM[biomesArray[i].asString()] = 1;
-    }
-    SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
-    TileType tileType { &sprites[spriteName], mobTypeName };
-    tileTypes[tileType.name] = tileType;
-    MobType mobType { &sprites[spriteName], mobTypeName, false, bM };
-    mobTypes[mobType.name] = mobType;
-  }
-
-
+  configController = ConfigurationController("tilemap.config.json", sprites);
+  auto [biomeTypes, biomeTypeKeys, terrainTypes, mobTypes, objectTypes, tileTypes] = configController.getTypeMaps();
+  player = {gameSize/2, gameSize/2, &configController.tileTypes["water"]};
   mapController = MapController(
-    zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes
+    zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes, &configController
   );
 
   // Create default tilemap
@@ -363,9 +290,7 @@ void GameEngine::renderCopyTiles()
     auto mobObject = mapController.mobMap[zLevel].find({ i, j });
     if (mobObject != mapController.mobMap[zLevel].end())
       for ( auto &w : mobObject->second )
-      {
         gfxController.renderCopyObject<MobObject>(w, x, y);
-      }
   };
   std::thread r (
     [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, renderer

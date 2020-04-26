@@ -18,7 +18,7 @@ struct GraphicsController
   Image* tilemapImage;
   SDL_DisplayMode displayMode;
   SDL_Rect camera;
-  std::map<std::string, Sprite> sprites;
+  std::map<std::string, Sprite*> sprites;
   int windowWidth;
   int windowHeight;
   int* tileSize;
