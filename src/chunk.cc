@@ -34,7 +34,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
             for (auto j = y1; j != y2; j++)
               std::get<chunkProcessorFunctor>(f.first)(h, i, j, b);
       }, it->x1, it->y1, it->x2, it->y2);
-      t.detach();
+      t.join();
     }
     // Post-process chunk thread
     for (auto f : functors[1])
@@ -44,7 +44,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
       std::thread t([this, &f, &b, it]() {
         std::get<chunkProcessorCallbackFunctor>(f.first)(&(*it), b);
       });
-      t.detach();
+      t.join();
     }
   }
 }

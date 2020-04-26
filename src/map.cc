@@ -281,7 +281,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     }
   };
 
-  auto addWorldObjects = [this](int h, int i, int j)
+  auto addWorldObjects = [this](int h, int i, int j, BiomeType* b)
   {
     auto it = terrainMap[h].find({i, j});
     if (it != terrainMap[h].end() && it->second.initialized == false)
@@ -328,13 +328,16 @@ int MapController::generateMapChunk(Rect* chunkRect)
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
   multiprocessChain objectPlacers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
   multiprocessChain chunkFuzzers { { fuzzIt, [this](){return &cfg->biomeTypes["water"];} } };
-  std::vector<chunkFunctor> objectAdders { addWorldObjects };
+  multiprocessChain objectAdders { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
+  //std::vector<chunkFunctor> objectAdders { addWorldObjects };
 
   ChunkProcessor chunker ( chunkRect, maxDepth );
   SDL_Log("Adding terrain objects...");
+  // std::thread t([this, &chunker](multiprocessChain o, multiprocessChain c){ chunker.multiProcessChunk({ o, c }); }, objectPlacers, chunkFuzzers);
+  // t.join();
   chunker.multiProcessChunk({ objectPlacers, chunkFuzzers });
   SDL_Log("Adding world and mob objects...");
-  chunker.processChunk({ objectAdders });
+  chunker.multiProcessChunk({ objectAdders, chunkFuzzers });
   SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);

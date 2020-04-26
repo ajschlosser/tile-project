@@ -1,6 +1,6 @@
 {
-  "gameSize": 100,
-  "tileSize": 32,
+  "gameSize": 250,
+  "tileSize": 16,
   "spriteSize": 32,
   "mobs": [
     {
