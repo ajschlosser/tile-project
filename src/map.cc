@@ -157,45 +157,6 @@ std::map<int, std::map<std::string, int>> MapController::getTilesInRange (Rect* 
 }
 
 
-ChunkReport MapController::getChunkReport (Rect* r)
-{
-  ChunkReport report;
-
-  auto lambda = [this, &report](int h, int i, int j)
-  {
-    std::map<std::string, std::tuple<std::string, int>> top;
-    top["biome"] = {"none", 0};
-    top["terrain"] = {"none", 0};
-    auto it = terrainMap[h].find({ i, j });
-    if (it != terrainMap[h].end() && it->second.initialized == true)
-    {
-      report.counts[h]["terrain"][it->second.terrainType->name]++;
-      report.counts[h]["biome"][it->second.biomeType->name]++;
-
-      int bn = report.counts[h]["biome"][it->second.biomeType->name];
-      int tn = report.counts[h]["terrain"][it->second.terrainType->name];
-
-      auto [ topBiomeName, topBiomeCount ] = top["biome"];
-      auto [ topTerrainName, topTerrainCount ] = top["terrain"];
-
-      if (bn > topBiomeCount)
-      {
-        top["biome"] = { it->second.biomeType->name, bn };
-        report.top[h]["biome"] = it->second.biomeType->name;
-      }
-      if (tn > topTerrainCount)
-      {
-        top["terrain"] = { it->second.terrainType->name, bn };
-        report.top[h]["terrain"] = it->second.terrainType->name;
-      }
-
-    }
-  };
-  processChunk(r, lambda);
-  return report;
-}
-
-
 std::map<int, std::map<std::string, std::map<std::string, int>>> MapController::getCountsInRange (Rect* r)
 {
   std::map<int, std::map<std::string, std::map<std::string, int>>> res;
@@ -267,19 +228,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
     }
   };
 
-  auto fudgeBiomes = [this](int h, int i, int j, BiomeType* b)
-  {
-    auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false)
-    {
-      Rect r = { it->second.x-3, it->second.y-3, it->second.x+3, it->second.y+3 };
-      auto results = getChunkReport(&r);
-      if (it->second.biomeType->name == "wasteland" && results.counts[h]["biome"]["snowlands"] > 2)
-        updateTile(h, i, j, &cfg->biomeTypes["snow"], &cfg->terrainTypes["snow"]);
-      else if (results.counts[h]["biome"]["water"] > 15)
-        updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"]);
-    }
-  };
 
   auto addWorldObjects = [this](int h, int i, int j, BiomeType* b)
   {
@@ -316,28 +264,84 @@ int MapController::generateMapChunk(Rect* chunkRect)
     }
   };
 
-  auto fuzzIt = [this](Rect* r, BiomeType* b)
+  auto fudgeChunk = [this](Rect* r, BiomeType* b)
   {
-    auto dingleTips = [this](int h, int i, int j)
+    auto edgeProcessor = [this](int h, int i, int j)
     {
-      updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"] );
+      auto it = terrainMap[h].find({ i, j });
+      if (it == terrainMap[h].end())
+      {
+        //make tile based on most common biome in range of 1
+      }
+      else
+      {
+        Rect range = { i-2, j-2, i+2, j+2 };
+        auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
+
+          auto it = terrainMap[h].find({x, y});
+          if (it != terrainMap[h].end())
+          {
+            r->terrainCounts[h][it->second.terrainType->name]++;
+            auto [ topTerrainCount, topTerrainName ] = r->topTerrain;
+            if (r->terrainCounts[h][it->second.terrainType->name] > topTerrainCount)
+            {
+              r->topTerrain = { r->terrainCounts[h][it->second.terrainType->name], it->second.terrainType->name };
+            }
+          }
+
+          r->meta["test"] = "great";
+        }, &range, 1, 1);
+
+        auto [tCount, tName] = t.topTerrain;
+        //SDL_Log("Rect report: top terrain: %s (%d)", tName.c_str(), tCount);
+
+        int n = std::rand() % 1000;
+
+        
+        if (it->second.terrainType->name != tName) updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes[tName] );
+
+
+
+        // std::map<std::string, int> terrainReport;
+        // int topTerrainCount = 0;
+        // std::string topTerrainName = "none";
+        // range.multiprocess([this, h, &terrainReport, &topTerrainCount, &topTerrainName](int x, int y){
+        //   mtx.lock();
+        //   auto it = terrainMap[h].find({x, y});
+        //   if (it != terrainMap[h].end())
+        //   {
+        //     int terrainCount = terrainReport[it->second.terrainType->name];
+        //     terrainReport[it->second.terrainType->name] = terrainCount + 1;
+        //     SDL_Log("terrain count %d", terrainCount);
+        //     if (terrainCount > topTerrainCount)
+        //     {
+        //       topTerrainName = it->second.terrainType->name;
+        //       topTerrainName = terrainCount;
+        //       SDL_Log("terrain name %s", topTerrainName.c_str());
+        //     }
+        //   }
+        //   mtx.unlock();
+        // });
+        //SDL_Log("Rect report: top grass count: (%d)", t.terrainCounts[h]["grass"]);
+        //updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"] );
+      }
     };
-    iterateOverChunkEdges(r, dingleTips);
+    iterateOverChunkEdges(r, edgeProcessor);
   };
 
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
-  multiprocessChain objectPlacers { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
-  multiprocessChain chunkFuzzers { { fuzzIt, [this](){return &cfg->biomeTypes["water"];} } };
-  multiprocessChain objectAdders { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
-  //std::vector<chunkFunctor> objectAdders { addWorldObjects };
+  multiprocessChain terrainPlacement { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
+  multiprocessChain chunkFudging { { fudgeChunk, [this](){return &cfg->biomeTypes["water"];} } };
+  multiprocessChain objectPlacement { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
 
-  ChunkProcessor chunker ( chunkRect, maxDepth );
+  chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
   SDL_Log("Adding terrain objects...");
   // std::thread t([this, &chunker](multiprocessChain o, multiprocessChain c){ chunker.multiProcessChunk({ o, c }); }, objectPlacers, chunkFuzzers);
   // t.join();
-  chunker.multiProcessChunk({ objectPlacers, chunkFuzzers });
+  chunker.multiProcessChunk({ terrainPlacement, chunkFudging });
   SDL_Log("Adding world and mob objects...");
-  chunker.multiProcessChunk({ objectAdders, chunkFuzzers }, cfg->chunkFuzz);
+  
+  chunker.multiProcessChunk({ objectPlacement }, cfg->chunkFuzz);
   SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);

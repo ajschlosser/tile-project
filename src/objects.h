@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <thread>
 
 struct Rect
 {
@@ -19,6 +20,7 @@ struct Rect
   std::vector<Rect> rects;
   Rect () {}
   Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
+  void set(std::tuple<int, int, int, int> data) { auto [x1, y1, x2, y2] = data; }
   SDL_Rect* getSDL_Rect () { SDL_Rect* r; r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
   int getWidth () { return std::abs(x1) + std::abs(x2); }
   int getHeight () { return std::abs(y1) + std::abs(y2); }
@@ -39,6 +41,17 @@ struct Rect
         rects.push_back(r);
       }
     return &rects;
+  }
+  void multiprocess(std::function<void(int, int)> f, Rect* r = NULL, int fuzz = 1)
+  {
+    if (r == NULL)
+      r->set({ x1, y1, x2, y2 });
+    for (auto i = x1; i < x2; i += 1 + std::rand() % fuzz)
+      for (auto j = y1; j < y2; j += 1 + std::rand() % fuzz)
+      {
+        std::thread t([this, &f, i, j]() { f(i, j); });
+        t.join();
+      }
   }
 };
 

@@ -1,5 +1,7 @@
 #include "chunk.h"
 
+using namespace chunk;
+
 void ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, BiomeType*> f)
 {
   Rect top { chunk->x1, chunk->y1, chunk->x2, chunk->y1 };
@@ -36,6 +38,8 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
       }, it->x1, it->y1, it->x2, it->y2);
       t.join();
     }
+    // TODO: This may be unnecessary
+    // TODO: Re-think map processing flows
     // Post-process chunk thread
     for (auto f : functors[1])
     {
@@ -61,4 +65,13 @@ void ChunkProcessor::process (Rect* r, std::vector<chunkFunctor> functors)
     for (auto i = r->x1; i != r->x2; i++)
       for (auto j = r->y1; j != r->y2; j++)
         for (auto f : functors) f(h, i, j);
+}
+
+chunk::ChunkReport chunk::getRangeReport(std::function<void(int, int, chunk::ChunkReport*)> f, Rect* r, int fuzz = 1, int base = 1)
+{
+  ChunkReport report;
+  for (auto i = r->x1; i < r->x2; i += base + std::rand() % fuzz)
+    for (auto j = r->y1; j < r->y2; j += base + std::rand() % fuzz)
+      f(i, j, &report);
+  return report;
 }

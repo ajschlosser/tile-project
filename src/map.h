@@ -76,7 +76,6 @@ struct MapController
   void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
   std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
   std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
-  ChunkReport getChunkReport (Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (Rect* rangeRect);
   void processChunk(Rect*, std::function<void(int, int, int)>);

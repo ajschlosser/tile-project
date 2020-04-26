@@ -14,11 +14,15 @@ typedef std::function<void(int, int, int, BiomeType*)> chunkProcessorFunctor;
 typedef std::function<void(Rect*, BiomeType* b)> chunkProcessorCallbackFunctor;
 typedef std::variant<chunkFunctor, chunkProcessorFunctor, chunkProcessorCallbackFunctor> genericChunkFunctor;
 
+namespace chunk {
+
 struct ChunkReport
 {
-  std::map<int, std::map<std::string, std::map<std::string, int>>> counts;
-  std::map<int, std::map<std::string, std::string>> top;
-  std::map<int, std::map<std::string, std::string>> bottom;
+  std::map<int, std::map<std::string, int >> terrainCounts;
+  std::map<int, std::map<std::string, int >> biomeCounts;
+  std::tuple<int, std::string> topTerrain;
+  std::string topBiome;
+  std::map<std::string, std::string> meta;
 };
 
 struct ChunkProcessor
@@ -45,5 +49,8 @@ struct ChunkProcessor
   void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
   void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
 };
+
+ChunkReport getRangeReport(std::function<void(int, int, ChunkReport*)>, Rect*, int, int);
+}
 
 #endif
