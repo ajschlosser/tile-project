@@ -29,6 +29,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     terrainType.impassable = impassable;
     tileTypes[tileType.name] = tileType;
     terrainTypes[terrainType.name] = terrainType;
+    terrainTypesKeys.push_back(terrainType.name);
     SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
   }
   for (auto i = 0; i < configJson["biomes"].size(); ++i)

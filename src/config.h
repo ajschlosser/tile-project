@@ -18,6 +18,7 @@ struct ConfigurationController
   objects::objectTypesMap objectTypes;
   objects::biomeTypesMap biomeTypes;
   std::vector<std::string> biomeTypeKeys;
+  std::vector<std::string> terrainTypesKeys;
   objects::terrainTypesMap terrainTypes;
   objects::tileTypesMap tileTypes;
   Json::Value configJson;
@@ -38,6 +39,12 @@ struct ConfigurationController
     );
   }
   BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
+  TerrainType* getRandomTerrainType() { return &terrainTypes[terrainTypesKeys[std::rand() % terrainTypesKeys.size()]]; }
+  TerrainType* getRandomTerrainType(std::string biomeType)
+  {
+    auto t = biomeTypes[biomeType].terrainTypes.at(std::rand() % biomeTypes[biomeType].terrainTypes.size());
+    return &terrainTypes[t.first];
+  }
 };
 
 #endif

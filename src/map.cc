@@ -71,8 +71,8 @@ void MapController::processChunk(Rect* chunkRect, std::function<void(int, int, i
     maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2
   );
   for (auto h = 0; h < maxDepth; h++)
-    for (auto i = chunkRect->x1; i != chunkRect->x2; i++)
-      for (auto j = chunkRect->y1; j != chunkRect->y2; j++)
+    for (auto i = chunkRect->x1; i < chunkRect->x2; i++)
+      for (auto j = chunkRect->y1; j < chunkRect->y2; j++)
         f(h, i ,j);
 }
 
@@ -273,7 +273,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
       {
         //make tile based on most common biome in range of 1
       }
-      else
+      else if (!it->second.initialized)
       {
         Rect range = { i-2, j-2, i+2, j+2 };
         auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
@@ -285,6 +285,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
             auto [ topTerrainCount, topTerrainName ] = r->topTerrain;
             if (r->terrainCounts[h][it->second.terrainType->name] > topTerrainCount)
             {
+              r->meta["secondTop"] = topTerrainName;
               r->topTerrain = { r->terrainCounts[h][it->second.terrainType->name], it->second.terrainType->name };
             }
           }
@@ -295,10 +296,23 @@ int MapController::generateMapChunk(Rect* chunkRect)
         auto [tCount, tName] = t.topTerrain;
         //SDL_Log("Rect report: top terrain: %s (%d)", tName.c_str(), tCount);
 
-        int n = std::rand() % 1000;
-
-        
-        if (it->second.terrainType->name != tName) updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes[tName] );
+        if (it->second.terrainType->name != tName)
+          updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[tName] );
+        else
+        {
+          if (t.terrainCounts[h][it->second.terrainType->name] < 3)
+          {
+            int a = std::rand() % 1000;
+            if (a > (700 + std::rand() % 299))
+              updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], cfg->getRandomTerrainType(it->second.biomeType->name) );
+            else
+              updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[t.meta["secondTop"]] );
+          }
+          else
+          {
+            updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[t.meta["secondTop"]] );
+          }
+        }
 
 
 
@@ -326,12 +340,19 @@ int MapController::generateMapChunk(Rect* chunkRect)
         //updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"] );
       }
     };
-    iterateOverChunkEdges(r, edgeProcessor);
+    processChunk(r, edgeProcessor);
+    //iterateOverChunkEdges(r, edgeProcessor);
   };
 
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
   multiprocessChain terrainPlacement { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
-  multiprocessChain chunkFudging { { fudgeChunk, [this](){return &cfg->biomeTypes["water"];} } };
+  multiprocessChain chunkFudging {
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
+    { fudgeChunk, [this](){return getRandomBiomeType();} }
+  };
   multiprocessChain objectPlacement { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
 
   chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
@@ -341,7 +362,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
   chunker.multiProcessChunk({ terrainPlacement, chunkFudging });
   SDL_Log("Adding world and mob objects...");
   
-  chunker.multiProcessChunk({ objectPlacement }, cfg->chunkFuzz);
+  // TODO: Chunkfuzz is fine but not in this case because this is what initializes all tiles. Need something else for that
+  chunker.multiProcessChunk({ objectPlacement });
   SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);
