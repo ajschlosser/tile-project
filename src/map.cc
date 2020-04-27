@@ -207,6 +207,30 @@ void MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::function
   }
 }
 
+chunk::ChunkReport MapController::generateRangeReport(Rect* range, int h = 0)
+{
+  auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
+    auto it = terrainMap[h].find({x, y});
+    if (it != terrainMap[h].end())
+    {
+      r->terrainCounts[h][it->second.terrainType->name]++;
+      r->biomeCounts[h][it->second.biomeType->name]++;
+      auto [ topTerrainCount, topTerrainName ] = r->topTerrain;
+      auto [ topBiomeCount, topBiomeName ] = r->topBiome;
+      if (r->terrainCounts[h][it->second.terrainType->name] > topTerrainCount)
+      {
+        r->meta["secondTopTerrain"] = topTerrainName;
+        r->topTerrain = { r->terrainCounts[h][it->second.terrainType->name], it->second.terrainType->name };
+      }
+      if (r->biomeCounts[h][it->second.biomeType->name] > topBiomeCount)
+      {
+        r->meta["secondTopBiome"] = topBiomeCount;
+        r->topBiome = { r->biomeCounts[h][it->second.biomeType->name], it->second.biomeType->name };
+      }
+    }
+  }, range, 1, 1);
+  return t;
+}
 
 int MapController::generateMapChunk(Rect* chunkRect)
 {
@@ -266,7 +290,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto fudgeChunk = [this](Rect* r, BiomeType* b)
   {
-    auto edgeProcessor = [this](int h, int i, int j)
+    auto fudgeProcessor = [this](int h, int i, int j)
     {
       auto it = terrainMap[h].find({ i, j });
       if (it == terrainMap[h].end())
@@ -276,72 +300,28 @@ int MapController::generateMapChunk(Rect* chunkRect)
       else if (!it->second.initialized)
       {
         Rect range = { i-2, j-2, i+2, j+2 };
-        auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
 
-          auto it = terrainMap[h].find({x, y});
-          if (it != terrainMap[h].end())
-          {
-            r->terrainCounts[h][it->second.terrainType->name]++;
-            auto [ topTerrainCount, topTerrainName ] = r->topTerrain;
-            if (r->terrainCounts[h][it->second.terrainType->name] > topTerrainCount)
-            {
-              r->meta["secondTop"] = topTerrainName;
-              r->topTerrain = { r->terrainCounts[h][it->second.terrainType->name], it->second.terrainType->name };
-            }
-          }
+        auto t = generateRangeReport(&range, h);
 
-          r->meta["test"] = "great";
-        }, &range, 1, 1);
+        auto [bCount, bName] = t.topBiome;
+        //SDL_Log("%s %d %s %s %s", it->second.biomeType->name.c_str(), bCount, bName.c_str(), cfg->biomeTypes[bName].name.c_str(), cfg->getRandomTerrainType(bName)->name.c_str() );
 
-        auto [tCount, tName] = t.topTerrain;
-        //SDL_Log("Rect report: top terrain: %s (%d)", tName.c_str(), tCount);
-
-        if (it->second.terrainType->name != tName)
-          updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[tName] );
+        if (it->second.biomeType->name != bName)
+          updateTile(h, i, j, &cfg->biomeTypes[bName], cfg->getRandomTerrainType(bName) );
         else
         {
-          if (t.terrainCounts[h][it->second.terrainType->name] < 3)
+          if (t.biomeCounts[h][it->second.biomeType->name] < 3)
           {
-            int a = std::rand() % 1000;
-            if (a > (700 + std::rand() % 299))
-              updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], cfg->getRandomTerrainType(it->second.biomeType->name) );
-            else
-              updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[t.meta["secondTop"]] );
-          }
-          else
-          {
-            updateTile(h, i, j, &cfg->biomeTypes[it->second.biomeType->name], &cfg->terrainTypes[t.meta["secondTop"]] );
+            updateTile(h, i, j, &cfg->biomeTypes[bName], cfg->getRandomTerrainType(bName) );
           }
         }
-
-
-
-        // std::map<std::string, int> terrainReport;
-        // int topTerrainCount = 0;
-        // std::string topTerrainName = "none";
-        // range.multiprocess([this, h, &terrainReport, &topTerrainCount, &topTerrainName](int x, int y){
-        //   mtx.lock();
-        //   auto it = terrainMap[h].find({x, y});
-        //   if (it != terrainMap[h].end())
-        //   {
-        //     int terrainCount = terrainReport[it->second.terrainType->name];
-        //     terrainReport[it->second.terrainType->name] = terrainCount + 1;
-        //     SDL_Log("terrain count %d", terrainCount);
-        //     if (terrainCount > topTerrainCount)
-        //     {
-        //       topTerrainName = it->second.terrainType->name;
-        //       topTerrainName = terrainCount;
-        //       SDL_Log("terrain name %s", topTerrainName.c_str());
-        //     }
-        //   }
-        //   mtx.unlock();
-        // });
-        //SDL_Log("Rect report: top grass count: (%d)", t.terrainCounts[h]["grass"]);
-        //updateTile(h, i, j, &cfg->biomeTypes["water"], &cfg->terrainTypes["water"] );
       }
     };
-    processChunk(r, edgeProcessor);
-    //iterateOverChunkEdges(r, edgeProcessor);
+
+    int n = std::rand() % 100;
+    if (n > 85) iterateOverChunkEdges(r, fudgeProcessor);
+    else if (n > 65 ) processChunk(r, fudgeProcessor);
+    else randomlyAccessAllTilesInChunk(r, fudgeProcessor);
   };
 
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;

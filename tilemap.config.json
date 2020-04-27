@@ -1,5 +1,5 @@
 {
-  "gameSize": 100,
+  "gameSize": 25,
   "tileSize": 16,
   "spriteSize": 32,
   "map": {
@@ -10,8 +10,8 @@
   "mobs": [
     {
       "name": "slime",
-      "sprite": "Sprite 0x160",
-      "biomes": ["wasteland", "underground", "meadow"]
+      "sprite": "Sprite 0x384",
+      "biomes": ["wasteland", "underground", "arid plains"]
     }
   ],
   "objects": [
@@ -54,6 +54,18 @@
       "solitary": true
     },
     {
+      "name": "blue flower",
+      "sprite": "Sprite 64x320",
+      "biomes": ["meadow"],
+      "solitary": true
+    },
+    {
+      "name": "red flower",
+      "sprite": "Sprite 96x320",
+      "biomes": ["meadow"],
+      "solitary": true
+    },
+    {
       "name": "red mushroom",
       "sprite": "Sprite 0x352",
       "biomes": ["underground"],
@@ -67,9 +79,39 @@
       "objects": ["green bush", "dirt", "light green bush", "yellow flower", "pink flower", "boulder"]
     },
     {
+      "name": "shrub grass",
+      "sprite": "Sprite 0x0",
+      "objects": ["green bush", "light green bush", "boulder"]
+    },
+    {
+      "name": "steppe grass",
+      "sprite": "Sprite 0x0",
+      "objects": ["dirt", "boulder"]
+    },
+    {
+      "name": "lush grass",
+      "sprite": "Sprite 32x0",
+      "objects": ["yellow flower", "pink flower", "red flower", "blue flower"]
+    },
+    {
+      "name": "dry grass",
+      "sprite": "Sprite 64x0",
+      "objects": ["dirt", "boulder"]
+    },
+    {
       "name": "soil",
       "sprite": "Sprite 0x32",
       "objects": ["mud"]
+    },
+    {
+      "name": "weedy soil",
+      "sprite": "Sprite 32x32",
+      "objects": ["mud"]
+    },
+    {
+      "name": "rocky soil",
+      "sprite": "Sprite 64x32",
+      "objects": ["boulder"]
     },
     {
       "name": "underground soil",
@@ -107,11 +149,11 @@
           "multiplier": 1.0
         },
         {
-          "name": "soil",
+          "name": "lush grass",
           "multiplier": 0.5
         },
         {
-          "name": "rock",
+          "name": "dry grass",
           "multiplier": 0.25
         }
       ]
@@ -124,6 +166,64 @@
         {
           "name": "grass",
           "multiplier": 1.0
+        },
+        {
+          "name": "dry grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "weedy soil",
+          "multiplier": 1.0
+        },
+        {
+          "name": "shrub grass",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "name": "arid plains",
+      "maxDepth": 0,
+      "minDepth": 0,
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "dry grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "weedy soil",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rocky soil",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "name": "plains",
+      "maxDepth": 0,
+      "minDepth": 0,
+      "terrains": [
+        {
+          "name": "grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "dry grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "steppe grass",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rock",
+          "multiplier": 1.0
         }
       ]
     },
@@ -134,6 +234,10 @@
       "terrains": [
         {
           "name": "snow",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rock",
           "multiplier": 1.0
         }
       ]
@@ -160,6 +264,10 @@
         },
         {
           "name": "rock",
+          "multiplier": 1.0
+        },
+        {
+          "name": "rocky soil",
           "multiplier": 1.0
         }
       ]

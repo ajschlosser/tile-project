@@ -21,7 +21,7 @@ struct ChunkReport
   std::map<int, std::map<std::string, int >> terrainCounts;
   std::map<int, std::map<std::string, int >> biomeCounts;
   std::tuple<int, std::string> topTerrain;
-  std::string topBiome;
+  std::tuple<int, std::string> topBiome;
   std::map<std::string, std::string> meta;
 };
 

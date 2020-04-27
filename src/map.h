@@ -78,6 +78,7 @@ struct MapController
   std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (Rect* rangeRect);
+  chunk::ChunkReport generateRangeReport(Rect*, int);
   void processChunk(Rect*, std::function<void(int, int, int)>);
   template<typename F> void iterateOverChunk(Rect*, F);
   template<typename F> void iterateOverChunkEdges(Rect*, F);

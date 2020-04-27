@@ -22,6 +22,7 @@ void ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, Biom
 }
 void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors, int fuzz = 1)
 {
+
   // Process every tile in every chunk
   for (auto it = smallchunks->begin(); it != smallchunks->end(); ++it)
   {
