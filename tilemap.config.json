@@ -1,5 +1,5 @@
 {
-  "gameSize": 40,
+  "gameSize": 75,
   "tileSize": 16,
   "spriteSize": 32,
   "map": {
@@ -69,7 +69,8 @@
       "name": "red mushroom",
       "sprite": "Sprite 0x352",
       "biomes": ["underground"],
-      "solitary": true
+      "solitary": true,
+      "impassable": 1
     }
   ],
   "terrains": [

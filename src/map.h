@@ -70,7 +70,7 @@ struct MapController
     maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
     terrainTypes = tnTypes; tileTypes = tlTypes; cfg = c;
   }
-
+  bool isPassable (std::tuple<int, int, int>);
   BiomeType* getRandomBiomeType() { return cfg->getRandomBiomeType(); }
   void updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
   void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);

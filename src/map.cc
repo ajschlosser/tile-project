@@ -37,15 +37,33 @@ void MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject
   }
 }
 
+bool MapController::isPassable (std::tuple<int, int, int> coords)
+{
+  auto [_z, _x, _y] = coords;
+  auto terrainIt = terrainMap[_z].find({ _x, _y });
+  if (terrainIt == terrainMap[_z].end())
+    return false;
+  else if (terrainIt->second.terrainType->impassable)
+    return false;
+  auto worldIt = worldMap[_z].find({ _x, _y });
+  if (worldIt != worldMap[_z].end())
+    for (auto o : worldIt->second)
+      if (o->objectType->impassable)
+        return false;
+  auto mobIt = mobMap[_z].find({ _x, _y });
+  if (mobIt != mobMap[_z].end())
+    for (auto o : mobIt->second)
+      if (o->mobType.impassable)
+        return false;
+  return true;
+}
+
 std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
 {
   auto [z1, x1, y1] = origin;
   auto [z2, x2, y2] = destination;
 
-  auto terrainIt = terrainMap[z2].find({ x2, y2 });
-  if (terrainIt == terrainMap[z2].end())
-    return mobMap[z1][{x1, y1}].begin();
-  else if (terrainIt->second.terrainType->impassable)
+  if (!isPassable(destination))
     return mobMap[z1][{x1, y1}].begin();
 
   std::unique_lock lock(mtx);

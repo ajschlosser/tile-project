@@ -124,18 +124,25 @@ int GameEngine::init()
 
 void GameEngine::scrollCamera(int directions)
 {
-  if (tileSize > 8)
-    scrollGameSurface(directions);
-  else
-    SDL_Delay(25);
+  int x = gfxController.camera.x;
+  int y = gfxController.camera.y;
   if (directions & LEFT)
-    gfxController.camera.x -= 1;
+    x--;
   if (directions & RIGHT)
-    gfxController.camera.x += 1;
+    x++;
   if (directions & DOWN)
-    gfxController.camera.y += 1;
+    y++;
   if (directions & UP)
-    gfxController.camera.y -= 1;
+    y--;
+  if (mapController.isPassable({zLevel, x, y}))
+  {
+    if (tileSize > 8)
+      scrollGameSurface(directions);
+    else
+      SDL_Delay(15);
+    gfxController.camera.x = x;
+    gfxController.camera.y = y;
+  }
 }
 
 
@@ -181,7 +188,7 @@ void GameEngine::scrollGameSurface(int directions)
     offset.second -= tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
-    // SDL_SetRenderTarget(appRenderer, gameTexture);
+    //SDL_SetRenderTarget(appRenderer, gameTexture);
     renderCopyTiles();
     if (directions & RIGHT)
       dest.x -= movementSpeed;
@@ -191,12 +198,11 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
-
+    // SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
+    // SDL_SetRenderTarget(appRenderer, NULL);
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
-    gfxController.applyUi();
-    // SDL_SetRenderTarget(appRenderer, NULL);
-    // SDL_RenderCopy(appRenderer, gameTexture, &dest, NULL);
+    gfxController.applyUi();;
     SDL_RenderPresent(appRenderer);
     // SDL_DestroyTexture(gameTexture);
   }
