@@ -1,4 +1,3 @@
-#include "SDL2/SDL.h"
 #include "engine.h"
 
 int GameEngine::init()
@@ -31,7 +30,7 @@ int GameEngine::init()
     );
   }
   gfxController.appWindow = appWindow;
-  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
   if (appRenderer == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -46,6 +45,8 @@ int GameEngine::init()
       "Renderer created."
     );
   }
+  gameTexture = SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gfxController.windowWidth, gfxController.windowHeight);
+  SDL_SetTextureBlendMode(gameTexture, SDL_BLENDMODE_BLEND);
   gfxController.appRenderer = appRenderer;
 
   // Load spritesheet
@@ -165,7 +166,6 @@ void GameEngine::processMap(int directions)
 
 };
 
-
 void GameEngine::scrollGameSurface(int directions)
 {
   auto [_w, _h] = gfxController.getWindowDimensions();
@@ -181,6 +181,7 @@ void GameEngine::scrollGameSurface(int directions)
     offset.second -= tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
+    // SDL_SetRenderTarget(appRenderer, gameTexture);
     renderCopyTiles();
     if (directions & RIGHT)
       dest.x -= movementSpeed;
@@ -190,10 +191,14 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
+
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();
+    // SDL_SetRenderTarget(appRenderer, NULL);
+    // SDL_RenderCopy(appRenderer, gameTexture, &dest, NULL);
     SDL_RenderPresent(appRenderer);
+    // SDL_DestroyTexture(gameTexture);
   }
   if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not reset render target: %s", SDL_GetError());

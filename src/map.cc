@@ -297,7 +297,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
       {
         //make tile based on most common biome in range of 1
       }
-      else if (!it->second.initialized)
+      else if (!it->second.initialized && std::rand() % 10 > std::rand() % 1)
       {
         Rect range = { i-2, j-2, i+2, j+2 };
 
@@ -306,7 +306,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
         auto [bCount, bName] = t.topBiome;
         //SDL_Log("%s %d %s %s %s", it->second.biomeType->name.c_str(), bCount, bName.c_str(), cfg->biomeTypes[bName].name.c_str(), cfg->getRandomTerrainType(bName)->name.c_str() );
 
-        if (it->second.biomeType->name != bName)
+        if (it->second.biomeType->name != bName && std::rand() % 10 > std::rand() % 1)
           updateTile(h, i, j, &cfg->biomeTypes[bName], cfg->getRandomTerrainType(bName) );
         else
         {
@@ -319,7 +319,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     };
 
     int n = std::rand() % 100;
-    if (n > 85) iterateOverChunkEdges(r, fudgeProcessor);
+    if (n > 85 && std::rand() % 10 > std::rand() % 1) iterateOverChunkEdges(r, fudgeProcessor);
     else if (n > 65 ) processChunk(r, fudgeProcessor);
     else randomlyAccessAllTilesInChunk(r, fudgeProcessor);
   };
@@ -327,6 +327,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
   multiprocessChain terrainPlacement { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
   multiprocessChain chunkFudging {
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
+    { fudgeChunk, [this](){return getRandomBiomeType();} },
     { fudgeChunk, [this](){return getRandomBiomeType();} },
     { fudgeChunk, [this](){return getRandomBiomeType();} },
     { fudgeChunk, [this](){return getRandomBiomeType();} },

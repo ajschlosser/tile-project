@@ -113,11 +113,19 @@ SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
 
 SDL_Texture* GraphicsController::getTextureFromSurface (SDL_Surface* s)
 {
-  if (SDL_LockSurface(s) < 0)
-    return NULL;
-  if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
-    return NULL;
-  SDL_UnlockSurface(s);
+  if (SDL_MUSTLOCK(s))
+  {
+    if (SDL_LockSurface(s) < 0)
+      return NULL;
+    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
+      return NULL;
+    SDL_UnlockSurface(s);
+  }
+  else
+  {
+    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
+      return NULL;
+  }
   SDL_Texture* t = SDL_CreateTextureFromSurface(appRenderer, s);
   return t;
 }
