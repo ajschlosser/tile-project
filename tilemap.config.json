@@ -1,5 +1,5 @@
 {
-  "gameSize": 100,
+  "gameSize": 50,
   "tileSize": 32,
   "spriteSize": 32,
   "map": {
@@ -10,8 +10,13 @@
   "mobs": [
     {
       "name": "blue slime",
-      "sprite": "Sprite 0x384",
-      "biomes": ["wasteland", "underground", "arid plains"]
+      "sprite": [
+        "Sprite 0x384",
+        "Sprite 32x384",
+        "Sprite 64x384",
+        "Sprite 96x384"
+      ],
+      "biomes": ["wasteland", "underground", "arid plains", "meadow", "forest", "plains"]
     },
     {
       "name": "red slime",
@@ -145,7 +150,10 @@
     },
     {
       "name": "water",
-      "sprite": "Sprite 0x96",
+      "sprite": [
+        "Sprite 0x96",
+        "Sprite 32x96"
+      ],
       "impassable": 1
     },
     {

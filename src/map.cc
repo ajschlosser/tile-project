@@ -15,6 +15,11 @@ void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, Terra
   t.y = y;
   t.biomeType = biomeType;
   t.terrainType = terrainType;
+  if (terrainType->isAnimated())
+  {
+    t.animationTimer.start();
+    t.animationSpeed = terrainType->animationSpeed + std::rand() % 3000;
+  }
   terrainMap[z][{ x, y }] = t;
   BiomeObject b;
   b.biomeType = biomeType;
@@ -53,7 +58,7 @@ bool MapController::isPassable (std::tuple<int, int, int> coords)
   auto mobIt = mobMap[_z].find({ _x, _y });
   if (mobIt != mobMap[_z].end())
     for (auto o : mobIt->second)
-      if (o->mobType.impassable)
+      if (o->mobType->impassable)
         return false;
   return true;
 }
@@ -295,13 +300,21 @@ int MapController::generateMapChunk(Rect* chunkRect)
       }
       if (std::rand() % 1000 > 995)
       {
-        for ( auto mob : cfg->mobTypes )
+        
+        for (auto mob = cfg->mobTypes.begin(); mob != cfg->mobTypes.end(); mob++)
         {
-          if (mob.second.biomes.find(it->second.biomeType->name) != mob.second.biomes.end())
+          if (mob->second.biomes.find(it->second.biomeType->name) != mob->second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, mob.second, &cfg->biomeTypes[it->second.biomeType->name]
+              i, j, &mob->second, &cfg->biomeTypes[it->second.biomeType->name]
             );
+
+            if (mob->second.isAnimated())
+            {
+              m->animationTimer.start();
+              m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;
+            }
+
             updateTile(h, i, j, nullptr, m);
           }
         }

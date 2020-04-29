@@ -76,6 +76,11 @@ struct GenericType
   std::string name;
   bool impassable;
   float multiplier;
+  std::map<int, Sprite*> animationMap;
+  int animationSpeed;
+  int maxFrames() { return animationMap.size(); }
+  Sprite* getFrame(int n) { return animationMap[n]; }
+  bool isAnimated() { return animationSpeed > 0; }
   float getMultiplier() { if (multiplier > 0) return multiplier; else return 1; }
 };
 
@@ -134,6 +139,10 @@ struct Tile
   BiomeType* biomeType;
   TerrainType* terrainType;
   Sprite* sprite;
+  Timer animationTimer;
+  int animationFrame;
+  int animationSpeed;
+  bool isAnimated() { return animationSpeed > 0; }
   bool seen;
   bool initialized;
   Tile() : seen(false), initialized(false) {}
@@ -191,10 +200,9 @@ struct MobObject : SimulatedObject
 {
   std::string id;
   int speed;
-  MobType mobType;
-  std::map<std::pair<int, int>, std::shared_ptr<MobObject>>* mobMapLayerRef;
+  MobType* mobType;
   std::map<std::string, Timer> mobTimers;
-  MobObject (int x, int y, MobType m, BiomeType* b)
+  MobObject (int x, int y, MobType* m, BiomeType* b)
   {
     id = uuid::generate_uuid_v4();
     this->initSimulation();
@@ -202,7 +210,7 @@ struct MobObject : SimulatedObject
     this->y = y;
     mobType = m;
     biomeType = b;
-    sprite = m.sprite;
+    sprite = m->sprite;
     speed = std::rand() % 1500 + 1000;
     Timer t;
     t.start();

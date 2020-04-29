@@ -29,8 +29,53 @@ struct GraphicsController
   void applyUi();
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
-  template<class T> int renderCopyObject(std::shared_ptr<T> t, int x, int y) { return renderCopySprite(t->sprite, x, y); }
-  int renderCopyTerrain(TerrainObject* t, int x, int y) { return renderCopySprite(t->terrainType->sprite, x, y); }
+  template<class T> int renderCopyObject(std::shared_ptr<T> t, int x, int y)
+  {
+    return renderCopySprite(t->sprite, x, y);
+  }
+  int renderCopyMobObject(std::shared_ptr<MobObject> t, int x, int y)
+  {
+    if (!t->isAnimated())
+      return renderCopySprite(t->mobType->sprite, x, y);
+    else
+    {
+      if (t->animationTimer.elapsed() > t->animationSpeed)
+      {
+        t->animationTimer.stop();
+        t->animationTimer.start();
+        t->animationFrame++;
+        if (t->animationFrame >= t->mobType->maxFrames())
+          t->animationFrame = 0;
+      }
+
+      auto it = t->mobType->animationMap.find(t->animationFrame);
+      if (it == t->mobType->animationMap.end())
+        return renderCopySprite(t->mobType->sprite, x, y);
+      else
+        return renderCopySprite(it->second, x, y);
+    }
+  }
+  int renderCopyTerrain(TerrainObject* t, int x, int y) {
+    if (!t->isAnimated())
+      return renderCopySprite(t->terrainType->sprite, x, y);
+    else
+    {
+      if (t->animationTimer.elapsed() > t->animationSpeed)
+      {
+        t->animationTimer.stop();
+        t->animationTimer.start();
+        t->animationFrame++;
+        if (t->animationFrame >= t->terrainType->maxFrames())
+          t->animationFrame = 0;
+      }
+
+      auto it = t->terrainType->animationMap.find(t->animationFrame);
+      if (it == t->terrainType->animationMap.end())
+        return renderCopySprite(t->terrainType->sprite, x, y);
+      else
+        return renderCopySprite(it->second, x, y);
+    }
+  }
   SDL_Surface* getGameSurfaceFromWindow();
   SDL_Texture* getTextureFromSurface (SDL_Surface* s);
   SDL_Texture* getGameSurfaceTexture ();

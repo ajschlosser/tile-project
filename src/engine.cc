@@ -17,34 +17,20 @@ int GameEngine::init()
   appWindow = SDL_CreateWindow("tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE); // SDL_WINDOW_FULLSCREEN
   if (appWindow == NULL)
   {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Could not create app window: %s",
-      SDL_GetError()
-    );
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not create app window: %s", SDL_GetError());
     return 3;
   }
   else
-  {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-      "Window created."
-    );
-  }
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Window created.");
   gfxController.appWindow = appWindow;
   appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
   if (appRenderer == NULL)
   {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Couldn't create a enderer: %s",
-      SDL_GetError()
-    );
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create a enderer: %s", SDL_GetError());
     return 3;
   }
   else
-  {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-      "Renderer created."
-    );
-  }
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Renderer created.");
   gameTexture = SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gfxController.windowWidth, gfxController.windowHeight);
   SDL_SetTextureBlendMode(gameTexture, SDL_BLENDMODE_BLEND);
   gfxController.appRenderer = appRenderer;
@@ -70,18 +56,11 @@ int GameEngine::init()
   SDL_Texture *texture = SDL_CreateTextureFromSurface(appRenderer, surface);
   if (!texture)
   {
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Couldn't create texture from surface: %s",
-      SDL_GetError()
-    );
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create texture from surface: %s", SDL_GetError());
     return 3;
   }
   else
-  {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-      "Tilemap loaded."
-    );
-  }
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Tilemap loaded.");
   tilemapImage = { surface, texture };
   gfxController.tilemapImage = &tilemapImage;
   gfxController.tilemapTexture = texture;
@@ -93,10 +72,7 @@ int GameEngine::init()
       std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
       Sprite s { i, j, name };
       spriteMap[name] = s;
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-        "Created sprite: %s",
-        name.c_str()
-      );
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created sprite: %s", name.c_str());
     }
   }
   gfxController.sprites = spriteMap;
@@ -192,7 +168,6 @@ void GameEngine::scrollGameSurface(int directions)
     offset.second -= tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
-    //SDL_SetRenderTarget(appRenderer, gameTexture);
     renderCopyTiles();
     if (directions & RIGHT)
       dest.x -= movementSpeed;
@@ -202,13 +177,10 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
-    // SDL_RenderCopy(appRenderer, gameTexture, NULL, &dest);
-    // SDL_SetRenderTarget(appRenderer, NULL);
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();;
     SDL_RenderPresent(appRenderer);
-    // SDL_DestroyTexture(gameTexture);
   }
   if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not reset render target: %s", SDL_GetError());
@@ -283,15 +255,10 @@ void GameEngine::handleEvents()
     }
   };
   userInputHandler.handleAppEvents(eventHandler);
-
 }
 
 void GameEngine::renderCopyTiles()
 {
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "renderCopyTiles() called"
-  );
-
   auto renderer = [this](std::tuple<int, int, int, int> locationData){
     auto [x, y, i, j] = locationData;
     auto terrainObject = mapController.terrainMap[zLevel].find({ i, j });
@@ -306,7 +273,8 @@ void GameEngine::renderCopyTiles()
     auto mobObject = mapController.mobMap[zLevel].find({ i, j });
     if (mobObject != mapController.mobMap[zLevel].end())
       for ( auto &w : mobObject->second )
-        gfxController.renderCopyObject<MobObject>(w, x, y);
+        //gfxController.renderCopyObject<MobObject>(w, x, y);
+        gfxController.renderCopyMobObject(w, x, y);
   };
   std::thread r (
     [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, renderer
@@ -330,16 +298,12 @@ void GameEngine::renderCopyTiles()
       else ++it;
     }
   };
+
   std::thread p (
     [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, processor
   );
-
   r.join();
   p.detach();
-
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "renderCopyTiles() completed. Screen refreshed."
-  );
 }
 
 
