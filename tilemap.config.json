@@ -1,6 +1,6 @@
 {
   "gameSize": 100,
-  "tileSize": 16,
+  "tileSize": 32,
   "spriteSize": 32,
   "map": {
     "chunks": {
@@ -15,7 +15,7 @@
     },
     {
       "name": "red slime",
-      "sprite": "Sprite 0x384",
+      "sprite": "Sprite 0x416",
       "biomes": ["meadow", "shrublands"]
     }
   ],

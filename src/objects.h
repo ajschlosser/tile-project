@@ -29,8 +29,8 @@ struct Rect
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
   std::vector<Rect>* getRects()
   {
-    int small_w = 20;
-    int small_h = 20;
+    int small_w = 15;
+    int small_h = 15;
     int w = getWidth();
     int h = getHeight();
     auto result_w = std::div(w, small_w);
