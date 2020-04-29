@@ -263,13 +263,15 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
+    // Rect range = { i-1, j-1, i+1, j+1 };
+    // auto t = generateRangeReport(&range, h);
+    // auto [bCount, topBiomeName] = t.topBiome;
+    // if (b->name != topBiomeName)
+    //   b = &cfg->biomeTypes[topBiomeName];
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
-      //auto randomTerrainType = b->terrainTypes[std::rand() % b->terrainTypes.size()].first;
-      auto bb = std::rand() % 100 > 15 ? b : getRandomBiomeType();
-      auto randomTerrainType = bb->terrainTypes[std::rand() % bb->terrainTypes.size()].first;
-      updateTile(h, i, j, bb, &cfg->terrainTypes[randomTerrainType]);
+      updateTile(h, i, j, b, &cfg->terrainTypes[b->getRandomTerrainTypeName()]);
     }
   };
 
@@ -330,6 +332,22 @@ int MapController::generateMapChunk(Rect* chunkRect)
     processChunk(r, hammerProcessor);
   };
 
+  auto cleanChunk = [this](Rect* r, BiomeType* b)
+  {
+    auto processor = [this](int h, int i, int j)
+    {
+      auto it = terrainMap[h].find({ i, j });
+      if (it != terrainMap[h].end() && it->second.initialized == false)
+      {
+        Rect range = { i-3, j-3, i+3, j+3 };
+        auto t = generateRangeReport(&range, h);
+        auto [bCount, topBiomeName] = t.topBiome;
+        if (t.biomeCounts[h][it->second.biomeType->name] <= 2) updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+      }
+    };
+    processChunk(r, processor);
+  };
+
   auto fudgeChunk = [this](Rect* r, BiomeType* b)
   {
     auto fudgeProcessor = [this](int h, int i, int j)
@@ -339,7 +357,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
       {
         //make tile based on most common biome in range of 1
       }
-      else if (it->second.initialized == false && std::rand() % 10 > std::rand() % 1)
+      else if (it->second.initialized == false)
       {
         Rect range = { i-2, j-2, i+2, j+2 };
 
@@ -347,7 +365,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
         auto [bCount, topBiomeName] = t.topBiome;
         //SDL_Log("%s %d %s %s %s", it->second.biomeType->name.c_str(), bCount, bName.c_str(), cfg->biomeTypes[bName].name.c_str(), cfg->getRandomTerrainType(bName)->name.c_str() );
-        auto rb = getRandomBiomeType();
+        //auto rb = getRandomBiomeType();
         if (it->second.biomeType->name != topBiomeName)
         {
             if (std::rand() % 10 > 4)
@@ -364,14 +382,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
         }
         else
         {
-          if (std::rand() % 100 > 85)
-          {
-            updateTile(h, i, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-            updateTile(h, i+1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-            updateTile(h, i-1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-            updateTile(h, i, j+1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-            updateTile(h, i, j-1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          }
+          // if (std::rand() % 100 > 85)
+          // {
+          //   updateTile(h, i, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
+          //   updateTile(h, i+1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
+          //   updateTile(h, i-1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
+          //   updateTile(h, i, j+1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
+          //   updateTile(h, i, j-1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
+          // }
         }
       }
     };
@@ -383,9 +401,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
   multiprocessChain terrainPlacement { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
   multiprocessChain chunkFudging {
+    // { hammerChunk, [this](){return getRandomBiomeType();} },
     { fudgeChunk, [this](){return getRandomBiomeType();} },
-    { fudgeChunk, [this](){return getRandomBiomeType();} },
-    { fudgeChunk, [this](){return getRandomBiomeType();} }
+    { cleanChunk, [this](){return getRandomBiomeType();} }
   };
   multiprocessChain objectPlacement { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
 

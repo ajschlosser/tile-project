@@ -75,6 +75,8 @@ struct GenericType
   Sprite* sprite;
   std::string name;
   bool impassable;
+  float multiplier;
+  float getMultiplier() { if (multiplier > 0) return multiplier; else return 1; }
 };
 
 struct ObjectType : GenericType
@@ -112,7 +114,10 @@ struct BiomeType
   int maxDepth;
   int minDepth;
   std::map<int, std::pair<std::string, float>> terrainTypes;
+  float multiplier;
+  std::vector<std::string> terrainTypeProbabilities;
   BiomeType () {}
+  std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(rand() % terrainTypeProbabilities.size()); }
 };
 
 struct BiomeObject

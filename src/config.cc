@@ -18,6 +18,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     std::string spriteName = configJson["terrains"][i]["sprite"].asString();
     std::string tileTypeName = configJson["terrains"][i]["name"].asString();
     bool impassable = configJson["terrains"][i]["impassable"].asBool();
+    float multiplier = configJson["terrains"][i]["multiplier"].asFloat();
     std::vector<std::string> relatedObjectTypes;
     const Json::Value& relatedObjectsArray = configJson["terrains"][i]["objects"];
     for (int i = 0; i < relatedObjectsArray.size(); i++)
@@ -27,6 +28,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     TileType tileType { &sprites[spriteName], tileTypeName };
     TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
     terrainType.impassable = impassable;
+    terrainType.multiplier = multiplier;
     tileTypes[tileType.name] = tileType;
     terrainTypes[terrainType.name] = terrainType;
     terrainTypesKeys.push_back(terrainType.name);
@@ -38,15 +40,24 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     b.name = configJson["biomes"][i]["name"].asString();
     b.maxDepth = configJson["biomes"][i]["maxDepth"].asInt();
     b.minDepth = configJson["biomes"][i]["minDepth"].asInt();
+    b.multiplier = configJson["biomes"][i]["multiplier"].asFloat();
+    if (b.multiplier <= 0)
+      b.multiplier = 1;
     const Json::Value& terrainsArray = configJson["biomes"][i]["terrains"];
     for (int i = 0; i < terrainsArray.size(); i++)
     {
       auto t = terrainsArray[i];
-      b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), t["multiplier"].asFloat() };
+      auto m = t["multiplier"].asFloat();
+      if (m <= 0)
+        m = 1;
+      b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), m };
+      for (int i = 0; i < 10 * m; i++)
+        b.terrainTypeProbabilities.push_back(t["name"].asString());
     }
     biomeTypes[b.name] = b;
     biomeTypeKeys.push_back(b.name);
-    
+    for (int i = 0; i < 10 * b.multiplier; i++)
+      biomeTypeProbabilities.push_back(b.name);
     SDL_Log("- Loaded '%s' biome", b.name.c_str());
   }
   for (auto i = 0; i < configJson["objects"].size(); ++i)
@@ -62,7 +73,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     }
     TileType tileType { &sprites[spriteName], objectTypeName };
     tileTypes[tileType.name] = tileType;
-    ObjectType o { &sprites[spriteName], objectTypeName, impassable, bM };
+    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), bM };
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -79,7 +90,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
     TileType tileType { &sprites[spriteName], mobTypeName };
     tileTypes[tileType.name] = tileType;
-    MobType mobType { &sprites[spriteName], mobTypeName, false, bM };
+    MobType mobType { &sprites[spriteName], mobTypeName, false, configJson["mobs"][i]["multiplier"].asFloat(), bM };
     mobTypes[mobType.name] = mobType;
   }
 }

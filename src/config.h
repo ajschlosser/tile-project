@@ -17,6 +17,7 @@ struct ConfigurationController
   objects::mobTypesMap mobTypes;
   objects::objectTypesMap objectTypes;
   objects::biomeTypesMap biomeTypes;
+  std::vector<std::string> biomeTypeProbabilities;
   std::vector<std::string> biomeTypeKeys;
   std::vector<std::string> terrainTypesKeys;
   objects::terrainTypesMap terrainTypes;
@@ -38,7 +39,7 @@ struct ConfigurationController
       &biomeTypes, &biomeTypeKeys, &terrainTypes, &mobTypes, &objectTypes, &tileTypes
     );
   }
-  BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeKeys[std::rand() % biomeTypeKeys.size()]]; }
+  BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeProbabilities[std::rand() % biomeTypeProbabilities.size()]]; }
   TerrainType* getRandomTerrainType() { return &terrainTypes[terrainTypesKeys[std::rand() % terrainTypesKeys.size()]]; }
   TerrainType* getRandomTerrainType(std::string biomeType)
   {

@@ -18,12 +18,14 @@
     {
       "name": "green bush",
       "sprite": "Sprite 0x192",
-      "biomes": ["shrubland"]
+      "biomes": ["shrubland"],
+      "impassable": 1
     },
     {
       "name": "light green bush",
       "sprite": "Sprite 32x192",
-      "biomes": ["shrubland"]
+      "biomes": ["shrubland"],
+      "impassable": 1
     },
     {
       "name": "dirt",
@@ -157,7 +159,8 @@
           "name": "dry grass",
           "multiplier": 0.25
         }
-      ]
+      ],
+      "multiplier": 0.2
     },
     {
       "name": "shrublands",
@@ -178,7 +181,7 @@
         },
         {
           "name": "shrub grass",
-          "multiplier": 1.0
+          "multiplier": 2.0
         }
       ]
     },
@@ -220,13 +223,14 @@
         },
         {
           "name": "steppe grass",
-          "multiplier": 1.0
+          "multiplier": 2.0
         },
         {
           "name": "rock",
-          "multiplier": 1.0
+          "multiplier": 0.5
         }
-      ]
+      ],
+      "multiplier": 1.5
     },
     {
       "name": "snowlands",
@@ -239,7 +243,7 @@
         },
         {
           "name": "rock",
-          "multiplier": 1.0
+          "multiplier": 0.8
         }
       ]
     },
@@ -252,7 +256,8 @@
           "name": "water",
           "multiplier": 1.0
         }
-      ]
+      ],
+      "multiplier": 1.7
     },
     {
       "maxDepth": 0,
@@ -261,7 +266,7 @@
       "terrains": [
         {
           "name": "soil",
-          "multiplier": 1.0
+          "multiplier": 0.5
         },
         {
           "name": "rock",
@@ -269,7 +274,7 @@
         },
         {
           "name": "rocky soil",
-          "multiplier": 1.0
+          "multiplier": 2.0
         }
       ]
     },
