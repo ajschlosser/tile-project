@@ -9,22 +9,39 @@
   },
   "mobs": [
     {
-      "name": "slime",
+      "name": "blue slime",
       "sprite": "Sprite 0x384",
       "biomes": ["wasteland", "underground", "arid plains"]
+    },
+    {
+      "name": "red slime",
+      "sprite": "Sprite 0x384",
+      "biomes": ["meadow", "shrublands"]
     }
   ],
   "objects": [
     {
+      "name": "oak tree",
+      "sprite": "Sprite 32x352",
+      "biomes": ["forest"],
+      "impassable": 1
+    },
+    {
+      "name": "apple tree",
+      "sprite": "Sprite 64x352",
+      "biomes": ["forest"],
+      "impassable": 1
+    },
+    {
       "name": "green bush",
       "sprite": "Sprite 0x192",
-      "biomes": ["shrubland"],
+      "biomes": ["shrublands"],
       "impassable": 1
     },
     {
       "name": "light green bush",
       "sprite": "Sprite 32x192",
-      "biomes": ["shrubland"],
+      "biomes": ["shrublands"],
       "impassable": 1
     },
     {
@@ -40,7 +57,7 @@
     {
       "name": "boulder",
       "sprite": "Sprite 0x256",
-      "biomes": ["wasteland", "underground"],
+      "biomes": ["wasteland", "underground", "snowlands", "plains"],
       "impassable": 1
     },
     {
@@ -139,6 +156,11 @@
       "name": "snow",
       "sprite": "Sprite 0x160",
       "objects": ["mud"]
+    },
+    {
+      "name": "oak forest",
+      "sprite": "Sprite 64x0",
+      "objects": ["oak tree","apple tree"]
     }
   ],
   "biomes": [
@@ -275,6 +297,21 @@
         {
           "name": "rocky soil",
           "multiplier": 2.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 0,
+      "minDepth": 0,
+      "name": "forest",
+      "terrains": [
+        {
+          "name": "oak forest",
+          "multiplier": 3.0
+        },
+        {
+          "name": "grass",
+          "multiplier": 0.25
         }
       ]
     },
