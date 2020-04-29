@@ -31,10 +31,11 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     {
       BiomeType* b = f.second();
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
-      std::thread t([this, f, b, functors, fuzz](int x1, int y1, int x2, int y2) {
+      int n = std::rand() % 10;
+      std::thread t([this, n, f, b, functors, fuzz](int x1, int y1, int x2, int y2) {
         for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
-          for (auto i = x1; i < x2; i += std::rand() % fuzz + 1)
-            for (auto j = y1; j < y2; j += std::rand() % fuzz + 1)
+          for (auto i = n > 5 ? x1 : x2; [i,x2,x1,n](){if(n>5)return i<=x2;else return i>=x1;}() ; [&i,n, fuzz](){if(n>5)i+=std::rand()%fuzz+1;else i-=(std::rand()%fuzz+1);}())
+            for (auto j = n > 5 ? y1 : y2; [j,y2,y1,n](){if(n>5)return j<=y2;else return j>=y1;}() ; [&j,n, fuzz](){if(n>5)j+=std::rand()%fuzz+1;else j-=(std::rand()%fuzz+1);}())
               std::get<chunkProcessorFunctor>(f.first)(h, i, j, b);
       }, it->x1, it->y1, it->x2, it->y2);
       t.join();

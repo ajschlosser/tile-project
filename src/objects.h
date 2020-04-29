@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <thread>
+#include <tuple>
 
 struct Rect
 {
@@ -21,14 +22,15 @@ struct Rect
   Rect () {}
   Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
   void set(std::tuple<int, int, int, int> data) { auto [x1, y1, x2, y2] = data; }
+  std::tuple<int, int, int, int> get(){ return std::make_tuple(x1, y1, x2, y2 ); };
   SDL_Rect* getSDL_Rect () { SDL_Rect* r; r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
   int getWidth () { return std::abs(x1) + std::abs(x2); }
   int getHeight () { return std::abs(y1) + std::abs(y2); }
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
   std::vector<Rect>* getRects()
   {
-    int small_w = 15;
-    int small_h = 15;
+    int small_w = 5;
+    int small_h = 5;
     int w = getWidth();
     int h = getHeight();
     auto result_w = std::div(w, small_w);

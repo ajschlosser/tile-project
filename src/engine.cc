@@ -14,7 +14,7 @@ int GameEngine::init()
   gfxController.initializeSDL();
 
   // Create app window and renderer
-  appWindow = SDL_CreateWindow("tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE);
+  appWindow = SDL_CreateWindow("tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE); // SDL_WINDOW_FULLSCREEN
   if (appWindow == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -158,12 +158,16 @@ void GameEngine::processMap(int directions)
   };
   if (directions & RIGHT)
     checkCoordinates.x += _w;
+    chunkRect.x1 += _w/2;
   if (directions & LEFT)
     checkCoordinates.x -= _w;
+    chunkRect.x1 -= _w/2;
   if (directions & UP)
     checkCoordinates.y -= _h;
+    chunkRect.y1 += _h/2;
   if (directions & DOWN)
     checkCoordinates.y += _h;
+    chunkRect.y1 -= _h/2;
   auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
   if (it == mapController.terrainMap[zLevel].end())
   {

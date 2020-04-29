@@ -1,5 +1,5 @@
 {
-  "gameSize": 75,
+  "gameSize": 100,
   "tileSize": 16,
   "spriteSize": 32,
   "map": {
