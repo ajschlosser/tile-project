@@ -36,7 +36,8 @@ struct ChunkProcessor
   ChunkProcessor (Rect* r, int zMax = 3)
   {
     chunk = r;
-    smallchunks = r->getRects();
+    bool shuffle = true;
+    smallchunks = r->getRects(shuffle);
     this->zMax = zMax;
   };
   BiomeType* getBrush() { std::shared_lock lock(brushMtx); return brush; }

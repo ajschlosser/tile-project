@@ -233,6 +233,7 @@ void MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::function
 
 chunk::ChunkReport MapController::generateRangeReport(Rect* range, int h = 0)
 {
+  std::unique_lock lock(mtx);
   auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
     auto it = terrainMap[h].find({x, y});
     if (it != terrainMap[h].end())
@@ -260,7 +261,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
 {
   if (mapGenerator.processing)
   {
-    SDL_Log("Already processing chunk.");
+    std::unique_lock lock(mtx);
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Already processing chunk.");
     return -1;
   }
 

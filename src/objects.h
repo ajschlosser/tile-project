@@ -4,13 +4,19 @@
 #include "timer.h"
 #include "uuid.h"
 
+#include <algorithm>
 #include <cmath>
+#include <chrono>
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
 #include <thread>
 #include <tuple>
+
+#include <random>
+
+// TODO: Switch from std::rand to <random>
 
 struct Rect
 {
@@ -27,7 +33,7 @@ struct Rect
   int getWidth () { return std::abs(x1) + std::abs(x2); }
   int getHeight () { return std::abs(y1) + std::abs(y2); }
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
-  std::vector<Rect>* getRects()
+  std::vector<Rect>* getRects(bool shuffle = false)
   {
     int small_w = 15;
     int small_h = 15;
@@ -36,14 +42,22 @@ struct Rect
     auto result_w = std::div(w, small_w);
     auto result_h = std::div(h, small_h);
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "found %dx%d rects in rect of %dx%d", result_w.quot, result_h.quot, w, h);
+    rects.clear();
     for (auto x = x1; x <= x2; x += result_w.quot)
       for (auto y = y1; y <= y2; y += result_h.quot)
       {
         Rect r { x, y, x + result_w.quot, y + result_h.quot };
         rects.push_back(r);
       }
+    if (shuffle == true)
+    {
+      unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+      std::default_random_engine rng(seed);
+      std::shuffle(rects.begin(), rects.end(), rng);
+    }
     return &rects;
   }
+  std::vector<Rect>* getShuffledRects() { return getRects(true); }
   void multiprocess(std::function<void(int, int)> f, Rect* r = NULL, int fuzz = 1)
   {
     if (r == NULL)
