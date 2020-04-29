@@ -322,11 +322,11 @@ int MapController::generateMapChunk(Rect* chunkRect)
         auto t = generateRangeReport(&range, h);
         auto [bCount, topBiomeName] = t.topBiome;
         if (std::rand() % 1000 > 985) topBiomeName = getRandomBiomeType()->name;
-        updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        updateTile(h, i+1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        updateTile(h, i-1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        updateTile(h, i, j+1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        updateTile(h, i, j-1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (terrainMap[h].find({ i, j })->second.initialized == false) updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (terrainMap[h].find({ i+1, j })->second.initialized == false) updateTile(h, i+1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (terrainMap[h].find({ i-1, j })->second.initialized == false) updateTile(h, i-1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (terrainMap[h].find({ i, j+1 })->second.initialized == false) updateTile(h, i, j+1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (terrainMap[h].find({ i, j-1 })->second.initialized == false) updateTile(h, i, j-1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
       }
     };
     processChunk(r, hammerProcessor);
@@ -401,7 +401,11 @@ int MapController::generateMapChunk(Rect* chunkRect)
   typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>> multiprocessChain;
   multiprocessChain terrainPlacement { { createTerrainObjects, [this](chunk::ChunkProcessor* p){ if (std::rand() % 10 > 5) p->setBrush(getRandomBiomeType()); return p->getBrush(); } } };
   multiprocessChain chunkFudging {
-    // { hammerChunk, [this](){return getRandomBiomeType();} },
+    { hammerChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
+    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
+    { cleanChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
+    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
+    { hammerChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
     { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
     { cleanChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} }
   };
