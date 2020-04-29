@@ -5,6 +5,7 @@
 #include "objects.h"
 #include <functional>
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
 #include <array>
 #include <variant>
@@ -29,25 +30,28 @@ struct ChunkProcessor
 {
   Rect* chunk;
   std::vector<Rect>* smallchunks;
-  int zMax;;
+  int zMax;
+  BiomeType* brush;
+  std::shared_mutex brushMtx;
   ChunkProcessor (Rect* r, int zMax = 3)
   {
     chunk = r;
     smallchunks = r->getRects();
     this->zMax = zMax;
-    SDL_Log("Chunk processor created for 1 %dx%d chunk of %lu???mp small 15x15 chunks",
-      r->getWidth(),
-      r->getHeight(),
-      smallchunks->size()
-    );
+  };
+  BiomeType* getBrush() { std::shared_lock lock(brushMtx); return brush; }
+  void setBrush(BiomeType* b)
+  {
+    std::unique_lock lock(brushMtx);
+    brush = b;
   }
   void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
-  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2>, int);
+  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>>, 2>, int);
   void lazyProcess (Rect* r, std::vector<chunkFunctor>, int);
   void process (Rect*, std::vector<chunkFunctor>);
   void processChunk (std::vector<chunkFunctor> functors) { process(chunk, functors); }
   void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
-  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
+  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
 };
 
 ChunkReport getRangeReport(std::function<void(int, int, ChunkReport*)>, Rect*, int, int);

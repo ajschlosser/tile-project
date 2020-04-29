@@ -398,16 +398,17 @@ int MapController::generateMapChunk(Rect* chunkRect)
     else if (n > 65 ) processChunk(r, fudgeProcessor);
   };
 
-  typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*()>>> multiprocessChain;
-  multiprocessChain terrainPlacement { { createTerrainObjects, [this](){return getRandomBiomeType();} } };
+  typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>> multiprocessChain;
+  multiprocessChain terrainPlacement { { createTerrainObjects, [this](chunk::ChunkProcessor* p){ if (std::rand() % 10 > 5) p->setBrush(getRandomBiomeType()); return p->getBrush(); } } };
   multiprocessChain chunkFudging {
     // { hammerChunk, [this](){return getRandomBiomeType();} },
-    { fudgeChunk, [this](){return getRandomBiomeType();} },
-    { cleanChunk, [this](){return getRandomBiomeType();} }
+    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
+    { cleanChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} }
   };
-  multiprocessChain objectPlacement { { addWorldObjects, [this](){return getRandomBiomeType(); } } };
+  multiprocessChain objectPlacement { { addWorldObjects, [this](chunk::ChunkProcessor* p){return getRandomBiomeType(); } } };
 
   chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
+  chunker.setBrush(getRandomBiomeType());
   SDL_Log("Adding terrain objects...");
   // std::thread t([this, &chunker](multiprocessChain o, multiprocessChain c){ chunker.multiProcessChunk({ o, c }); }, objectPlacers, chunkFuzzers);
   // t.join();
