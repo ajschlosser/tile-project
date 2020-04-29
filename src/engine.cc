@@ -177,6 +177,11 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
+    if (directions & DOWN && directions & LEFT)
+    {
+      dest.y += movementSpeed/2;
+      dest.y -= movementSpeed/2;
+    }
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();;
