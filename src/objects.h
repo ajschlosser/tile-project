@@ -147,7 +147,7 @@ struct BiomeType
   float multiplier;
   std::vector<std::string> terrainTypeProbabilities;
   BiomeType () {}
-  std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(rand() % terrainTypeProbabilities.size()); }
+  std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(std::rand() % terrainTypeProbabilities.size()); }
 };
 
 struct BiomeObject

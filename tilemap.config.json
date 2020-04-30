@@ -29,8 +29,7 @@
       "name": "oak tree",
       "sprite": "Sprite 32x352",
       "biomes": ["forest"],
-      "impassable": 1,
-      "clusters": 1
+      "impassable": 1
     },
     {
       "name": "apple tree",

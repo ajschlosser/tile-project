@@ -283,8 +283,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
-      // updateTile(h, i, j, b, &cfg->terrainTypes[b->getRandomTerrainTypeName()]);
-
       TerrainType* tt;
       Rect range = { i-1, j-1, i+1, j+1 };
       auto t = generateRangeReport(&range, h);
@@ -300,34 +298,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
       updateTile(h, i, j, b, tt);
       if ((std::rand() % 10000 > (9500 - ((9500 * tt->getObjectFrequencyMultiplier()) - 9500))) && tt->objectTypeProbabilities.size() > 0)
       {
-        // //SDL_Log("getting name");
-        // std::string name = tt->getRandomObjectTypeName();
-        // //SDL_Log("got name: %s", name.c_str());
-
-        // // while (cfg->objectTypes[name].canExistIn(b->name) == false)
-        // //   name = tt->getRandomObjectTypeName();
-
-        // // if (cfg->objectTypes[name].canExistIn(b->name) == true)
-        // // {
-        //   SDL_Log("here: %s, %s, %s", b->name.c_str(), tt->name.c_str(), name.c_str());
-        //   std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-        //     i, j, &cfg->objectTypes[name], b
-        //   );
-        //   updateTile(h, i, j, o, nullptr);
-        // // }
-
-
-
-      for (auto relatedObjectType : tt->objects)
-      {
-        if (!cfg->objectTypes[relatedObjectType].biomes[b->name])
-          continue;
-
+        std::string n = tt->getRandomObjectTypeName(); // TODO: First check if it's possible, then keep checking until you've got it
+        if (cfg->objectTypes[n].biomes[b->name] && worldMap[h][{i, j}].begin() == worldMap[h][{i, j}].end())
+        {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &cfg->objectTypes[relatedObjectType], &cfg->biomeTypes[b->name]
+            i, j, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]
           );
           updateTile(h, i, j, o, nullptr);
-      }        
+        }  
       }
     }
   };
@@ -338,18 +316,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
     auto it = terrainMap[h].find({i, j});
     if (it != terrainMap[h].end() && it->second.initialized == false)
     {
-      // for (auto relatedObjectType : it->second.terrainType->objects)
-      // {
-      //   if (!cfg->objectTypes[relatedObjectType].biomes[it->second.biomeType->name])
-      //     continue;
-      //   if (std::rand() % 1000 > 950)
-      //   {
-      //     std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-      //       i, j, &cfg->objectTypes[relatedObjectType], &cfg->biomeTypes[it->second.biomeType->name]
-      //     );
-      //     updateTile(h, i, j, o, nullptr);
-      //   }
-      // }
       if (std::rand() % 1000 > 995)
       {
         
