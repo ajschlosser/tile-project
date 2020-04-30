@@ -34,17 +34,37 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
 
     std::string tileTypeName = configJson["terrains"][i]["name"].asString();
     bool impassable = configJson["terrains"][i]["impassable"].asBool();
+    bool clusters = configJson["terrains"][i]["clusters"].asBool();
     float multiplier = configJson["terrains"][i]["multiplier"].asFloat();
+    float objectFrequencyMultiplier = configJson["terrains"][i]["objectFrequencyMultiplier"].asFloat();
     std::vector<std::string> relatedObjectTypes;
+    std::vector<std::string> relatedObjectTypeProbabilities;
     const Json::Value& relatedObjectsArray = configJson["terrains"][i]["objects"];
     for (int i = 0; i < relatedObjectsArray.size(); i++)
     {
-      relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
+      if (relatedObjectsArray[i].isString())
+      {
+        relatedObjectTypes.push_back(relatedObjectsArray[i].asString());
+        for (auto a = 0; a < 10; a++)
+          relatedObjectTypeProbabilities.push_back(relatedObjectsArray[i].asString());
+      }
+      else if (relatedObjectsArray[i].isObject())
+      {
+        std::string objectTypeName = relatedObjectsArray[i]["type"].asString();
+        float objectTypeNameFrequency = relatedObjectsArray[i]["multiplier"].asFloat();
+        relatedObjectTypes.push_back(objectTypeName);
+        SDL_Log("wow %s", objectTypeName.c_str());
+        for (auto a = 0; a < 10 * objectTypeNameFrequency; a++)
+          relatedObjectTypeProbabilities.push_back(objectTypeName);
+      }
     }
     TileType tileType { &sprites[spriteName], tileTypeName };
     TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
     terrainType.impassable = impassable;
     terrainType.multiplier = multiplier;
+    terrainType.clusters = clusters;
+    terrainType.objectFrequencyMultiplier = objectFrequencyMultiplier;
+    terrainType.objectTypeProbabilities = relatedObjectTypeProbabilities;
     terrainType.animationMap = animationMap;
     if (animationMap.size() > 1)
     {
@@ -86,6 +106,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     std::string spriteName = configJson["objects"][i]["sprite"].asString();
     std::string objectTypeName = configJson["objects"][i]["name"].asString();
     bool impassable = configJson["objects"][i]["impassable"].asBool();
+    bool clusters = configJson["objects"][i]["clusters"].asBool();
     const Json::Value& biomesArray = configJson["objects"][i]["biomes"];
     std::map<std::string, int> bM;
     for (int i = 0; i < biomesArray.size(); i++)
@@ -96,7 +117,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     tileTypes[tileType.name] = tileType;
     std::map<int, Sprite*> animationMap; // TODO : Fix this
     animationMap[0] = &sprites[spriteName];
-    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), animationMap, 0, bM };
+    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), clusters, animationMap, 0, bM };
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -130,7 +151,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     }
 
 
-    MobType mobType { &sprites[spriteName], mobTypeName, false, configJson["mobs"][i]["multiplier"].asFloat(), animationMap, 1000, bM };
+    MobType mobType { &sprites[spriteName], mobTypeName, false, configJson["mobs"][i]["multiplier"].asFloat(), 0, animationMap, 1000, bM };
     mobTypes[mobType.name] = mobType;
   }
 }

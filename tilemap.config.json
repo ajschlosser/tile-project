@@ -1,6 +1,6 @@
 {
-  "gameSize": 50,
-  "tileSize": 64,
+  "gameSize": 65,
+  "tileSize": 32,
   "spriteSize": 32,
   "map": {
     "chunks": {
@@ -29,7 +29,8 @@
       "name": "oak tree",
       "sprite": "Sprite 32x352",
       "biomes": ["forest"],
-      "impassable": 1
+      "impassable": 1,
+      "clusters": 1
     },
     {
       "name": "apple tree",
@@ -101,16 +102,19 @@
     {
       "name": "grass",
       "sprite": "Sprite 0x0",
+      "clusters": 1,
       "objects": ["green bush", "dirt", "light green bush", "yellow flower", "pink flower", "boulder"]
     },
     {
       "name": "shrub grass",
       "sprite": "Sprite 0x0",
+      "clusters": 1,
       "objects": ["green bush", "light green bush", "boulder"]
     },
     {
       "name": "steppe grass",
       "sprite": "Sprite 0x0",
+      "clusters": 1,
       "objects": ["dirt", "boulder"]
     },
     {
@@ -121,6 +125,7 @@
     {
       "name": "dry grass",
       "sprite": "Sprite 64x0",
+      "clusters": 1,
       "objects": ["dirt", "boulder"]
     },
     {
@@ -131,6 +136,7 @@
     {
       "name": "weedy soil",
       "sprite": "Sprite 32x32",
+      "clusters": 1,
       "objects": ["mud"]
     },
     {
@@ -150,6 +156,7 @@
     },
     {
       "name": "water",
+      "clusters": 1,
       "sprite": [
         "Sprite 0x96",
         "Sprite 32x96"
@@ -168,7 +175,8 @@
     {
       "name": "oak forest",
       "sprite": "Sprite 64x0",
-      "objects": ["oak tree","apple tree"]
+      "objectFrequencyMultiplier": 15.0,
+      "objects": ["oak tree", "apple tree"]
     }
   ],
   "biomes": [
@@ -260,7 +268,7 @@
           "multiplier": 0.5
         }
       ],
-      "multiplier": 1.5
+      "multiplier": 1.0
     },
     {
       "name": "snowlands",
@@ -312,6 +320,7 @@
       "maxDepth": 0,
       "minDepth": 0,
       "name": "forest",
+      "multiplier": 3.0,
       "terrains": [
         {
           "name": "oak forest",

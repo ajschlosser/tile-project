@@ -36,8 +36,8 @@ struct Rect
   std::tuple<int, int> getMid (){ return std::make_tuple(std::floor((x1 + x2)/2), std::floor((y1 + y2)/2)); }
   std::vector<Rect>* getRects(bool shuffle = false)
   {
-    int small_w = 15;
-    int small_h = 15;
+    int small_w = 25;
+    int small_h = 25;
     int w = getWidth();
     int h = getHeight();
     auto result_w = std::div(w, small_w);
@@ -91,6 +91,7 @@ struct GenericType
   std::string name;
   bool impassable;
   float multiplier;
+  bool clusters;
   std::map<int, Sprite*> animationMap;
   int animationSpeed;
   int maxFrames() { return animationMap.size(); }
@@ -102,6 +103,7 @@ struct GenericType
 struct ObjectType : GenericType
 {
   std::map<std::string, int> biomes;
+  bool canExistIn(std::string biomeName) { return biomes[biomeName] == 1; }
 };
 
 struct MobType : ObjectType {};
@@ -119,12 +121,20 @@ struct TileType : GenericType
 struct TerrainType : GenericType
 {
   std::vector<std::string> objects;
+  int objectFrequencyMultiplier;
+  std::vector<std::string> objectTypeProbabilities;
   TerrainType () {}
   TerrainType (Sprite* sprite, std::string name, std::vector<std::string> objects)
   {
     this->sprite = sprite;
     this->name = name;
     this->objects = objects;
+    this->objectFrequencyMultiplier = 1.0;
+  }
+  int getObjectFrequencyMultiplier() { if (objectFrequencyMultiplier > 0) return objectFrequencyMultiplier; else return 1; }
+  std::string getRandomObjectTypeName()
+  {
+    return objectTypeProbabilities.at(rand() % objectTypeProbabilities.size());
   }
 };
 

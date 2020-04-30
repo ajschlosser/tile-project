@@ -32,7 +32,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     {
       BiomeType* b = f.second(this, it->getMid());
       auto fn = std::get<chunkProcessorFunctor>(f.first);
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
       int n = std::rand() % 10;
       std::thread t([this, n, fn, b, fuzz](int x1, int y1, int x2, int y2) {
         for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
