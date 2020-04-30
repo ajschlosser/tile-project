@@ -4,6 +4,7 @@
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
 #include "objects.h"
+#include "rect.h"
 #include "config.h"
 #include "input.h"
 #include "map.h"

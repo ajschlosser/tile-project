@@ -39,15 +39,15 @@
     {
       "name": "beech tree",
       "sprite": [
-        "Sprite 150x352",
-        "Sprite 182x352"
+        "Sprite 160x352",
+        "Sprite 192x352"
       ],
       "biomes": ["forest"],
       "impassable": 1
     },
     {
       "name": "green bush",
-      "sprite": "Sprite 0x192",
+      "sprite": "Sprite 160x192",
       "biomes": ["shrublands"],
       "impassable": 1
     },

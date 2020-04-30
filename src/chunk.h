@@ -3,6 +3,7 @@
 
 #include "SDL2/SDL.h"
 #include "objects.h"
+#include "rect.h"
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
