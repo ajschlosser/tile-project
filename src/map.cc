@@ -304,6 +304,11 @@ int MapController::generateMapChunk(Rect* chunkRect)
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
             i, j, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]
           );
+          if (cfg->objectTypes[n].isAnimated())
+          {
+            o->animationTimer.start();
+            o->animationSpeed = cfg->objectTypes[n].animationSpeed + std::rand() % 3000;
+          }
           updateTile(h, i, j, o, nullptr);
         }  
       }

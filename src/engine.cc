@@ -177,11 +177,6 @@ void GameEngine::scrollGameSurface(int directions)
       dest.y += movementSpeed;
     if (directions & DOWN)
       dest.y -= movementSpeed;
-    if (directions & DOWN && directions & LEFT)
-    {
-      dest.y += movementSpeed/2;
-      dest.y -= movementSpeed/2;
-    }
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();
     gfxController.applyUi();;
@@ -274,11 +269,10 @@ void GameEngine::renderCopyTiles()
       gfxController.renderCopySprite("Sprite 0x128", x, y);
     if (worldObject != mapController.worldMap[zLevel].end())
       for ( auto w : worldObject->second )
-        gfxController.renderCopyObject<WorldObject>(w, x, y);
+        gfxController.renderCopyObject(w, x, y);
     auto mobObject = mapController.mobMap[zLevel].find({ i, j });
     if (mobObject != mapController.mobMap[zLevel].end())
       for ( auto &w : mobObject->second )
-        //gfxController.renderCopyObject<MobObject>(w, x, y);
         gfxController.renderCopyMobObject(w, x, y);
   };
   std::thread r (

@@ -29,9 +29,28 @@ struct GraphicsController
   void applyUi();
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
-  template<class T> int renderCopyObject(std::shared_ptr<T> t, int x, int y)
+  int renderCopyObject(std::shared_ptr<WorldObject> t, int x, int y)
   {
-    return renderCopySprite(t->sprite, x, y);
+
+    if (!t->isAnimated())
+      return renderCopySprite(t->objectType->sprite, x, y);
+    else
+    {
+      if (t->animationTimer.elapsed() > t->animationSpeed)
+      {
+        t->animationTimer.stop();
+        t->animationTimer.start();
+        t->animationFrame++;
+        if (t->animationFrame >= t->objectType->maxFrames())
+          t->animationFrame = 0;
+      }
+
+      auto it = t->objectType->animationMap.find(t->animationFrame);
+      if (it == t->objectType->animationMap.end())
+        return renderCopySprite(t->objectType->sprite, x, y);
+      else
+        return renderCopySprite(it->second, x, y);
+    }
   }
   int renderCopyMobObject(std::shared_ptr<MobObject> t, int x, int y)
   {

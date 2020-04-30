@@ -103,7 +103,6 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
   }
   for (auto i = 0; i < configJson["objects"].size(); ++i)
   {
-    std::string spriteName = configJson["objects"][i]["sprite"].asString();
     std::string objectTypeName = configJson["objects"][i]["name"].asString();
     bool impassable = configJson["objects"][i]["impassable"].asBool();
     bool clusters = configJson["objects"][i]["clusters"].asBool();
@@ -113,11 +112,24 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     {
       bM[biomesArray[i].asString()] = 1;
     }
-    TileType tileType { &sprites[spriteName], objectTypeName };
-    tileTypes[tileType.name] = tileType;
+
     std::map<int, Sprite*> animationMap; // TODO : Fix this
-    animationMap[0] = &sprites[spriteName];
-    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), clusters, animationMap, 0, bM };
+    std::string spriteName;
+    if (configJson["objects"][i]["sprite"].isString())
+    {
+      spriteName = configJson["objects"][i]["sprite"].asString();
+      animationMap[0] = &sprites[spriteName];
+    }
+    else if (configJson["objects"][i]["sprite"].isArray())
+    {
+      const Json::Value& animationArr = configJson["objects"][i]["sprite"];
+      spriteName = animationArr[0].asString();
+      for (int i = 0; i < animationArr.size(); i++)
+      {
+        animationMap[i] = &sprites[animationArr[i].asString()];
+      }
+    }
+    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), clusters, animationMap, 1000, bM };
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -131,8 +143,6 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       bM[biomesArray[i].asString()] = 1;
     }
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
-    //TileType tileType { &sprites[spriteName], mobTypeName };
-    //tileTypes[tileType.name] = tileType;
     std::map<int, Sprite*> animationMap; // TODO : Fix this
     std::string spriteName;
     if (configJson["mobs"][i]["sprite"].isString())
