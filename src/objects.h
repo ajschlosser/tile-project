@@ -33,6 +33,7 @@ struct Rect
   int getWidth () { return std::abs(x1) + std::abs(x2); }
   int getHeight () { return std::abs(y1) + std::abs(y2); }
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
+  std::tuple<int, int> getMid (){ return std::make_tuple(std::floor((x1 + x2)/2), std::floor((y1 + y2)/2)); }
   std::vector<Rect>* getRects(bool shuffle = false)
   {
     int small_w = 15;

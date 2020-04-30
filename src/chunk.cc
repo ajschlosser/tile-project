@@ -21,7 +21,7 @@ void ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, Biom
   }
 }
 
-void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>>, 2> functors, int fuzz = 1)
+void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>>, 2> functors, int fuzz = 1)
 {
 
   // Process every tile in every chunk
@@ -30,7 +30,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     // Process tiles in chunk thread
     for (auto f : functors[0])
     {
-      BiomeType* b = f.second(this);
+      BiomeType* b = f.second(this, it->getMid());
       auto fn = std::get<chunkProcessorFunctor>(f.first);
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
       int n = std::rand() % 10;
@@ -47,7 +47,7 @@ void ChunkProcessor::multiProcess (Rect* r, std::array<std::vector<std::pair<gen
     // Post-process chunk thread
     for (auto f : functors[1])
     {
-      BiomeType* b = f.second(this);
+      BiomeType* b = f.second(this, it->getMid());
       auto fn = std::get<chunkProcessorCallbackFunctor>(f.first);
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Post-processing chunk (%d, %d)", it->x1, it->x2);
       std::thread t([this, fn, &b, it]() {

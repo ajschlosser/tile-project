@@ -375,12 +375,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
       else if (it->second.initialized == false)
       {
         Rect range = { i-2, j-2, i+2, j+2 };
-
         auto t = generateRangeReport(&range, h);
-
         auto [bCount, topBiomeName] = t.topBiome;
-        //SDL_Log("%s %d %s %s %s", it->second.biomeType->name.c_str(), bCount, bName.c_str(), cfg->biomeTypes[bName].name.c_str(), cfg->getRandomTerrainType(bName)->name.c_str() );
-        //auto rb = getRandomBiomeType();
         if (it->second.biomeType->name != topBiomeName)
         {
             if (std::rand() % 10 > 4)
@@ -395,17 +391,6 @@ int MapController::generateMapChunk(Rect* chunkRect)
               updateTile(h, i, j-1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
             }
         }
-        else
-        {
-          // if (std::rand() % 100 > 85)
-          // {
-          //   updateTile(h, i, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          //   updateTile(h, i+1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          //   updateTile(h, i-1, j, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          //   updateTile(h, i, j+1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          //   updateTile(h, i, j-1, &cfg->biomeTypes[rb->name], cfg->getRandomTerrainType(rb->name) );
-          // }
-        }
       }
     };
     int n = std::rand() % 100;
@@ -413,18 +398,30 @@ int MapController::generateMapChunk(Rect* chunkRect)
     else if (n > 65 ) processChunk(r, fudgeProcessor);
   };
 
-  typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>> multiprocessChain;
-  multiprocessChain terrainPlacement { { createTerrainObjects, [this](chunk::ChunkProcessor* p){ if (std::rand() % 10 > 5) p->setBrush(getRandomBiomeType()); return p->getBrush(); } } };
-  multiprocessChain chunkFudging {
-    { hammerChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { cleanChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { hammerChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { fudgeChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} },
-    { cleanChunk, [this](chunk::ChunkProcessor* p){return getRandomBiomeType();} }
+  typedef std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>> multiprocessChain;
+  multiprocessChain terrainPlacement { { createTerrainObjects, [this](chunk::ChunkProcessor* p, std::tuple<int, int> coords)
+  {
+    if (std::rand() % 10 > 5)
+    {
+      auto [i, j] = coords;
+      Rect range = { i-5, j-5, i+5, j+5 };
+      auto t = generateRangeReport(&range, 0);
+      auto [bCount, topBiomeName] = t.topBiome;
+      if (topBiomeName.length() > 0)
+        p->setBrush(&cfg->biomeTypes[topBiomeName]);
+      else
+        p->setBrush(getRandomBiomeType());
+    }
+    return p->getBrush(); } }
+
   };
-  multiprocessChain objectPlacement { { addWorldObjects, [this](chunk::ChunkProcessor* p){return getRandomBiomeType(); } } };
+  multiprocessChain chunkFudging {
+    { fudgeChunk, [this](chunk::ChunkProcessor* p,std::tuple<int,int>coords){return getRandomBiomeType();} },
+    { hammerChunk, [this](chunk::ChunkProcessor* p,std::tuple<int,int>coords){return getRandomBiomeType();} },
+    { fudgeChunk, [this](chunk::ChunkProcessor* p,std::tuple<int,int>coords){return getRandomBiomeType();} },
+    { cleanChunk, [this](chunk::ChunkProcessor* p,std::tuple<int,int>coords){return getRandomBiomeType();} }
+  };
+  multiprocessChain objectPlacement { { addWorldObjects, [this](chunk::ChunkProcessor* p,std::tuple<int,int>coords){return getRandomBiomeType(); } } };
 
   chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
   chunker.setBrush(getRandomBiomeType());

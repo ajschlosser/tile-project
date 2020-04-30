@@ -47,12 +47,12 @@ struct ChunkProcessor
     brush = b;
   }
   void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
-  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>>, 2>, int);
+  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>>, 2>, int);
   void lazyProcess (Rect* r, std::vector<chunkFunctor>, int);
   void process (Rect*, std::vector<chunkFunctor>);
   void processChunk (std::vector<chunkFunctor> functors) { process(chunk, functors); }
   void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
-  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*)>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
+  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
 };
 
 ChunkReport getRangeReport(std::function<void(int, int, ChunkReport*)>, Rect*, int, int);
