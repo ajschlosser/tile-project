@@ -29,7 +29,9 @@
       "name": "oak tree",
       "sprite": [
         "Sprite 32x352",
-        "Sprite 64x352"
+        "Sprite 64x352",
+        "Sprite 96x352",
+        "Sprite 128x352"
       ],
       "biomes": ["forest"],
       "impassable": 1
@@ -37,8 +39,8 @@
     {
       "name": "beech tree",
       "sprite": [
-        "Sprite 96x352",
-        "Sprite 128x352"
+        "Sprite 150x352",
+        "Sprite 182x352"
       ],
       "biomes": ["forest"],
       "impassable": 1
