@@ -7,12 +7,18 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
   std::ifstream configFile(configFilePath.c_str());
   configFile >> configJson;
 
-  chunkFuzz = configJson["map"]["chunks"]["fuzz"].asInt();
 
+  ////////////////
+  //  GENERAL
+  ///////////////
+  chunkFuzz = configJson["map"]["chunks"]["fuzz"].asInt();
   gameSize = configJson["gameSize"].asInt();
   tileSize = configJson["tileSize"].asInt();
   spriteSize = configJson["spriteSize"].asInt();
 
+  ////////////////
+  //  TERRAINS
+  ///////////////
   for (auto i = 0; i < configJson["terrains"].size(); ++i)
   {
     std::map<int, Sprite*> animationMap;
@@ -31,7 +37,6 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
         animationMap[i] = &sprites[animationArr[i].asString()];
       }
     }
-
     std::string tileTypeName = configJson["terrains"][i]["name"].asString();
     bool impassable = configJson["terrains"][i]["impassable"].asBool();
     bool clusters = configJson["terrains"][i]["clusters"].asBool();
@@ -75,6 +80,10 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     terrainTypesKeys.push_back(terrainType.name);
     SDL_Log("- Loaded '%s' terrain", tileTypeName.c_str());
   }
+
+  ////////////////
+  //  BIOMES
+  ///////////////
   for (auto i = 0; i < configJson["biomes"].size(); ++i)
   {
     BiomeType b;
@@ -101,6 +110,10 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       biomeTypeProbabilities.push_back(b.name);
     SDL_Log("- Loaded '%s' biome", b.name.c_str());
   }
+
+  ////////////////////
+  //  WORLDOBJECTS
+  ///////////////////
   for (auto i = 0; i < configJson["objects"].size(); ++i)
   {
     std::string objectTypeName = configJson["objects"][i]["name"].asString();
@@ -133,6 +146,10 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
+
+  ////////////////
+  //  MOBS
+  ///////////////
   for (auto i = 0; i < configJson["mobs"].size(); ++i)
   {
     std::string mobTypeName = configJson["mobs"][i]["name"].asString();

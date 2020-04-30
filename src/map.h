@@ -11,22 +11,14 @@
 #include <shared_mutex>
 #include <thread>
 
-namespace map
-{
-  std::shared_mutex* getMutex();
-}
-
 struct MapGenerator
 {
   bool processing;
-  BiomeType* currentBiomeType;
-  std::vector<SDL_Rect*> rects;
-  MapGenerator () : processing(false), currentBiomeType(NULL) {}
-  void init(BiomeType* b, std::shared_mutex* mtx)
+  MapGenerator () : processing(false){}
+  void init(std::shared_mutex* mtx)
   {
     mtx->lock();
     processing = true;
-    currentBiomeType = b;
     mtx->unlock();
   }
   void reset(std::shared_mutex* mtx)
@@ -35,13 +27,11 @@ struct MapGenerator
     processing = false;
     mtx->unlock();
   }
-  bool currentlyGenerating () { return processing; }
-  bool isOutOfDepth (int h) { return (h > currentBiomeType->maxDepth || h < currentBiomeType->minDepth); }
-  void setCurrentBiomeType (BiomeType* b, std::mutex* mtx) { mtx->lock(); currentBiomeType = b; mtx->unlock(); }
 };
 
 struct MapController
 {
+  MapGenerator mapGenerator;
   int maxDepth;
   objects::mobTypesMap* mobTypes;
   objects::objectTypesMap* objectTypes;
@@ -54,7 +44,6 @@ struct MapController
   objects::worldMap worldMap;
   objects::mobMap mobMap;
   ConfigurationController* cfg;
-  MapGenerator mapGenerator;
   MapController () : maxDepth(0) {}
   MapController (
       int d,

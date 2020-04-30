@@ -2,11 +2,6 @@
 
 std::shared_mutex mtx;
 
-std::shared_mutex* map::getMutex ()
-{
-  return &mtx;
-}
-
 void MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TerrainType* terrainType, objects::objectsVector worldObjects = objects::objectsVector ())
 {
   std::unique_lock lock(mtx);
@@ -276,7 +271,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     return -1;
   }
 
-  mapGenerator.init(getRandomBiomeType(), &mtx);
+  mapGenerator.init(&mtx);
 
   auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
   {
