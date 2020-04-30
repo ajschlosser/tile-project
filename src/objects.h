@@ -4,131 +4,21 @@
 #include "sprite.h"
 #include "timer.h"
 #include "uuid.h"
-
-#include "type/generic.h"
-#include "type/terrain.h"
-#include "type/object.h"
-#include "type/mob.h"
-#include "type/tile.h"
+#include "type/type.h"
+#include "object/object.h"
 
 #include <algorithm>
-#include <cmath>
 #include <chrono>
+#include <cmath>
 #include <map>
-#include <string>
-#include <vector>
 #include <memory>
+#include <random>
+#include <string>
 #include <thread>
 #include <tuple>
-
-#include <random>
+#include <vector>
 
 // TODO: Switch from std::rand to <random>
-
-struct BiomeType
-{
-  std::string name;
-  int maxDepth;
-  int minDepth;
-  std::map<int, std::pair<std::string, float>> terrainTypes;
-  float multiplier;
-  std::vector<std::string> terrainTypeProbabilities;
-  BiomeType () {}
-  std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(std::rand() % terrainTypeProbabilities.size()); }
-};
-
-struct BiomeObject
-{
-  int x;
-  int y;
-  BiomeType* biomeType;
-};
-
-struct Tile
-{
-  int x;
-  int y;
-  BiomeType* biomeType;
-  TerrainType* terrainType;
-  Sprite* sprite;
-  Timer animationTimer;
-  int animationFrame;
-  int animationSpeed;
-  bool isAnimated() { return animationSpeed > 0; }
-  bool seen;
-  bool initialized;
-  Tile() : seen(false), initialized(false) {}
-  Tile (int x, int y) { this->x = x; this->y = y; }
-};
-
-struct TerrainObject : Tile
-{
-  TerrainType* terrainType;
-  TerrainObject () {}
-  TerrainObject (int x, int y, BiomeType* b, TerrainType* t)
-  {
-    this->x = x;
-    this->y = y;
-    biomeType = b;
-    terrainType = t;
-    sprite = t->sprite;
-  }
-};
-
-struct WorldObject : Tile
-{
-  ObjectType* objectType;
-  WorldObject() {}
-  WorldObject(int x, int y, ObjectType* o, BiomeType* b)
-  {
-    this->x = x;
-    this->y = y;
-    objectType = o;
-    biomeType = b;
-    sprite = o->sprite;
-  }
-};
-
-
-struct SimulatedObject : Tile
-{
-  std::map<std::string, Timer*> objectTimers;
-  bool dead;
-  SimulatedObject () : dead(false) {}
-  void kill()
-  {
-    dead = true;
-  }
-  void initSimulation()
-  {
-    Timer t;
-    t.start();
-    objectTimers["lifetime"] = &t;
-  }
-};
-
-
-struct MobObject : SimulatedObject
-{
-  std::string id;
-  int speed;
-  MobType* mobType;
-  std::map<std::string, Timer> mobTimers;
-  MobObject (int x, int y, MobType* m, BiomeType* b)
-  {
-    id = uuid::generate_uuid_v4();
-    this->initSimulation();
-    this->x = x;
-    this->y = y;
-    mobType = m;
-    biomeType = b;
-    sprite = m->sprite;
-    speed = std::rand() % 1500 + 1000;
-    Timer t;
-    t.start();
-    mobTimers["movement"] = t;
-  }
-};
 
 struct Player {
   int x;

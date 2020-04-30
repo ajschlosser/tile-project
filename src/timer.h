@@ -1,3 +1,6 @@
+#ifndef GAME_TIMER_H
+#define GAME_TIMER_H
+
 #include "SDL2/SDL.h"
 
 struct Timer {
@@ -54,3 +57,5 @@ struct Timer {
   }
   Timer () : last(0), current(0), paused(false), started(false) {}
 };
+
+#endif
