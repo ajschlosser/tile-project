@@ -1,7 +1,6 @@
 #ifndef GAME_MOB_OBJECT_H
 #define GAME_MOB_OBJECT_H
 
-#include "../uuid.h"
 #include "simulated.h"
 
 struct MobObject : SimulatedObject
@@ -10,7 +9,7 @@ struct MobObject : SimulatedObject
   int speed;
   MobType* mobType;
   std::map<std::string, Timer> mobTimers;
-  //std::vector< Simualotrs
+  std::vector<std::shared_ptr<simulated::Simulator<MobObject>>> simulators;
   MobObject (int x, int y, MobType* m, BiomeType* b)
   {
     id = uuid::generate_uuid_v4();
@@ -24,6 +23,13 @@ struct MobObject : SimulatedObject
     Timer t;
     t.start();
     mobTimers["movement"] = t;
+    simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(this,[](MobObject* m){
+
+      int n = std::rand() % 100;
+
+      
+
+    }));
   }
 };
 

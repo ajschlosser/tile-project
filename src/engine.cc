@@ -284,6 +284,11 @@ void GameEngine::renderCopyTiles()
     auto it = mapController.mobMap[zLevel][{i, j}].begin();
     while (it != mapController.mobMap[zLevel][{i, j}].end())
     {
+      for (auto s : it->get()->simulators)
+      {
+        auto [simulated, m] = s->simulate();
+        
+      }
       if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
       {
         it->get()->mobTimers["movement"].stop();

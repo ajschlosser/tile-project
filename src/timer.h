@@ -22,6 +22,10 @@ struct Timer {
     last = 0;
     current = 0;
   }
+  void reset() {
+    stop();
+    start();
+  }
   void pause()
   {
     if (started && !paused)

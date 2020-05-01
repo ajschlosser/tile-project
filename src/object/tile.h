@@ -3,6 +3,7 @@
 
 #include "../type/type.h"
 #include "../timer.h"
+#include "../uuid.h"
 
 namespace tileObject
 {
