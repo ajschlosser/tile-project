@@ -102,13 +102,13 @@ void GameEngine::scrollCamera(int directions)
 {
   int x = gfxController.camera.x;
   int y = gfxController.camera.y;
-  if (directions & LEFT)
+  if (directions & input::LEFT)
     x--;
-  if (directions & RIGHT)
+  if (directions & input::RIGHT)
     x++;
-  if (directions & DOWN)
+  if (directions & input::DOWN)
     y++;
-  if (directions & UP)
+  if (directions & input::UP)
     y--;
   if (mapController.isPassable({zLevel, x, y}))
   {
@@ -132,16 +132,16 @@ void GameEngine::processMap(int directions)
     gfxController.camera.x+configController.gameSize*2,
     gfxController.camera.y+configController.gameSize*2
   };
-  if (directions & RIGHT)
+  if (directions & input::RIGHT)
     checkCoordinates.x += _w;
     chunkRect.x1 += _w/2;
-  if (directions & LEFT)
+  if (directions & input::LEFT)
     checkCoordinates.x -= _w;
     chunkRect.x1 -= _w/2;
-  if (directions & UP)
+  if (directions & input::UP)
     checkCoordinates.y -= _h;
     chunkRect.y1 += _h/2;
-  if (directions & DOWN)
+  if (directions & input::DOWN)
     checkCoordinates.y += _h;
     chunkRect.y1 -= _h/2;
   auto it = mapController.terrainMap[zLevel].find({ checkCoordinates.x, checkCoordinates.y });
@@ -158,24 +158,24 @@ void GameEngine::scrollGameSurface(int directions)
   auto [_w, _h] = gfxController.getWindowDimensions();
   SDL_Rect dest {0, 0, _w, _h};
   std::pair<int, int> offset = {0, 0};
-  if (directions & RIGHT)
+  if (directions & input::RIGHT)
     offset.first -= tileSize;
-  if (directions & LEFT)
+  if (directions & input::LEFT)
     offset.first += tileSize;
-  if (directions & UP)
+  if (directions & input::UP)
     offset.second += tileSize;
-  if (directions & DOWN)
+  if (directions & input::DOWN)
     offset.second -= tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
     renderCopyTiles();
-    if (directions & RIGHT)
+    if (directions & input::RIGHT)
       dest.x -= movementSpeed;
-    if (directions & LEFT)
+    if (directions & input::LEFT)
       dest.x += movementSpeed;
-    if (directions & UP)
+    if (directions & input::UP)
       dest.y += movementSpeed;
-    if (directions & DOWN)
+    if (directions & input::DOWN)
       dest.y -= movementSpeed;
     SDL_RenderCopy(appRenderer, gfxController.getGameSurfaceTexture(), NULL, &dest);
     renderCopyPlayer();

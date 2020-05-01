@@ -3,11 +3,23 @@
 
 #include "tile.h"
 
+namespace simulated
+{
+  class Simulator
+  {
+    private:
+      
+    public:
+      Simulator () {}
+  };
+}
+
 struct SimulatedObject : Tile
 {
   std::map<std::string, Timer*> objectTimers;
   bool dead;
-  SimulatedObject () : dead(false) {}
+  int direction;
+  SimulatedObject () : dead(false), direction(tileObject::DOWN) {}
   void kill()
   {
     dead = true;

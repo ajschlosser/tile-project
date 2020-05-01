@@ -4,13 +4,16 @@
 #include "SDL2/SDL.h"
 #include <functional>
 
-enum directions
+namespace input
 {
-  UP        = 0x01,
-  DOWN      = 0x02,
-  LEFT      = 0x04,
-  RIGHT     = 0x08
-};
+  enum directions
+  {
+    UP        = 0x01,
+    DOWN      = 0x02,
+    LEFT      = 0x04,
+    RIGHT     = 0x08
+  };
+}
 
 struct UserInputHandler
 {

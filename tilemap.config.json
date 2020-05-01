@@ -10,12 +10,14 @@
   "mobs": [
     {
       "name": "blue slime",
-      "sprite": [
-        "Sprite 0x384",
-        "Sprite 32x384",
-        "Sprite 64x384",
-        "Sprite 96x384"
-      ],
+      "sprite": {
+        "directions": {
+          "up": ["Sprite 96x384"],
+          "down": ["Sprite 0x384"],
+          "left": ["Sprite 64x384"],
+          "right": [ "Sprite 32x384"]
+        }
+      },
       "biomes": ["wasteland", "underground cave", "arid plains", "meadow", "forest", "plains"]
     },
     {
@@ -166,7 +168,7 @@
       "name": "rockbase",
       "sprite": "Sprite 0x64",
       "objectFrequencyMultiplier": 2.5,
-      "objects": ["boulder"]
+      "objects": ["boulder", "dirt"]
     },
     {
       "name": "water",

@@ -10,6 +10,7 @@ struct MobObject : SimulatedObject
   int speed;
   MobType* mobType;
   std::map<std::string, Timer> mobTimers;
+  //std::vector< Simualotrs
   MobObject (int x, int y, MobType* m, BiomeType* b)
   {
     id = uuid::generate_uuid_v4();

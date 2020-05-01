@@ -12,10 +12,10 @@ struct GenericType
   bool impassable;
   float multiplier;
   bool clusters;
-  std::map<int, Sprite*> animationMap;
+  std::map<int, std::map<int, Sprite*>> animationMap;
   int animationSpeed;
-  int maxFrames() { return animationMap.size(); }
-  Sprite* getFrame(int n) { return animationMap[n]; }
+  int maxFrames(int direction = 0x00) { return animationMap[direction].size(); }
+  Sprite* getFrame(int n, int direction = 0x00) { return animationMap[direction][n]; }
   bool isAnimated() { return animationSpeed > 0; }
   float getMultiplier() { if (multiplier > 0) return multiplier; else return 1; }
 };
