@@ -15,11 +15,11 @@ namespace simulated
       Timer _timer;
       int _frequency;
       int _variation;
-      T* _simulatedObject;
-      std::function<void(T*)> _fn;
+      std::shared_ptr<T> _simulatedObject;
+      std::function<void(std::shared_ptr<T>)> _fn;
     public:
       Simulator () {}
-      Simulator (T* o, std::function<void(T*)> fn)
+      Simulator (std::shared_ptr<T> o, std::function<void(std::shared_ptr<T>)> fn)
       {
         _simulatedObject = o;
         _fn = fn;
@@ -27,7 +27,7 @@ namespace simulated
         _timer.start();
         _frequency = 3000 + std::rand() * 3000;
       }
-      std::tuple<bool, T*> simulate ()
+      std::tuple<bool, std::shared_ptr<T>> simulate ()
       {
         auto elapsed = _timer.elapsed();
         if (elapsed > _frequency)

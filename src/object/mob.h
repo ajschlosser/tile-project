@@ -23,13 +23,6 @@ struct MobObject : SimulatedObject
     Timer t;
     t.start();
     mobTimers["movement"] = t;
-    simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(this,[](MobObject* m){
-
-      int n = std::rand() % 100;
-
-      
-
-    }));
   }
 };
 

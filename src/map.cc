@@ -341,6 +341,16 @@ int MapController::generateMapChunk(Rect* chunkRect)
 
             if (mob->second.isAnimated())
             {
+
+              m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[](std::shared_ptr<MobObject> m){
+
+                int n = std::rand() % 100;
+                if (n>95)
+                  SDL_Log("simulating %s", m->id.c_str());
+
+
+              }));
+
               m->animationTimer.start();
               m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;
             }

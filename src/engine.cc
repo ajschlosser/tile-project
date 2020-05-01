@@ -287,7 +287,7 @@ void GameEngine::renderCopyTiles()
       for (auto s : it->get()->simulators)
       {
         auto [simulated, m] = s->simulate();
-        
+
       }
       if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
       {
