@@ -58,7 +58,6 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
         std::string objectTypeName = relatedObjectsArray[i]["type"].asString();
         float objectTypeNameFrequency = relatedObjectsArray[i]["multiplier"].asFloat();
         relatedObjectTypes.push_back(objectTypeName);
-        SDL_Log("wow %s", objectTypeName.c_str());
         for (auto a = 0; a < 10 * objectTypeNameFrequency; a++)
           relatedObjectTypeProbabilities.push_back(objectTypeName);
       }
@@ -111,13 +110,11 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     for (auto i = b.maxDepth; i >= b.minDepth; i--)
     {
       biomeLevelMap[i][b.name] = &biomeTypes[b.name];
-      for (int i = 0; i < 10 * b.multiplier; i++)
-        biomeTypeProbabilitiesLevels[i].push_back(b.name);
+      for (int j = 0; j < 10 * b.multiplier; j++)
+        biomeTypeProbabilities[i].push_back(b.name);
     }
 
     biomeTypeKeys.push_back(b.name);
-    for (int i = 0; i < 10 * b.multiplier; i++)
-      biomeTypeProbabilities.push_back(b.name);
     SDL_Log("- Loaded '%s' biome", b.name.c_str());
   }
 
@@ -186,9 +183,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
         animationMap[i] = &sprites[animationArr[i].asString()];
       }
     }
-
-
     MobType mobType { &sprites[spriteName], mobTypeName, false, configJson["mobs"][i]["multiplier"].asFloat(), 0, animationMap, 1000, bM };
     mobTypes[mobType.name] = mobType;
-  }
+  };
 }

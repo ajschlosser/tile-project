@@ -16,7 +16,7 @@
         "Sprite 64x384",
         "Sprite 96x384"
       ],
-      "biomes": ["wasteland", "underground", "arid plains", "meadow", "forest", "plains"]
+      "biomes": ["wasteland", "underground cave", "arid plains", "meadow", "forest", "plains"]
     },
     {
       "name": "red slime",
@@ -61,17 +61,17 @@
     {
       "name": "dirt",
       "sprite": "Sprite 0x224",
-      "biomes": ["wasteland", "underground"]
+      "biomes": ["wasteland", "underground","underground cave","underground cavern"]
     },
     {
       "name": "mud",
       "sprite": "Sprite 32x224",
-      "biomes": ["wasteland", "underground", "snowlands", "water"]
+      "biomes": ["wasteland", "underground", "snowlands", "water", "underground cave"]
     },
     {
       "name": "boulder",
       "sprite": "Sprite 160x256",
-      "biomes": ["wasteland", "underground", "snowlands", "plains"],
+      "biomes": ["wasteland", "underground cave", "snowlands", "plains", "underground rock", "underground cavern"],
       "impassable": 1
     },
     {
@@ -101,7 +101,7 @@
     {
       "name": "red mushroom",
       "sprite": "Sprite 0x352",
-      "biomes": ["underground"],
+      "biomes": ["underground cavern"],
       "solitary": true,
       "impassable": 1
     }
@@ -163,8 +163,23 @@
       "objects": ["boulder", "dirt"]
     },
     {
+      "name": "rockbase",
+      "sprite": "Sprite 0x64",
+      "objectFrequencyMultiplier": 2.5,
+      "objects": ["boulder"]
+    },
+    {
       "name": "water",
       "clusters": 1,
+      "sprite": [
+        "Sprite 0x96",
+        "Sprite 32x96",
+        "Sprite 64x96"
+      ],
+      "impassable": 1
+    },
+    {
+      "name": "underground water",
       "sprite": [
         "Sprite 0x96",
         "Sprite 32x96",
@@ -192,7 +207,7 @@
       "name": "rock-pressed earth",
       "sprite": "Sprite 64x32",
       "clusters": 1,
-      "objectFrequencyMultiplier": 5.0,
+      "objectFrequencyMultiplier": 3.0,
       "objects": ["boulder"]
     }
   ],
@@ -352,18 +367,52 @@
     {
       "maxDepth": 10,
       "minDepth": 1,
-      "name": "underground",
+      "name": "underground cavern",
       "terrains": [
         {
           "name": "rock-pressed earth",
-          "multiplier": 5.0
+          "multiplier": 0.75
         },
         {
           "name": "underground soil",
-          "multiplier": 1.0
+          "multiplier": 1.25
         },
         {
           "name": "rock",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 10,
+      "minDepth": 1,
+      "name": "underground cave",
+      "terrains": [
+        {
+          "name": "rock",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 10,
+      "minDepth": 1,
+      "name": "underground rock",
+      "terrains": [
+        {
+          "name": "rockbase",
+          "multiplier": 1.0
+        }
+      ]
+    },
+    {
+      "maxDepth": 10,
+      "minDepth": 1,
+      "multiplier": 1.0,
+      "name": "underground water",
+      "terrains": [
+        {
+          "name": "underground water",
           "multiplier": 1.0
         }
       ]
