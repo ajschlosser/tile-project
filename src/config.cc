@@ -87,9 +87,11 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
   for (auto i = 0; i < configJson["biomes"].size(); ++i)
   {
     BiomeType b;
+
     b.name = configJson["biomes"][i]["name"].asString();
     b.maxDepth = configJson["biomes"][i]["maxDepth"].asInt();
     b.minDepth = configJson["biomes"][i]["minDepth"].asInt();
+
     b.multiplier = configJson["biomes"][i]["multiplier"].asFloat();
     if (b.multiplier <= 0)
       b.multiplier = 1;
@@ -105,6 +107,14 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
         b.terrainTypeProbabilities.push_back(t["name"].asString());
     }
     biomeTypes[b.name] = b;
+
+    for (auto i = b.maxDepth; i >= b.minDepth; i--)
+    {
+      biomeLevelMap[i][b.name] = &biomeTypes[b.name];
+      for (int i = 0; i < 10 * b.multiplier; i++)
+        biomeTypeProbabilitiesLevels[i].push_back(b.name);
+    }
+
     biomeTypeKeys.push_back(b.name);
     for (int i = 0; i < 10 * b.multiplier; i++)
       biomeTypeProbabilities.push_back(b.name);

@@ -11,20 +11,24 @@
 #include <array>
 #include <variant>
 
+namespace chunk {
+
+struct ChunkProcessor;
 typedef std::function<void(int, int, int)> chunkFunctor;
 typedef std::function<void(int, int, int, BiomeType*)> chunkProcessorFunctor;
 typedef std::function<void(Rect*, BiomeType* b)> chunkProcessorCallbackFunctor;
+typedef std::function<BiomeType*(ChunkProcessor*,int,std::tuple<int,int>)> chunkCallbackFn;
 typedef std::variant<chunkFunctor, chunkProcessorFunctor, chunkProcessorCallbackFunctor> genericChunkFunctor;
-
-namespace chunk {
+typedef std::vector<std::pair<genericChunkFunctor, chunkCallbackFn>> multiprocessFunctorVec;
+typedef std::array<multiprocessFunctorVec, 2> multiprocessFunctorArray;
 
 struct ChunkReport
 {
   std::map<int, std::map<std::string, int >> terrainCounts;
   std::map<int, std::map<std::string, int >> biomeCounts;
-  std::tuple<int, std::string> topTerrain;
-  std::tuple<int, std::string> topBiome;
-  std::map<std::string, std::string> meta;
+  std::map<int, std::tuple<int, std::string>> topTerrain;
+  std::map<int, std::tuple<int, std::string>> topBiome;
+  std::map<int, std::map<std::string, std::string>> meta;
 };
 
 struct ChunkProcessor
@@ -48,12 +52,12 @@ struct ChunkProcessor
     brush = b;
   }
   void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
-  void multiProcess (Rect*, std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>>, 2>, int);
+  void multiProcess (Rect*, multiprocessFunctorArray, int);
   void lazyProcess (Rect* r, std::vector<chunkFunctor>, int);
   void process (Rect*, std::vector<chunkFunctor>);
   void processChunk (std::vector<chunkFunctor> functors) { process(chunk, functors); }
   void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
-  void multiProcessChunk (std::array<std::vector<std::pair<genericChunkFunctor, std::function<BiomeType*(chunk::ChunkProcessor*,std::tuple<int,int>)>>>, 2> functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
+  void multiProcessChunk (multiprocessFunctorArray functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
 };
 
 ChunkReport getRangeReport(std::function<void(int, int, ChunkReport*)>, Rect*, int, int);

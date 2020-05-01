@@ -181,8 +181,16 @@
     {
       "name": "oak forest",
       "sprite": "Sprite 64x0",
+      "clusters": 1,
       "objectFrequencyMultiplier": 15.0,
       "objects": ["oak tree", "beech tree"]
+    },
+    {
+      "name": "rock-pressed earth",
+      "sprite": "Sprite 64x32",
+      "clusters": 1,
+      "objectFrequencyMultiplier": 5.0,
+      "objects": ["boulder"]
     }
   ],
   "biomes": [
@@ -343,6 +351,10 @@
       "minDepth": 1,
       "name": "underground",
       "terrains": [
+        {
+          "name": "rock-pressed earth",
+          "multiplier": 5.0
+        },
         {
           "name": "underground soil",
           "multiplier": 1.0

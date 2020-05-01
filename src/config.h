@@ -18,6 +18,8 @@ struct ConfigurationController
   objects::objectTypesMap objectTypes;
   objects::biomeTypesMap biomeTypes;
   std::vector<std::string> biomeTypeProbabilities;
+  std::map<int, std::map<std::string, BiomeType*>> biomeLevelMap;
+  std::map<int, std::vector<std::string>> biomeTypeProbabilitiesLevels;
   std::vector<std::string> biomeTypeKeys;
   std::vector<std::string> terrainTypesKeys;
   objects::terrainTypesMap terrainTypes;
@@ -39,13 +41,15 @@ struct ConfigurationController
       &biomeTypes, &biomeTypeKeys, &terrainTypes, &mobTypes, &objectTypes, &tileTypes
     );
   }
-  BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeProbabilities[std::rand() % biomeTypeProbabilities.size()]]; }
+  BiomeType* getRandomBiomeType(int z = 0) { return &biomeTypes[biomeTypeProbabilitiesLevels[z][std::rand() % biomeTypeProbabilitiesLevels[z].size()]]; }
+  //BiomeType* getRandomBiomeType() { return &biomeTypes[biomeTypeProbabilities[std::rand() % biomeTypeProbabilities.size()]]; }
   TerrainType* getRandomTerrainType() { return &terrainTypes[terrainTypesKeys[std::rand() % terrainTypesKeys.size()]]; }
   TerrainType* getRandomTerrainType(std::string biomeType)
   {
     auto t = biomeTypes[biomeType].terrainTypes.at(std::rand() % biomeTypes[biomeType].terrainTypes.size());
     return &terrainTypes[t.first];
   }
+  bool biomeExistsOnLevel(std::string name, int z) { return biomeLevelMap[z].find(name) != biomeLevelMap[z].end(); }
 };
 
 #endif

@@ -60,8 +60,8 @@ struct MapController
     terrainTypes = tnTypes; tileTypes = tlTypes; cfg = c;
   }
   bool isPassable (std::tuple<int, int, int>);
-  BiomeType* getRandomBiomeType() { return cfg->getRandomBiomeType(); }
-  void updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
+  //BiomeType* getRandomBiomeType() { return cfg->getRandomBiomeType(); }
+  BiomeType* updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
   void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
   std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
   std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
