@@ -25,7 +25,7 @@ namespace simulated
         _fn = fn;
         _id = uuid::generate_uuid_v4();
         _timer.start();
-        _frequency = 3000 + std::rand() * 3000;
+        _frequency = 10000 + std::rand() * 3000;
       }
       std::tuple<bool, std::shared_ptr<T>> simulate ()
       {
@@ -46,7 +46,7 @@ struct SimulatedObject : Tile
   std::map<std::string, Timer*> objectTimers;
   bool dead;
   int direction;
-  SimulatedObject () : dead(false), direction(tileObject::DOWN) {}
+  SimulatedObject () : dead(false), direction(tileObject::DOWN) { type = tileObject::SIMULATED; }
   void kill()
   {
     dead = true;

@@ -12,6 +12,7 @@ struct MobObject : SimulatedObject
   std::vector<std::shared_ptr<simulated::Simulator<MobObject>>> simulators;
   MobObject (int x, int y, MobType* m, BiomeType* b)
   {
+    type = tileObject::MOB;
     id = uuid::generate_uuid_v4();
     this->initSimulation();
     this->x = x;

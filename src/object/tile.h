@@ -14,6 +14,15 @@ namespace tileObject
     LEFT      = 0x04,
     RIGHT     = 0x08
   };
+  enum types
+  {
+    BIOME       = 0x01,
+    MOB         = 0x02,
+    WORLD       = 0x04,
+    SIMULATED   = 0x08,
+    TERRAIN     = 0x16,
+    TILE        = 0x32
+  };
 }
 
 struct Tile
@@ -29,8 +38,9 @@ struct Tile
   bool isAnimated() { return animationSpeed > 0; }
   bool seen;
   bool initialized;
-  Tile() : seen(false), initialized(false) {}
-  Tile (int x, int y) { this->x = x; this->y = y; }
+  int type;
+  Tile() : seen(false), initialized(false) { type = tileObject::TILE; }
+  Tile (int x, int y) { this->x = x; this->y = y; type = tileObject::TILE; }
 };
 
 #endif

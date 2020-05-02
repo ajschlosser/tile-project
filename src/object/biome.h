@@ -8,6 +8,8 @@ struct BiomeObject
   int x;
   int y;
   BiomeType* biomeType;
+  int type;
+  BiomeObject () { type = tileObject::BIOME; }
 };
 
 #endif

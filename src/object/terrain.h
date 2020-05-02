@@ -6,9 +6,10 @@
 struct TerrainObject : Tile
 {
   TerrainType* terrainType;
-  TerrainObject () {}
+  TerrainObject () { type = tileObject::TERRAIN; }
   TerrainObject (int x, int y, BiomeType* b, TerrainType* t)
   {
+    type = tileObject::TERRAIN;
     this->x = x;
     this->y = y;
     biomeType = b;

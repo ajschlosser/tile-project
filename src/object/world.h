@@ -6,9 +6,10 @@
 struct WorldObject : Tile
 {
   ObjectType* objectType;
-  WorldObject() {}
+  WorldObject() { type = tileObject::WORLD; }
   WorldObject(int x, int y, ObjectType* o, BiomeType* b)
   {
+    type = tileObject::WORLD;
     this->x = x;
     this->y = y;
     objectType = o;
