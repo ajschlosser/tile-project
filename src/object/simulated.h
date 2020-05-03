@@ -5,8 +5,14 @@
 #include <memory>
 #include <tuple>
 
+
+
 namespace simulated
 {
+  enum actions
+  {
+    MOVE      = 0x01
+  };
   template <class T>
   class Simulator
   {
@@ -32,7 +38,6 @@ namespace simulated
         auto elapsed = _timer.elapsed();
         if (elapsed > _frequency)
         {
-          SDL_Log("%d > %d", elapsed, _frequency);
           _fn(_simulatedObject);
           _timer.reset();
           return std::make_tuple(true, _simulatedObject);
@@ -46,6 +51,7 @@ struct SimulatedObject : Tile
 {
   std::map<std::string, Timer*> objectTimers;
   bool dead;
+  int orders;
   SimulatedObject () : dead(false) { type = tileObject::SIMULATED; }
   void kill()
   {

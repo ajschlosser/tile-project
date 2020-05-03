@@ -286,27 +286,54 @@ void GameEngine::renderCopyTiles()
     auto it = mapController.mobMap[zLevel][{i, j}].begin();
     while (it != mapController.mobMap[zLevel][{i, j}].end())
     {
+      auto mob = it->get();
 
-
-      for (auto s : it->get()->simulators)
+      for (auto s : mob->simulators)
       {
         auto [simulated, m] = s->simulate();
       }
 
-      if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
+      auto orders = it->get()->orders;
+      if (orders & simulated::MOVE)
       {
-        it->get()->mobTimers["movement"].stop();
-        it->get()->mobTimers["movement"].start();
-        int n = std::rand() % 100;
-        if (n > 75) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::RIGHT);
-        else if (n > 50) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::LEFT);
-        else if (n > 25) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::UP);
-        else it = mapController.moveMob(it, {zLevel, i, j}, tileObject::DOWN);
+        SDL_Log("trying to move to %d %d %d", mob->z, mob->x, mob->y);
+        mob->orders -= simulated::MOVE;
+        it = mapController.moveMob(it, {zLevel, i, j}, i != mob->x ?
+          (i < mob->x ? tileObject::RIGHT : tileObject::LEFT)
+          : j != mob->y ? (j < mob->y ? tileObject::DOWN : tileObject::UP) : tileObject::DOWN
+        );
       }
       else
       {
         ++it;
       }
+
+      // if (it->get()->x != i || it->get()->y != j)
+      // {
+      //   //it = mapController.moveMob(it, {zLevel, i, j}, tileObject::DOWN);
+      // }
+      // else
+      // {
+      //   ++it;
+      // }
+
+      // if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
+      // {
+      //   it->get()->mobTimers["movement"].stop();
+      //   it->get()->mobTimers["movement"].start();
+      //   int n = std::rand() % 100;
+
+
+
+      //   if (n > 75) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::RIGHT);
+      //   else if (n > 50) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::LEFT);
+      //   else if (n > 25) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::UP);
+      //   else it = mapController.moveMob(it, {zLevel, i, j}, tileObject::DOWN);
+      // }
+      // else
+      // {
+      //   ++it;
+      // }
     }
   };
 
