@@ -64,6 +64,20 @@ std::tuple<int, int> GraphicsController::getWindowDimensions()
 }
 
 
+int GraphicsController::renderCopySprite(Sprite *s, std::tuple<int, int, int, int> coords)
+{
+  auto [x, y, o_x, o_y] = coords;
+  int tS = (*tileSize);
+  SDL_Rect src {s->tileMapX, s->tileMapY, (*spriteSize), (*spriteSize)};
+  SDL_Rect dest {(x*tS)+o_x, (y*tS)+o_y, tS, tS};
+  if (SDL_RenderCopy(appRenderer, tilemapTexture, &src, &dest) < -1)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
+    return 3;
+  }
+  return 0;
+}
+
 int GraphicsController::renderCopySprite(Sprite *s, int x, int y)
 {
   int tS = (*tileSize);

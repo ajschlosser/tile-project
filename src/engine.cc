@@ -249,9 +249,11 @@ void GameEngine::handleEvents()
           break;
         case SDLK_p:
           tileSize = tileSize / 2;
+          configController.tileSize = tileSize;
           break;
         case SDLK_o:
           tileSize = tileSize * 2;
+          configController.tileSize = tileSize;
           break;
       }
     }
@@ -289,24 +291,25 @@ void GameEngine::renderCopyTiles()
       auto mob = it->get();
 
       for (auto s : mob->simulators)
-      {
-        auto [simulated, m] = s->simulate();
-      }
+        s->simulate();
 
       auto orders = it->get()->orders;
       if (orders & simulated::MOVE)
       {
-        SDL_Log("trying to move to %d %d %d", mob->z, mob->x, mob->y);
         mob->orders -= simulated::MOVE;
-        it = mapController.moveMob(it, {zLevel, i, j}, i != mob->x ?
-          (i < mob->x ? tileObject::RIGHT : tileObject::LEFT)
-          : j != mob->y ? (j < mob->y ? tileObject::DOWN : tileObject::UP) : tileObject::DOWN
-        );
+        if (!mapController.isPassable(std::make_tuple(mob->z,mob->x,mob->y)))
+          continue;
+
+        auto direction = i != mob->x
+          ? (i < mob->x ? tileObject::RIGHT : tileObject::LEFT)
+          : j != mob->y
+            ? (j < mob->y ? tileObject::DOWN : tileObject::UP)
+            : tileObject::DOWN;
+
+        it = mapController.moveMob(it, {zLevel, i, j}, direction);
+        continue;
       }
-      else
-      {
-        ++it;
-      }
+      ++it;
 
       // if (it->get()->x != i || it->get()->y != j)
       // {

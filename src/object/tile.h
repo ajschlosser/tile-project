@@ -41,9 +41,19 @@ struct Tile
   bool initialized;
   int type;
   int direction;
+  int relativeX;
+  int relativeY;
+  int drawX;
+  int drawY;
   Tile() : seen(false), initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
   Tile (int x, int y, int z) { this->x = x; this->y = y; this->z = z; type = tileObject::TILE; }
   std::tuple<int, int, int, int> getPosition() { return std::make_tuple(z, x, y, direction); }
+  void setPosition(std::tuple<int, int, int> position)
+  {
+    z = std::get<0>(position);
+    x = std::get<1>(position);
+    y = std::get<2>(position);
+  }
 };
 
 #endif

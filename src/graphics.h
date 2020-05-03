@@ -27,6 +27,7 @@ struct GraphicsController
   std::tuple<int, int> getWindowGridDimensions();
   std::tuple<int, int> getWindowDimensions();
   void applyUi();
+  int renderCopySprite(Sprite*, std::tuple<int, int, int, int>);
   int renderCopySprite(std::string, int, int);
   int renderCopySprite(Sprite*, int, int);
   int renderCopyObject(std::shared_ptr<WorldObject> t, int x, int y)
@@ -54,6 +55,17 @@ struct GraphicsController
   }
   int renderCopyMobObject(std::shared_ptr<MobObject> t, int x, int y)
   {
+    int o_x, o_y = 0;
+    if (t->relativeX != 0 || t->relativeY != 0)
+    {
+      o_x = t->relativeX;
+      o_y = t->relativeY;
+      if (t->relativeX > 0) t->relativeX -= std::floor((*tileSize)/8);
+      if (t->relativeX < 0) t->relativeX += std::floor((*tileSize)/8);
+      if (t->relativeY > 0) t->relativeY -= std::floor((*tileSize)/8);
+      if (t->relativeY < 0) t->relativeY += std::floor((*tileSize)/8);
+    }
+
     if (!t->isAnimated())
       return renderCopySprite(t->mobType->sprite, x, y);
     else
@@ -71,9 +83,9 @@ struct GraphicsController
 
       
       if (it == t->mobType->animationMap[t->direction].end())
-        return renderCopySprite(t->mobType->sprite, x, y);
+        return renderCopySprite(t->mobType->sprite, { x, y, o_x, o_y });
       else
-        return renderCopySprite(it->second, x, y);
+        return renderCopySprite(it->second, { x, y, o_x, o_y });
     }
   }
   int renderCopyTerrain(TerrainObject* t, int x, int y) {

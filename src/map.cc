@@ -88,6 +88,7 @@ std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::s
   {
     if (it->get()->id == id)
     {
+      it->get()->setPosition({ z2, x2, y2 });
       mobMap[z2][{x2, y2}].push_back((*it));
       it = mobMap[z1][{x1, y1}].erase(it);
       return it;
@@ -156,6 +157,17 @@ std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::v
       return ++mobIt;
     }
   }
+  SDL_Point offset = {0, 0};
+  if (mob->direction == tileObject::RIGHT)
+    offset.x -= cfg->tileSize;
+  if (mob->direction == tileObject::LEFT)
+    offset.x += cfg->tileSize;
+  if (mob->direction == tileObject::DOWN)
+    offset.y -= cfg->tileSize;
+  if (mob->direction == tileObject::UP)
+    offset.y += cfg->tileSize;
+  mob->relativeX = offset.x;
+  mob->relativeY = offset.y;
   return moveMob(mob->id, {z1, x1, y1}, {z2, x2, y2});
 }
 
@@ -389,7 +401,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     auto it = terrainMap[h].find({i, j});
     if (it != terrainMap[h].end() && it->second.initialized == false)
     {
-      if (std::rand() % 1000 > 995)
+      if (std::rand() % 1000 > 990)
       {
         
         for (auto mob = cfg->mobTypes.begin(); mob != cfg->mobTypes.end(); mob++)
@@ -403,22 +415,19 @@ int MapController::generateMapChunk(Rect* chunkRect)
             if (mob->second.isAnimated())
             {
 
-              m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[this,h,i,j,m](std::shared_ptr<MobObject> mo){
-                //SDL_Log("%s (%s) %d %d (%d %d)", m->id.c_str(), mo->id.c_str(), m->x, m->y, mo->x, mo->y );
-                //moveMob(m->id, {m->z, m->x, m->y}, {m->z, m->x+2, m->y});
-                // m->x = 0;
-                // m->y = 0;
-                m->x = m->x;
-                m->y = m->y;
+              m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(
+                [this,h,i,j,m]()
+                {
+                  
+                  int n = std::rand() % 100;
+                  if (n > 50)
+                    m->x += std::rand() % 100 > 50 ? 1 : -1;
+                  else
+                    m->y += std::rand() % 100 > 50 ? 1 : -1;
 
-                m->orders += simulated::MOVE;
-
-
-                // if (std::rand() % 2 > 1) m->x = std::rand() % 2 > 1 ? m->x + 1 : m->x - 1;
-                // if (std::rand() % 2 > 1) m->y = std::rand() % 2 > 1 ? m->y + 1 : m->y - 1;
-                // // TODO change x,y here, have engine check for diff and then use moveMob on diff YO
-
-              }));
+                  m->orders += simulated::MOVE;
+                }
+              ));
 
               m->animationTimer.start();
               m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;
