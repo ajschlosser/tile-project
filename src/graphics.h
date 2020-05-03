@@ -65,7 +65,7 @@ struct GraphicsController
       if (t->relativeY > 0) t->relativeY -= std::floor((*tileSize)/8);
       if (t->relativeY < 0) t->relativeY += std::floor((*tileSize)/8);
     }
-
+    // TODO: UP and LEFT need different handling
     if (!t->isAnimated())
       return renderCopySprite(t->mobType->sprite, x, y);
     else

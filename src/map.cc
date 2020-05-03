@@ -160,12 +160,12 @@ std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::v
   SDL_Point offset = {0, 0};
   if (mob->direction == tileObject::RIGHT)
     offset.x -= cfg->tileSize;
-  if (mob->direction == tileObject::LEFT)
-    offset.x += cfg->tileSize;
   if (mob->direction == tileObject::DOWN)
     offset.y -= cfg->tileSize;
   if (mob->direction == tileObject::UP)
     offset.y += cfg->tileSize;
+  if (mob->direction == tileObject::LEFT)
+    offset.x += cfg->tileSize;
   mob->relativeX = offset.x;
   mob->relativeY = offset.y;
   return moveMob(mob->id, {z1, x1, y1}, {z2, x2, y2});
@@ -396,12 +396,12 @@ int MapController::generateMapChunk(Rect* chunkRect)
   };
 
 
-  auto addWorldObjects = [this](int h, int i, int j, BiomeType* b)
+  auto addMobs = [this](int h, int i, int j, BiomeType* b)
   {
     auto it = terrainMap[h].find({i, j});
-    if (it != terrainMap[h].end() && it->second.initialized == false)
+    if (isPassable({h, i, j}) && it != terrainMap[h].end() && it->second.initialized == false)
     {
-      if (std::rand() % 1000 > 990)
+      if (std::rand() % 1000 > 975)
       {
         
         for (auto mob = cfg->mobTypes.begin(); mob != cfg->mobTypes.end(); mob++)
@@ -437,9 +437,9 @@ int MapController::generateMapChunk(Rect* chunkRect)
           }
         }
       }
-      std::unique_lock lock(mtx);
-      it->second.initialized = true;
     }
+    std::unique_lock lock(mtx);
+    it->second.initialized = true;
   };
 
   auto hammerChunk = [this](Rect* r, BiomeType* b)
@@ -536,7 +536,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     { fudgeChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
     { cleanChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} }
   };
-  chunk::multiprocessFunctorVec objectPlacement { { addWorldObjects, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(); } } };
+  chunk::multiprocessFunctorVec objectPlacement { { addMobs, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(); } } };
 
   chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
   chunker.setBrush(cfg->getRandomBiomeType(0));
