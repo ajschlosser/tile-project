@@ -39,7 +39,8 @@ struct Tile
   bool seen;
   bool initialized;
   int type;
-  Tile() : seen(false), initialized(false) { type = tileObject::TILE; }
+  int direction;
+  Tile() : seen(false), initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
   Tile (int x, int y) { this->x = x; this->y = y; type = tileObject::TILE; }
 };
 

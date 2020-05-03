@@ -26,7 +26,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     if (configJson["terrains"][i]["sprite"].isString())
     {
       spriteName = configJson["terrains"][i]["sprite"].asString();
-      animationMap[0][0] = &sprites[spriteName];
+      animationMap[tileObject::DOWN][0] = &sprites[spriteName];
     }
     else if (configJson["terrains"][i]["sprite"].isArray())
     {
@@ -34,7 +34,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       spriteName = animationArr[0].asString();
       for (int i = 0; i < animationArr.size(); i++)
       {
-        animationMap[0][i] = &sprites[animationArr[i].asString()];
+        animationMap[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
       }
     }
     std::string tileTypeName = configJson["terrains"][i]["name"].asString();
@@ -70,7 +70,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
     terrainType.objectFrequencyMultiplier = objectFrequencyMultiplier;
     terrainType.objectTypeProbabilities = relatedObjectTypeProbabilities;
     terrainType.animationMap = animationMap;
-    if (animationMap[0].size() > 1)
+    if (animationMap[tileObject::DOWN].size() > 1)
     {
       terrainType.animationSpeed = 1000;
     }

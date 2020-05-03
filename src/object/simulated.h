@@ -45,8 +45,7 @@ struct SimulatedObject : Tile
 {
   std::map<std::string, Timer*> objectTimers;
   bool dead;
-  int direction;
-  SimulatedObject () : dead(false), direction(tileObject::DOWN) { type = tileObject::SIMULATED; }
+  SimulatedObject () : dead(false) { type = tileObject::SIMULATED; }
   void kill()
   {
     dead = true;

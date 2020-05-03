@@ -1,5 +1,4 @@
 #include "engine.h"
-#include "queue.h"
 
 int GameEngine::init()
 {
@@ -286,14 +285,12 @@ void GameEngine::renderCopyTiles()
     while (it != mapController.mobMap[zLevel][{i, j}].end())
     {
 
-      //process mob events from mob queue
-
-      auto [id, o] = events::pop<std::shared_ptr<events::eventData<std::shared_ptr<MobObject>>>>();
 
       for (auto s : it->get()->simulators)
       {
         auto [simulated, m] = s->simulate();
       }
+
       if (it->get()->mobTimers["movement"].elapsed() > it->get()->speed)
       {
         it->get()->mobTimers["movement"].stop();

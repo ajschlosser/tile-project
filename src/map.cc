@@ -1,5 +1,4 @@
 #include "map.h"
-#include "queue.h"
 
 std::shared_mutex mtx;
 
@@ -343,40 +342,14 @@ int MapController::generateMapChunk(Rect* chunkRect)
             if (mob->second.isAnimated())
             {
 
-              m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[this,h,i,j](std::shared_ptr<MobObject> m){
+              // m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[this,h,i,j,m](std::shared_ptr<MobObject> mo){
 
-                int n = std::rand() % 100;
-                // if (n>95)
-                //   SDL_Log("simulating %s", m->id.c_str());
-                SDL_Log("moving %s", m->id.c_str());
-                // auto it = mobMap[h][{i, j}].begin();
-                // while (it != mobMap[h][{i, j}].end())
-                // {
-                //   if (it->get()->id == m->id)
-                //   {
-                //     it =
-                //   }
-                //   else
-                //     ++it;
-                // }
+                
+              //   if (std::rand() % 2 > 1) m->x = std::rand() % 2 > 1 ? m->x + 1 : m->x - 1;
+              //   if (std::rand() % 2 > 1) m->y = std::rand() % 2 > 1 ? m->y + 1 : m->y - 1;
+              //   // TODO change x,y here, have engine check for diff and then use moveMob on diff YO
 
-                // TODO: Engine needs event queue!
-                std::thread mv([this,n,h,i,j,m](){
-                  //queue::eventData<MobObject> e; //= { m, i, j, h };
-                  auto e = std::make_shared<events::eventData<MobObject>>();
-                  e->trigger = m;
-                  e->x = i;
-                  e->y = j;
-                  e->z = h;
-                  events::push<MobObject>(events::MOVE, e);
-                  // if (n > 75) moveMob(m->id, {h, i, j}, {h, i+1, j});
-                  // else if (n > 50) moveMob(m->id, {h, i, j}, {h, i-1, j});
-                  // else if (n > 25) moveMob(m->id, {h, i, j}, {h, i, j+1});
-                  // else moveMob(m->id, {h, i, j}, {h, i, j-1});
-                });
-                mv.join();
-
-              }));
+              // }));
 
               m->animationTimer.start();
               m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;

@@ -45,8 +45,8 @@ struct GraphicsController
           t->animationFrame = 0;
       }
 
-      auto it = t->objectType->animationMap[0].find(t->animationFrame);
-      if (it == t->objectType->animationMap[0].end())
+      auto it = t->objectType->animationMap[t->direction].find(t->animationFrame);
+      if (it == t->objectType->animationMap[t->direction].end())
         return renderCopySprite(t->objectType->sprite, x, y);
       else
         return renderCopySprite(it->second, x, y);
@@ -90,8 +90,8 @@ struct GraphicsController
           t->animationFrame = 0;
       }
 
-      auto it = t->terrainType->animationMap[0].find(t->animationFrame);
-      if (it == t->terrainType->animationMap[0].end())
+      auto it = t->terrainType->animationMap[t->direction].find(t->animationFrame);
+      if (it == t->terrainType->animationMap[t->direction].end())
         return renderCopySprite(t->terrainType->sprite, x, y);
       else
         return renderCopySprite(it->second, x, y);
