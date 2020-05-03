@@ -90,12 +90,74 @@ std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::s
     {
       mobMap[z2][{x2, y2}].push_back((*it));
       it = mobMap[z1][{x1, y1}].erase(it);
+      it->get()->x = x2;
+      it->get()->y = y2;
+      it->get()->z = z2;
       return it;
     }
     else
       ++it;
   }
   return it;
+}
+
+std::vector<std::shared_ptr<MobObject>>::iterator MapController::moveMob (std::vector<std::shared_ptr<MobObject>>::iterator mobIt, std::tuple<int, int, int> coords, int directions)
+{
+  auto mob = mobIt->get();
+  //auto [z1, x1, y1] = coords;
+  //auto [z2, x2, y2] = coords;
+  auto [z1, x1, y1, d1] = mob->getPosition();
+  auto [z2, x2, y2, d2] = mob->getPosition();
+  //auto it = mobMap[z1][{x1, y1}].begin();
+  if (directions & tileObject::LEFT)
+  {
+    if (mob->direction == tileObject::LEFT)
+    {
+      x2--;
+    }
+    else
+    {
+      mob->direction = tileObject::LEFT;
+      return ++mobIt;
+    }
+  }
+  if (directions & tileObject::RIGHT)
+  {
+    if (mob->direction == tileObject::RIGHT)
+    {
+      x2++;
+    }
+    else
+    {
+      mob->direction = tileObject::RIGHT;
+      return ++mobIt;
+    }
+  }
+  if (directions & tileObject::UP)
+  {
+    if (mob->direction == tileObject::UP)
+    {
+      y2--;
+    }
+    else
+    {
+      mob->direction = tileObject::UP;
+      return ++mobIt;
+    }
+  }
+  if (directions & tileObject::DOWN)
+  {
+    if (mob->direction == tileObject::DOWN)
+    {
+      y2++;
+    }
+    else
+    {
+      mob->direction = tileObject::DOWN;
+      return ++mobIt;
+    }
+  }
+  return moveMob(mob->id, {z1, x1, y1}, {z2, x2, y2});
 }
 
 void MapController::processChunk(Rect* chunkRect, std::function<void(int, int, int)> f)
@@ -309,7 +371,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
         if (cfg->objectTypes[n].biomes[b->name] && worldMap[h][{i, j}].begin() == worldMap[h][{i, j}].end())
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]
+            i, j, h, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]
           );
           if (cfg->objectTypes[n].isAnimated())
           {
@@ -336,20 +398,20 @@ int MapController::generateMapChunk(Rect* chunkRect)
           if (mob->second.biomes.find(it->second.biomeType->name) != mob->second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, &mob->second, &cfg->biomeTypes[it->second.biomeType->name]
+              i, j, h, &mob->second, &cfg->biomeTypes[it->second.biomeType->name]
             );
 
             if (mob->second.isAnimated())
             {
 
-              // m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[this,h,i,j,m](std::shared_ptr<MobObject> mo){
-
+              m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(m,[this,h,i,j,m](std::shared_ptr<MobObject> mo){
+                SDL_Log("%s (%s) %d %d (%d %d)", m->id.c_str(), mo->id.c_str(), m->x, m->y, mo->x, mo->y );
                 
-              //   if (std::rand() % 2 > 1) m->x = std::rand() % 2 > 1 ? m->x + 1 : m->x - 1;
-              //   if (std::rand() % 2 > 1) m->y = std::rand() % 2 > 1 ? m->y + 1 : m->y - 1;
-              //   // TODO change x,y here, have engine check for diff and then use moveMob on diff YO
+                // if (std::rand() % 2 > 1) m->x = std::rand() % 2 > 1 ? m->x + 1 : m->x - 1;
+                // if (std::rand() % 2 > 1) m->y = std::rand() % 2 > 1 ? m->y + 1 : m->y - 1;
+                // // TODO change x,y here, have engine check for diff and then use moveMob on diff YO
 
-              // }));
+              }));
 
               m->animationTimer.start();
               m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;

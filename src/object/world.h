@@ -7,11 +7,12 @@ struct WorldObject : Tile
 {
   ObjectType* objectType;
   WorldObject() { type = tileObject::WORLD; }
-  WorldObject(int x, int y, ObjectType* o, BiomeType* b)
+  WorldObject(int x, int y, int z, ObjectType* o, BiomeType* b)
   {
     type = tileObject::WORLD;
     this->x = x;
     this->y = y;
+    this->z = z;
     objectType = o;
     biomeType = b;
     sprite = o->sprite;

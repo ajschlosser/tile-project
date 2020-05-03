@@ -27,6 +27,7 @@ namespace tileObject
 
 struct Tile
 {
+  int z;
   int x;
   int y;
   BiomeType* biomeType;
@@ -41,7 +42,8 @@ struct Tile
   int type;
   int direction;
   Tile() : seen(false), initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
-  Tile (int x, int y) { this->x = x; this->y = y; type = tileObject::TILE; }
+  Tile (int x, int y, int z) { this->x = x; this->y = y; this->z = z; type = tileObject::TILE; }
+  std::tuple<int, int, int, int> getPosition() { return std::make_tuple(z, x, y, direction); }
 };
 
 #endif

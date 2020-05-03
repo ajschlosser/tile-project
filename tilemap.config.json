@@ -22,8 +22,15 @@
     },
     {
       "name": "red slime",
-      "sprite": "Sprite 0x416",
-      "biomes": ["meadow", "shrublands"]
+      "sprite": {
+        "directions": {
+          "up": ["Sprite 96x416"],
+          "down": ["Sprite 0x416"],
+          "left": ["Sprite 64x416"],
+          "right": [ "Sprite 32x416"]
+        }
+      },
+      "biomes": ["snowlands"]
     }
   ],
   "objects": [

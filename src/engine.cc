@@ -14,7 +14,9 @@ int GameEngine::init()
   gfxController.initializeSDL();
 
   // Create app window and renderer
-  appWindow = SDL_CreateWindow("tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE); // SDL_WINDOW_FULLSCREEN
+  appWindow = SDL_CreateWindow(
+    "tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE
+  ); // SDL_WINDOW_FULLSCREEN
   if (appWindow == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not create app window: %s", SDL_GetError());
@@ -296,12 +298,15 @@ void GameEngine::renderCopyTiles()
         it->get()->mobTimers["movement"].stop();
         it->get()->mobTimers["movement"].start();
         int n = std::rand() % 100;
-        if (n > 75) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i+1, j});
-        else if (n > 50) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i-1, j});
-        else if (n > 25) it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i, j+1});
-        else it = mapController.moveMob(it->get()->id, {zLevel, i, j}, {zLevel, i, j-1});
+        if (n > 75) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::RIGHT);
+        else if (n > 50) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::LEFT);
+        else if (n > 25) it = mapController.moveMob(it, {zLevel, i, j}, tileObject::UP);
+        else it = mapController.moveMob(it, {zLevel, i, j}, tileObject::DOWN);
       }
-      else ++it;
+      else
+      {
+        ++it;
+      }
     }
   };
 

@@ -25,13 +25,14 @@ namespace simulated
         _fn = fn;
         _id = uuid::generate_uuid_v4();
         _timer.start();
-        _frequency = 10000 + std::rand() * 3000;
+        _frequency = 3000 + std::rand() % 3000;
       }
       std::tuple<bool, std::shared_ptr<T>> simulate ()
       {
         auto elapsed = _timer.elapsed();
         if (elapsed > _frequency)
         {
+          SDL_Log("%d > %d", elapsed, _frequency);
           _fn(_simulatedObject);
           _timer.reset();
           return std::make_tuple(true, _simulatedObject);
