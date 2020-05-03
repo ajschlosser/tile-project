@@ -424,8 +424,8 @@ int MapController::generateMapChunk(Rect* chunkRect)
                     m->x += std::rand() % 100 > 50 ? 1 : -1;
                   else
                     m->y += std::rand() % 100 > 50 ? 1 : -1;
-
-                  m->orders += simulated::MOVE;
+                  if (isPassable({h, i, j}))
+                    m->orders += simulated::MOVE;
                 }
               ));
 
