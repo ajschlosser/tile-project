@@ -44,6 +44,15 @@
       "impassable": 1
     },
     {
+      "name": "elm tree",
+      "sprite": [
+        "Sprite 96x352",
+        "Sprite 128x352"
+      ],
+      "biomes": ["forest", "arid plains"],
+      "impassable": 1
+    },
+    {
       "name": "beech tree",
       "sprite": [
         "Sprite 160x352",
@@ -143,7 +152,7 @@
       "name": "dry grass",
       "sprite": "Sprite 64x0",
       "clusters": 1,
-      "objects": ["dirt", "boulder"]
+      "objects": ["dirt", "boulder", "elm tree"]
     },
     {
       "name": "soil",

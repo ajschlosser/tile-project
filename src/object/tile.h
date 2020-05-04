@@ -37,7 +37,6 @@ struct Tile
   int animationFrame;
   int animationSpeed;
   bool isAnimated() { return animationSpeed > 0; }
-  bool seen;
   bool initialized;
   int type;
   int direction;
@@ -45,7 +44,7 @@ struct Tile
   int relativeY;
   int drawX;
   int drawY;
-  Tile() : seen(false), initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
+  Tile() : initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
   Tile (int x, int y, int z) { this->x = x; this->y = y; this->z = z; type = tileObject::TILE; }
   std::tuple<int, int, int, int> getPosition() { return std::make_tuple(z, x, y, direction); }
   void setPosition(std::tuple<int, int, int> position)
