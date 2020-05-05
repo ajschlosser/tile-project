@@ -3,8 +3,6 @@
 
 #include "engine.h"
 
-using namespace controller;
-
 struct controller::EventsController
 {
   GameEngine* e;

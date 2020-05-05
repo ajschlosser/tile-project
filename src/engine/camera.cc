@@ -1,3 +1,4 @@
+#include "engine/movement.h"
 #include "engine/camera.h"
 
 using namespace controller;
@@ -17,7 +18,7 @@ void CameraController::scrollCamera(int directions)
   if (e->mapController.isPassable({e->zLevel, x, y}))
   {
     if (e->tileSize > 8)
-      e->scrollGameSurface(directions);
+      engine::controller<controller::MovementController>.scrollGameSurface(directions);
     else
       SDL_Delay(15);
     e->gfxController.camera.x = x;

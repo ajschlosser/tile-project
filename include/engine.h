@@ -32,6 +32,7 @@ namespace controller
 {
   struct CameraController;
   struct EventsController;
+  struct MovementController;
 }
 
 
@@ -74,12 +75,10 @@ struct GameEngine
   std::map<std::string, Sprite>* sprites;
   SDL_Rect camera;
   int init();
-  void scrollGameSurface(int);
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   int generateMapChunk(SDL_Rect*);
-  void processMap(int);
   void renderCopyTiles();
   int renderCopyPlayer();
   int run();

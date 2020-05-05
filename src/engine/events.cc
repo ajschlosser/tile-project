@@ -1,4 +1,5 @@
 #include "engine/camera.h"
+#include "engine/movement.h"
 #include "engine/events.h"
 
 using namespace controller;
@@ -8,7 +9,7 @@ void EventsController::handleEvents()
   auto keyboardMovementHandler = [this](int directions)
   {
     std::thread graphicalThread([this](int d) { engine::controller<controller::CameraController>.scrollCamera(d); }, directions);
-    std::thread mapProcessingThread([this](int d) { e->processMap(d); }, directions);
+    std::thread mapProcessingThread([this](int d) { engine::controller<controller::MovementController>.processMap(d); }, directions);
     mapProcessingThread.detach();
     graphicalThread.join();
   };
