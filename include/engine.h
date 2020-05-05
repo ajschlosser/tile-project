@@ -13,13 +13,37 @@
 #include <cmath>
 #include <map>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include <thread>
 #include <memory>
 
+namespace engine
+{
+  namespace graphics
+  {
+    template <typename T1> T1 controller;
+    struct RenderController;
+  }
+  template <typename T1> T1 controller;
+}
+
+namespace controller
+{
+  struct CameraController;
+  struct EventsController;
+  struct MovementController;
+  struct RenderController;
+  struct GraphicsController;
+}
+
 struct GameEngine
 {
+  template <typename T> void registerController (T t)
+  {
+    engine::controller<T> = t;
+  };
   config::ConfigurationController configController;
   graphics::GraphicsController gfxController;
   input::UserInputHandler userInputHandler;
@@ -52,18 +76,15 @@ struct GameEngine
   std::map<std::string, Sprite>* sprites;
   SDL_Rect camera;
   int init();
-  void scrollGameSurface(int);
   std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   int generateMapChunk(SDL_Rect*);
-  void processMap(int);
-  void renderCopyTiles();
-  void scrollCamera(int);
-  void handleEvents();
-  int renderCopyPlayer();
-  void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)>);
   int run();
+  bool stopRunning() { running = false; return !running; }
+  int getSpriteSize() { return spriteSize; }
+  int getTileSize() { return tileSize; }
+  template <typename T> T* controller() { return &engine::controller<T>; }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
 };
 
