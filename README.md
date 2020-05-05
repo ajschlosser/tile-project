@@ -2,28 +2,22 @@
 
 #### Install build dependencies
 
-This assumes that your systen already has Homebrew (https://brew.sh/) and python >= 3.0. 
+This assumes that your systen already has Homebrew (https://brew.sh/).
 
-`$ pip3 install conan`
-
-`$ mkdir -p build`
-
-`$ cd build`
-
-`$ conan install ..`
-
-`$ brew install sdl2 sdl2_image wxmac`
+`$ brew install sdl2 sdl2_image jsoncpp`
 
 #### Build
 
 ```
-$ g++ src/**/*.cc                     \
-    -I ./include                      \
-    -o bin/game                       \
-    -lSDL2                            \
-    -lSDL2_image                      \
-    $(cat build/conanbuildinfo.args)  \
-    -std=gnu++2a
+$ g++ src/**/*.cc \
+    -I./include \
+    -o bin/game \
+    -lSDL2 \
+    -lSDL2_image \
+    -ljsoncpp \
+    -stdlib=libc++ \
+    -std=gnu++2a \
+    -m64 -O3 -DNDEBUG
 ```
 
 #### Run
