@@ -1,3 +1,6 @@
+#ifndef GAME_GRAPHICS_RENDER_H
+#define GAME_GRAPHICS_RENDER_H
+
 #include "../graphics.h"
 
 using namespace graphics;
@@ -120,3 +123,5 @@ int GraphicsController::renderCopyTerrain(TerrainObject* t, int x, int y) {
       return renderCopySprite(it->second, x, y);
   }
 }
+
+#endif

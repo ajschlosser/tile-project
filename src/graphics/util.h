@@ -1,3 +1,6 @@
+#ifndef GAME_GRAPHICS_UTIL_H
+#define GAME_GRAPHICS_UTIL_H
+
 #include "../graphics.h"
 
 using namespace graphics;
@@ -21,3 +24,5 @@ std::tuple<int, int> GraphicsController::getWindowDimensions()
   int _h = viewportRect.h;
   return std::make_tuple(_w, _h);
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef GAME_ENGINE_INIT_H
+#define GAME_ENGINE_INIT_H
+
 #include "../engine.h"
 
 int GameEngine::init()
@@ -93,9 +96,9 @@ int GameEngine::init()
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
 
-  SDL_Log("Tilemap of %d tiles created.",
-    configController.gameSize*configController.gameSize*4
-  );
+  SDL_Log("Tilemap created.");
 
   return 0;
 }
+
+#endif

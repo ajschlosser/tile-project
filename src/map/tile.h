@@ -1,3 +1,6 @@
+#ifndef GAME_MAP_TILE_H
+#define GAME_MAP_TILE_H
+
 #include "../map.h"
 
 using namespace map;
@@ -75,3 +78,5 @@ bool MapController::isPassable (std::tuple<int, int, int> coords)
         return false;
   return true;
 }
+
+#endif

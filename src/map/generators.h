@@ -1,3 +1,6 @@
+#ifndef GAME_MAP_GENERATORS_H
+#define GAME_MAP_GENERATORS_H
+
 #include "../map.h"
 
 using namespace map;
@@ -167,7 +170,7 @@ int MapController::generateMapChunk(Rect* chunkRect)
     if (std::rand() % 100 > 65) processChunk(r, fudgeProcessor);
   };
 
-  chunk::multiprocessFunctorVec terrainPlacement { { createTerrainObjects, [this](chunk::ChunkProcessor* p, int z, std::tuple<int, int> coords)
+  map::chunk::multiprocessFunctorVec terrainPlacement { { createTerrainObjects, [this](map::chunk::ChunkProcessor* p, int z, std::tuple<int, int> coords)
   {
     if (cfg->biomeExistsOnLevel(p->getBrush()->name, z) == false)
       p->setBrush(cfg->getRandomBiomeType(z)); 
@@ -185,15 +188,15 @@ int MapController::generateMapChunk(Rect* chunkRect)
     return p->getBrush(); } }
 
   };
-  chunk::multiprocessFunctorVec chunkFudging {
-    { fudgeChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { hammerChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { fudgeChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { cleanChunk, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} }
+  map::chunk::multiprocessFunctorVec chunkFudging {
+    { fudgeChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
+    { hammerChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
+    { fudgeChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
+    { cleanChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} }
   };
-  chunk::multiprocessFunctorVec objectPlacement { { addMobs, [this](chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(); } } };
+  map::chunk::multiprocessFunctorVec objectPlacement { { addMobs, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(); } } };
 
-  chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
+  map::chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
   chunker.setBrush(cfg->getRandomBiomeType(0));
   SDL_Log("Adding terrain objects...");
   // std::thread t([this, &chunker](multiprocessChain o, multiprocessChain c){ chunker.multiProcessChunk({ o, c }); }, objectPlacers, chunkFuzzers);
@@ -215,3 +218,5 @@ int MapController::generateMapChunk(Rect* chunkRect)
   );
   return 0;
 }
+
+#endif

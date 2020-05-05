@@ -4,3 +4,4 @@
 #include "map/mob.h"
 #include "map/processors.h"
 #include "map/generators.h"
+#include "map/chunk/chunk.h"

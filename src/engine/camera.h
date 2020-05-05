@@ -1,3 +1,6 @@
+#ifndef GAME_ENGINE_CAMERA_H
+#define GAME_ENGINE_CAMERA_H
+
 #include "../engine.h"
 
 void GameEngine::scrollCamera(int directions)
@@ -39,3 +42,5 @@ void GameEngine::iterateOverTilesInView (std::function<void(std::tuple<int, int,
     x++;
   }
 }
+
+#endif

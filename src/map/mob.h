@@ -1,3 +1,6 @@
+#ifndef GAME_MAP_MOB_H
+#define GAME_MAP_MOB_H
+
 #include "../map.h"
 
 using namespace map;
@@ -97,3 +100,5 @@ MapController::moveMob (std::vector<std::shared_ptr<MobObject>>::iterator mobIt,
   mob->relativeY = offset.y;
   return moveMob(mob->id, {z1, x1, y1}, {z2, x2, y2});
 }
+
+#endif

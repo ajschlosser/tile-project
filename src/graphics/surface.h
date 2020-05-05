@@ -1,3 +1,6 @@
+#ifndef GAME_GRAPHICS_SURFACE_H
+#define GAME_GRAPHICS_SURFACE_H
+
 #include "../graphics.h"
 
 using namespace graphics;
@@ -53,3 +56,5 @@ SDL_Texture* GraphicsController::getGameSurfaceTexture ()
   else
     return NULL;
 }
+
+#endif

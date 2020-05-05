@@ -1,3 +1,6 @@
+#ifndef GAME_MAP_UTIL_H
+#define GAME_MAP_UTIL_H
+
 #include "../map.h"
 
 using namespace map;
@@ -68,10 +71,10 @@ std::map<int, std::map<std::string, int>> MapController::getBiomesInRange (Rect*
 }
 
 
-chunk::ChunkReport MapController::generateRangeReport(Rect* range, int h = 0)
+map::chunk::ChunkReport MapController::generateRangeReport(Rect* range, int h = 0)
 {
   std::unique_lock lock(mtx);
-  auto t = chunk::getRangeReport([this, h](int x, int y, chunk::ChunkReport* r){
+  auto t = map::chunk::getRangeReport([this, h](int x, int y, map::chunk::ChunkReport* r){
     auto it = terrainMap[h].find({x, y});
     if (it != terrainMap[h].end())
     {
@@ -96,3 +99,5 @@ chunk::ChunkReport MapController::generateRangeReport(Rect* range, int h = 0)
   }, range, 1, 1);
   return t;
 }
+
+#endif

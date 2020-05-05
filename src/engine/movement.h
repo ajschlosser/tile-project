@@ -1,3 +1,6 @@
+#ifndef GAME_ENGINE_MOVEMENT_H
+#define GAME_ENGINE_MOVEMENT_H
+
 #include "../engine.h"
 
 void GameEngine::processMap(int directions)
@@ -63,3 +66,5 @@ void GameEngine::scrollGameSurface(int directions)
   if (SDL_SetRenderTarget(appRenderer, NULL) < 0)
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not reset render target: %s", SDL_GetError());
 }
+
+#endif

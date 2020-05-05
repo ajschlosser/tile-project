@@ -3,13 +3,16 @@
 
 #include "SDL2/SDL.h"
 #include "objects.h"
-#include "chunk.h"
 #include "config.h"
+#include "rect.h"
 
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <variant>
+
+#include "map/chunk/chunk.h"
 
 namespace map
 {
@@ -62,7 +65,6 @@ namespace map
       terrainTypes = tnTypes; tileTypes = tlTypes; cfg = c;
     }
     bool isPassable (std::tuple<int, int, int>);
-    //BiomeType* getRandomBiomeType() { return cfg->getRandomBiomeType(); }
     BiomeType* updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
     void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
     std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
@@ -70,7 +72,7 @@ namespace map
     std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
     std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);
     std::map<int, std::map<std::string, int>> getBiomesInRange (Rect* rangeRect);
-    chunk::ChunkReport generateRangeReport(Rect*, int);
+    map::chunk::ChunkReport generateRangeReport(Rect*, int);
     void processChunk(Rect*, std::function<void(int, int, int)>);
     template<typename F> void iterateOverChunk(Rect*, F);
     template<typename F> void iterateOverChunkEdges(Rect*, F);

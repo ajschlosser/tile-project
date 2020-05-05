@@ -1,3 +1,6 @@
+#ifndef GAME_ENGINE_RENDER_H
+#define GAME_ENGINE_RENDER_H
+
 #include "../engine.h"
 
 void GameEngine::renderCopyTiles()
@@ -90,3 +93,5 @@ int GameEngine::renderCopyPlayer()
   SDL_Rect playerRect = { _w/2*tileSize, _h/2*tileSize, tileSize, tileSize };
   return SDL_RenderFillRect(appRenderer, &playerRect);
 }
+
+#endif
