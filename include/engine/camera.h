@@ -3,7 +3,7 @@
 
 #include "engine.h"
 
-struct camera::CameraController
+struct controller::CameraController
 {
   GameEngine* e;
   CameraController () {}

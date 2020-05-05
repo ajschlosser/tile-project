@@ -2,12 +2,15 @@
 #define GAME_ENGINE_INIT_H
 
 #include "engine/camera.h"
+#include "engine/events.h"
 #include "engine.h"
 
 int GameEngine::init()
 {
-  auto cameraController = camera::CameraController(this);
-  registerController<camera::CameraController>(cameraController);
+  auto cameraController = controller::CameraController(this);
+  auto eventsController = controller::EventsController(this);
+  registerController<controller::CameraController>(cameraController);
+  registerController<controller::EventsController>(eventsController);
   gfxController.tileSize = &tileSize;
   gfxController.spriteSize = const_cast<int*>(&spriteSize);
 

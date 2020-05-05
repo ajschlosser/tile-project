@@ -1,6 +1,6 @@
 #include "engine/camera.h"
 
-using namespace camera;
+using namespace controller;
 
 void CameraController::scrollCamera(int directions)
 {

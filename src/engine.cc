@@ -10,7 +10,7 @@ int GameEngine::run ()
   init();
   while (running)
   {
-    handleEvents();
+    controller<controller::EventsController>()->handleEvents();
     SDL_RenderClear(appRenderer);
     renderCopyTiles();
     renderCopyPlayer();

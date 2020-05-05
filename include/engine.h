@@ -28,9 +28,10 @@ namespace engine
   template <typename T1> T1 controller;
 }
 
-namespace camera
+namespace controller
 {
   struct CameraController;
+  struct EventsController;
 }
 
 
@@ -80,9 +81,9 @@ struct GameEngine
   int generateMapChunk(SDL_Rect*);
   void processMap(int);
   void renderCopyTiles();
-  void handleEvents();
   int renderCopyPlayer();
   int run();
+  bool stopRunning() { running = false; return !running; }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
 };
 
