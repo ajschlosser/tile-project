@@ -12,8 +12,8 @@ int GameEngine::run ()
   {
     controller<controller::EventsController>()->handleEvents();
     SDL_RenderClear(appRenderer);
-    renderCopyTiles();
-    renderCopyPlayer();
+    controller<controller::RenderController>()->renderCopyTiles();
+    controller<controller::RenderController>()->renderCopyPlayer();
     gfxController.applyUi();
     SDL_RenderPresent(appRenderer);
   }

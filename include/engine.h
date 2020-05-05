@@ -33,6 +33,7 @@ namespace controller
   struct CameraController;
   struct EventsController;
   struct MovementController;
+  struct RenderController;
 }
 
 
@@ -79,8 +80,6 @@ struct GameEngine
   std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
   std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
   int generateMapChunk(SDL_Rect*);
-  void renderCopyTiles();
-  int renderCopyPlayer();
   int run();
   bool stopRunning() { running = false; return !running; }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}

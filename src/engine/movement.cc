@@ -1,3 +1,4 @@
+#include "engine/render.h"
 #include "engine/movement.h"
 
 using namespace controller;
@@ -48,7 +49,7 @@ void MovementController::scrollGameSurface(int directions)
     offset.second -= e->tileSize;
   while (dest.x != offset.first || dest.y != offset.second)
   {
-    e->renderCopyTiles();
+    e->controller<controller::RenderController>()->renderCopyTiles();
     if (directions & input::RIGHT)
       dest.x -= e->movementSpeed;
     if (directions & input::LEFT)
@@ -58,7 +59,7 @@ void MovementController::scrollGameSurface(int directions)
     if (directions & input::DOWN)
       dest.y -= e->movementSpeed;
     SDL_RenderCopy(e->appRenderer, e->gfxController.getGameSurfaceTexture(), NULL, &dest);
-    e->renderCopyPlayer();
+    e->controller<controller::RenderController>()->renderCopyPlayer();
     e->gfxController.applyUi();;
     SDL_RenderPresent(e->appRenderer);
   }

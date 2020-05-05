@@ -4,6 +4,7 @@
 #include "engine/camera.h"
 #include "engine/events.h"
 #include "engine/movement.h"
+#include "engine/render.h"
 #include "engine.h"
 
 int GameEngine::init()
@@ -11,9 +12,11 @@ int GameEngine::init()
   auto cameraController = controller::CameraController(this);
   auto eventsController = controller::EventsController(this);
   auto movementController = controller::MovementController(this);
+  auto renderController = controller::RenderController(this);
   registerController<controller::CameraController>(cameraController);
   registerController<controller::EventsController>(eventsController);
   registerController<controller::MovementController>(movementController);
+  registerController<controller::RenderController>(renderController);
   gfxController.tileSize = &tileSize;
   gfxController.spriteSize = const_cast<int*>(&spriteSize);
 
