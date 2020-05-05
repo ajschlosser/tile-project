@@ -14,7 +14,17 @@
 
 #### Build
 
-`$ g++ src/**/*.cc -o bin/game -lSDL2 -lSDL2_image $(cat build/conanbuildinfo.args) $(wx-config --cxxflags) $(wx-config --libs) -std=gnu++2a`
+```
+$ g++ src/**/*.cc                     \
+    -I ./include                      \
+    -o bin/game                       \
+    -lSDL2                            \
+    -lSDL2_image                      \
+    $(cat build/conanbuildinfo.args)  \
+    $(wx-config --cxxflags)           \
+    $(wx-config --libs)               \
+    -std=gnu++2a
+```
 
 #### Run
 

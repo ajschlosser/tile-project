@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_RENDER_H
 #define GAME_ENGINE_RENDER_H
 
-#include "../engine.h"
+#include "engine.h"
 
 void GameEngine::renderCopyTiles()
 {

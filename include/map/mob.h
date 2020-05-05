@@ -1,7 +1,7 @@
 #ifndef GAME_MAP_MOB_H
 #define GAME_MAP_MOB_H
 
-#include "../map.h"
+#include "map.h"
 
 using namespace map;
 

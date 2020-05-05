@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_INIT_H
 #define GAME_ENGINE_INIT_H
 
-#include "../engine.h"
+#include "engine.h"
 
 int GameEngine::init()
 {

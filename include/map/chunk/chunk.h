@@ -2,8 +2,8 @@
 #define GAME_MAP_CHUNK_H
 
 #include "SDL2/SDL.h"
-#include "../../objects.h"
-#include "../../rect.h"
+#include "objects.h"
+#include "rect.h"
 #include <functional>
 #include <mutex>
 #include <shared_mutex>

@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_CAMERA_H
 #define GAME_ENGINE_CAMERA_H
 
-#include "../engine.h"
+#include "engine.h"
 
 void GameEngine::scrollCamera(int directions)
 {

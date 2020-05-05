@@ -1,7 +1,7 @@
 #ifndef GAME_MAP_PROCESSORS_H
 #define GAME_MAP_PROCESSORS_H
 
-#include "../map.h"
+#include "map.h"
 
 using namespace map;
 

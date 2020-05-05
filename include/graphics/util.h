@@ -1,7 +1,7 @@
 #ifndef GAME_GRAPHICS_UTIL_H
 #define GAME_GRAPHICS_UTIL_H
 
-#include "../graphics.h"
+#include "graphics.h"
 
 using namespace graphics;
 

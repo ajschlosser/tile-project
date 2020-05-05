@@ -1,7 +1,7 @@
 #ifndef GAME_GENERIC_TYPE_H
 #define GAME_GENERIC_TYPE_H
 
-#include "../sprite.h"
+#include "sprite.h"
 #include <map>
 #include <string>
 

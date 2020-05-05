@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_MOVEMENT_H
 #define GAME_ENGINE_MOVEMENT_H
 
-#include "../engine.h"
+#include "engine.h"
 
 void GameEngine::processMap(int directions)
 {

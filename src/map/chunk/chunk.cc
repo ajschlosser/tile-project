@@ -1,4 +1,4 @@
-#include "chunk.h"
+#include "map/chunk/chunk.h"
 
 // TODO: Integrate this into the map namespace
 

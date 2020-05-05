@@ -1,7 +1,7 @@
 #ifndef GAME_ENGINE_EVENTS_H
 #define GAME_ENGINE_EVENTS_H
 
-#include "../engine.h"
+#include "engine.h"
 
 void GameEngine::handleEvents()
 {

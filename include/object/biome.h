@@ -1,7 +1,7 @@
 #ifndef GAME_BIOME_OBJECT_H
 #define GAME_BIOME_OBJECT_H
 
-#include "../type/biome.h"
+#include "type/biome.h"
 
 struct BiomeObject
 {
