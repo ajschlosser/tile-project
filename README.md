@@ -21,8 +21,6 @@ $ g++ src/**/*.cc                     \
     -lSDL2                            \
     -lSDL2_image                      \
     $(cat build/conanbuildinfo.args)  \
-    $(wx-config --cxxflags)           \
-    $(wx-config --libs)               \
     -std=gnu++2a
 ```
 
