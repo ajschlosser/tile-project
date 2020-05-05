@@ -1,5 +1,6 @@
 #include "engine/camera.h"
 #include "engine/render.h"
+#include "engine/graphics/render.h"
 
 using namespace controller;
 
@@ -42,27 +43,21 @@ void RenderController::renderCopyTiles()
     auto [x, y, i, j] = locationData;
     auto terrainObject = e->mapController.terrainMap[e->zLevel].find({ i, j });
     if (terrainObject != e->mapController.terrainMap[e->zLevel].end())
-      e->gfxController.renderCopyTerrain(&terrainObject->second, x, y);
+      engine::graphics::controller<engine::graphics::RenderController>.renderCopyTerrain(&terrainObject->second, x, y);
     else
-      e->gfxController.renderCopySprite("Sprite 0x128", x, y);
+      engine::graphics::controller<engine::graphics::RenderController>.renderCopySprite("Sprite 0x128", x, y);
     auto worldObject = e->mapController.worldMap[e->zLevel].find({ i, j });
     if (worldObject != e->mapController.worldMap[e->zLevel].end())
       for ( auto w : worldObject->second )
         e->gfxController.renderCopyObject(w, x, y);
     auto mobObject = e->mapController.mobMap[e->zLevel].find({ i, j });
-    // TODO: process differently depending on direction due to how tiles are drawn
     if (mobObject != e->mapController.mobMap[e->zLevel].end())
       for ( auto &w : mobObject->second )
       {
         if (w->relativeX == 0 && w->relativeY == 0)
-        {
-          e->gfxController.renderCopyMobObject(w, x, y);
-        }
+          engine::graphics::controller<engine::graphics::RenderController>.renderCopyTerrain(&terrainObject->second, x, y);
         else
-        {
           movers.push_back({w, { x, y }});
-          //e->gfxController.renderCopyMobObject(w, x, y);
-        }
       }
   };
   std::thread r (
@@ -74,7 +69,7 @@ void RenderController::renderCopyTiles()
       {
         auto mob = it->first;
         auto [_x, _y] = it->second;
-        e->gfxController.renderCopyMobObject(mob, _x, _y);        
+        engine::graphics::controller<engine::graphics::RenderController>.renderCopyMobObject(mob, _x, _y);
         movers.erase(it);
       }
     },

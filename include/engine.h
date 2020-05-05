@@ -13,6 +13,7 @@
 #include <cmath>
 #include <map>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 #include <thread>
@@ -20,11 +21,11 @@
 
 namespace engine
 {
-  struct CameraController;
-  struct EventsController;
-  struct InitHandler;
-  struct MovementController;
-  struct Renderer;
+  namespace graphics
+  {
+    template <typename T1> T1 controller;
+    struct RenderController;
+  }
   template <typename T1> T1 controller;
 }
 
@@ -34,8 +35,8 @@ namespace controller
   struct EventsController;
   struct MovementController;
   struct RenderController;
+  struct GraphicsController;
 }
-
 
 struct GameEngine
 {
@@ -43,7 +44,6 @@ struct GameEngine
   {
     engine::controller<T> = t;
   };
-  template <typename T> T* controller() { return &engine::controller<T>; }
   config::ConfigurationController configController;
   graphics::GraphicsController gfxController;
   input::UserInputHandler userInputHandler;
@@ -82,6 +82,9 @@ struct GameEngine
   int generateMapChunk(SDL_Rect*);
   int run();
   bool stopRunning() { running = false; return !running; }
+  int getSpriteSize() { return spriteSize; }
+  int getTileSize() { return tileSize; }
+  template <typename T> T* controller() { return &engine::controller<T>; }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
 };
 
