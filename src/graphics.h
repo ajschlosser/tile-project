@@ -34,7 +34,7 @@ struct GraphicsController
   {
 
     if (!t->isAnimated())
-      return renderCopySprite(t->objectType->sprite, x, y);
+      return renderCopySprite(t->objectType->getFrame(0), x, y);
     else
     {
       if (t->animationTimer.elapsed() > t->animationSpeed)
@@ -48,7 +48,7 @@ struct GraphicsController
 
       auto it = t->objectType->animationMap[t->direction].find(t->animationFrame);
       if (it == t->objectType->animationMap[t->direction].end())
-        return renderCopySprite(t->objectType->sprite, x, y);
+        return renderCopySprite(t->objectType->getFrame(0), x, y);
       else
         return renderCopySprite(it->second, x, y);
     }
@@ -67,7 +67,7 @@ struct GraphicsController
     }
     // TODO: UP and LEFT need different handling
     if (!t->isAnimated())
-      return renderCopySprite(t->mobType->sprite, x, y);
+      return renderCopySprite(t->mobType->getFrame(0), x, y);
     else
     {
       if (t->animationTimer.elapsed() > t->animationSpeed)
@@ -83,14 +83,14 @@ struct GraphicsController
 
       
       if (it == t->mobType->animationMap[t->direction].end())
-        return renderCopySprite(t->mobType->sprite, { x, y, o_x, o_y });
+        return renderCopySprite(t->mobType->getFrame(0), { x, y, o_x, o_y });
       else
         return renderCopySprite(it->second, { x, y, o_x, o_y });
     }
   }
   int renderCopyTerrain(TerrainObject* t, int x, int y) {
     if (!t->isAnimated())
-      return renderCopySprite(t->terrainType->sprite, x, y);
+      return renderCopySprite(t->terrainType->getFrame(0), x, y);
     else
     {
       if (t->animationTimer.elapsed() > t->animationSpeed)
@@ -104,7 +104,7 @@ struct GraphicsController
 
       auto it = t->terrainType->animationMap[t->direction].find(t->animationFrame);
       if (it == t->terrainType->animationMap[t->direction].end())
-        return renderCopySprite(t->terrainType->sprite, x, y);
+        return renderCopySprite(t->terrainType->getFrame(0), x, y);
       else
         return renderCopySprite(it->second, x, y);
     }

@@ -32,7 +32,6 @@ struct Tile
   int y;
   BiomeType* biomeType;
   TerrainType* terrainType;
-  Sprite* sprite;
   Timer animationTimer;
   int animationFrame;
   int animationSpeed;

@@ -25,7 +25,7 @@ int GameEngine::init()
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Window created.");
   gfxController.appWindow = appWindow;
-  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
+  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
   if (appRenderer == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create a enderer: %s", SDL_GetError());
@@ -81,7 +81,7 @@ int GameEngine::init()
   SDL_Log("Spritesheet processed.");
 
   SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
-  configController = ConfigurationController("tilemap.config.json", spriteMap);
+  configController = config::ConfigurationController("tilemap.config.json", spriteMap);
   auto [biomeTypes, biomeTypeKeys, terrainTypes, mobTypes, objectTypes, tileTypes] = configController.getTypeMaps();
   player = {configController.gameSize/2, configController.gameSize/2, &configController.tileTypes["water"]};
   mapController = MapController(
@@ -226,7 +226,7 @@ void GameEngine::handleEvents()
             gfxController.camera.h,
             t->terrainType->name.c_str(),
             t->biomeType->name.c_str(),
-            t->terrainType->sprite->name.c_str(),
+            t->terrainType->getFrame(0)->name.c_str(),
             t->initialized
           );
           break;

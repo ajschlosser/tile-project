@@ -20,7 +20,6 @@ struct MobObject : SimulatedObject
     this->z = z;
     mobType = m;
     biomeType = b;
-    sprite = m->sprite;
     speed = std::rand() % 1500 + 1000;
     Timer t;
     t.start();

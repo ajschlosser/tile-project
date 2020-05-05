@@ -6,11 +6,7 @@
 struct TileType : GenericType
 {
   TileType () {}
-  TileType (Sprite* s, std::string n)
-  {
-    sprite = s;
-    name = n;
-  }
+  TileType (std::string n) { this->name = n; }
 };
 
 #endif

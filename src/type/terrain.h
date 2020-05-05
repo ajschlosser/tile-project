@@ -10,13 +10,24 @@ struct TerrainType : GenericType
   int objectFrequencyMultiplier;
   std::vector<std::string> objectTypeProbabilities;
   TerrainType () {}
-  TerrainType (Sprite* sprite, std::string name, std::vector<std::string> objects)
+  TerrainType(
+    std::string name,
+    std::vector<std::string> relatedObjectTypes,
+    float objectFrequencyMultiplier,
+    std::vector<std::string> relatedObjectTypeProbabilities,
+    bool impassable,
+    float multiplier,
+    bool clusters
+  )
   {
-    this->sprite = sprite;
     this->name = name;
-    this->objects = objects;
-    this->objectFrequencyMultiplier = 1.0;
-  }
+    this->objects = relatedObjectTypes;
+    this->objectFrequencyMultiplier = objectFrequencyMultiplier;
+    this->objectTypeProbabilities = relatedObjectTypeProbabilities;
+    this->impassable = impassable;
+    this->multiplier = multiplier;
+    this->clusters = clusters;
+  };
   int getObjectFrequencyMultiplier() { if (objectFrequencyMultiplier > 0) return objectFrequencyMultiplier; else return 1; }
   std::string getRandomObjectTypeName()
   {

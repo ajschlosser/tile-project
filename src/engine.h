@@ -20,7 +20,7 @@
 
 struct GameEngine
 {
-  ConfigurationController configController;
+  config::ConfigurationController configController;
   GraphicsController gfxController;
   UserInputHandler userInputHandler;
   bool running;

@@ -15,7 +15,6 @@ struct TerrainObject : Tile
     this->z = z;
     biomeType = b;
     terrainType = t;
-    sprite = t->sprite;
   }
 };
 

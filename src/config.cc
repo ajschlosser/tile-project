@@ -1,5 +1,43 @@
 #include "config.h"
 
+using namespace config;
+
+animationMap ConfigurationController::configureAnimationMap (int i, std::string n)
+{
+  animationMap m;
+  if (configJson[n][i]["sprite"].isString())
+  {
+    m[tileObject::DOWN][0] = &sprites[configJson[n][i]["sprite"].asString()];
+  }
+  else if (configJson[n][i]["sprite"].isArray())
+  {
+    const Json::Value& animationArr = configJson[n][i]["sprite"];
+    for (int i = 0; i < animationArr.size(); i++)
+    {
+      m[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
+    }
+  }
+  else if (configJson[n][i]["sprite"].isObject())
+  {
+    if (configJson[n][i]["sprite"]["directions"].isObject())
+    {
+      const Json::Value& uArr = configJson[n][i]["sprite"]["directions"]["up"];
+      const Json::Value& dArr = configJson[n][i]["sprite"]["directions"]["down"];
+      const Json::Value& lArr = configJson[n][i]["sprite"]["directions"]["left"];
+      const Json::Value& rArr = configJson[n][i]["sprite"]["directions"]["right"];
+      for (auto i = 0; i < uArr.size(); i++)
+        m[tileObject::UP][i] = &sprites[uArr[i].asString()];
+      for (auto i = 0; i < dArr.size(); i++)
+        m[tileObject::DOWN][i] = &sprites[dArr[i].asString()];
+      for (auto i = 0; i < lArr.size(); i++)
+        m[tileObject::LEFT][i] = &sprites[lArr[i].asString()];
+      for (auto i = 0; i < rArr.size(); i++)
+        m[tileObject::RIGHT][i] = &sprites[rArr[i].asString()];
+    }
+  }
+  return m;
+};
+
 ConfigurationController::ConfigurationController (std::string configFilePath, std::map<std::string, Sprite> s)
 {
 
@@ -21,22 +59,7 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
   ///////////////
   for (auto i = 0; i < configJson["terrains"].size(); ++i)
   {
-    std::map<int, std::map<int, Sprite*>> animationMap;
-    std::string spriteName;
-    if (configJson["terrains"][i]["sprite"].isString())
-    {
-      spriteName = configJson["terrains"][i]["sprite"].asString();
-      animationMap[tileObject::DOWN][0] = &sprites[spriteName];
-    }
-    else if (configJson["terrains"][i]["sprite"].isArray())
-    {
-      const Json::Value& animationArr = configJson["terrains"][i]["sprite"];
-      spriteName = animationArr[0].asString();
-      for (int i = 0; i < animationArr.size(); i++)
-      {
-        animationMap[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
-      }
-    }
+    animationMap aMap = configureAnimationMap(i, "terrains");
     std::string tileTypeName = configJson["terrains"][i]["name"].asString();
     bool impassable = configJson["terrains"][i]["impassable"].asBool();
     bool clusters = configJson["terrains"][i]["clusters"].asBool();
@@ -62,15 +85,18 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
           relatedObjectTypeProbabilities.push_back(objectTypeName);
       }
     }
-    TileType tileType { &sprites[spriteName], tileTypeName };
-    TerrainType terrainType { &sprites[spriteName], tileTypeName, relatedObjectTypes };
-    terrainType.impassable = impassable;
-    terrainType.multiplier = multiplier;
-    terrainType.clusters = clusters;
-    terrainType.objectFrequencyMultiplier = objectFrequencyMultiplier;
-    terrainType.objectTypeProbabilities = relatedObjectTypeProbabilities;
-    terrainType.animationMap = animationMap;
-    if (animationMap[tileObject::DOWN].size() > 1)
+    TileType tileType { tileTypeName };
+    TerrainType terrainType {
+      tileTypeName,
+      relatedObjectTypes,
+      objectFrequencyMultiplier,
+      relatedObjectTypeProbabilities,
+      impassable,
+      multiplier,
+      clusters
+    };
+    terrainType.animationMap = aMap;
+    if (aMap[tileObject::DOWN].size() > 1)
     {
       terrainType.animationSpeed = 1000;
     }
@@ -133,23 +159,16 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       bM[biomesArray[i].asString()] = 1;
     }
 
-    std::map<int, std::map<int, Sprite*>> animationMap; // TODO : Fix this
-    std::string spriteName;
-    if (configJson["objects"][i]["sprite"].isString())
-    {
-      spriteName = configJson["objects"][i]["sprite"].asString();
-      animationMap[tileObject::DOWN][0] = &sprites[spriteName];
-    }
-    else if (configJson["objects"][i]["sprite"].isArray())
-    {
-      const Json::Value& animationArr = configJson["objects"][i]["sprite"];
-      spriteName = animationArr[0].asString();
-      for (int i = 0; i < animationArr.size(); i++)
-      {
-        animationMap[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
-      }
-    }
-    ObjectType o { &sprites[spriteName], objectTypeName, impassable, configJson["objects"][i]["multiplier"].asFloat(), clusters, animationMap, 1000, bM };
+    animationMap aMap = configureAnimationMap(i, "objects");;
+    auto o = ObjectType( 
+      objectTypeName,
+      impassable,
+      configJson["objects"][i]["multiplier"].asFloat(),
+      clusters,
+      aMap,
+      1000,
+      bM
+    );
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -167,41 +186,16 @@ ConfigurationController::ConfigurationController (std::string configFilePath, st
       bM[biomesArray[i].asString()] = 1;
     }
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
-    std::map<int, std::map<int, Sprite*>> animationMap; // TODO : Fix this
-    std::string spriteName;
-    if (configJson["mobs"][i]["sprite"].isString())
-    {
-      spriteName = configJson["mobs"][i]["sprite"].asString();
-      animationMap[tileObject::DOWN][0] = &sprites[spriteName];
-    }
-    else if (configJson["mobs"][i]["sprite"].isArray())
-    {
-      const Json::Value& animationArr = configJson["mobs"][i]["sprite"];
-      spriteName = animationArr[0].asString();
-      for (int i = 0; i < animationArr.size(); i++)
-      {
-        animationMap[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
-      }
-    }
-    else if (configJson["mobs"][i]["sprite"].isObject())
-    {
-      if (configJson["mobs"][i]["sprite"]["directions"].isObject())
-      {
-        const Json::Value& uArr = configJson["mobs"][i]["sprite"]["directions"]["up"];
-        const Json::Value& dArr = configJson["mobs"][i]["sprite"]["directions"]["down"];
-        const Json::Value& lArr = configJson["mobs"][i]["sprite"]["directions"]["left"];
-        const Json::Value& rArr = configJson["mobs"][i]["sprite"]["directions"]["right"];
-        for (auto i = 0; i < uArr.size(); i++)
-          animationMap[tileObject::UP][i] = &sprites[uArr[i].asString()];
-        for (auto i = 0; i < dArr.size(); i++)
-          animationMap[tileObject::DOWN][i] = &sprites[dArr[i].asString()];
-        for (auto i = 0; i < lArr.size(); i++)
-          animationMap[tileObject::LEFT][i] = &sprites[lArr[i].asString()];
-        for (auto i = 0; i < rArr.size(); i++)
-          animationMap[tileObject::RIGHT][i] = &sprites[rArr[i].asString()];
-      }
-    }
-    MobType mobType { &sprites[spriteName], mobTypeName, false, configJson["mobs"][i]["multiplier"].asFloat(), 0, animationMap, 1000, bM };
+    animationMap aMap = configureAnimationMap(i, "mobs");
+    MobType mobType { 
+      mobTypeName,
+      false,
+      configJson["mobs"][i]["multiplier"].asFloat(),
+      0,
+      aMap,
+      1000,
+      bM
+    };
     mobTypes[mobType.name] = mobType;
   };
 }

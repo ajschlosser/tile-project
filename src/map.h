@@ -43,7 +43,7 @@ struct MapController
   objects::terrainMap terrainMap;
   objects::worldMap worldMap;
   objects::mobMap mobMap;
-  ConfigurationController* cfg;
+  config::ConfigurationController* cfg;
   MapController () : maxDepth(0) {}
   MapController (
       int d,
@@ -53,7 +53,7 @@ struct MapController
       std::vector<std::string>* bTypeKeys,
       objects::terrainTypesMap* tnTypes,
       objects::tileTypesMap* tlTypes,
-      ConfigurationController* c
+      config::ConfigurationController* c
   )
   {
     maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;

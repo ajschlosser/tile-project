@@ -15,7 +15,6 @@ struct WorldObject : Tile
     this->z = z;
     objectType = o;
     biomeType = b;
-    sprite = o->sprite;
   }
 };
 
