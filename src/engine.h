@@ -36,7 +36,7 @@ struct GameEngine
   int tileSize;
   const int spriteSize;
   int zLevel;
-  int zMaxLevel;
+  const int zMaxLevel;
   MapController mapController;
   objects::mobTypesMap* mobTypes;
   objects::objectTypesMap* objectTypes;
@@ -80,6 +80,20 @@ struct GameEngine
     }
   }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
+  int run ()
+  {
+    init();
+    while (running)
+    {
+      handleEvents();
+      SDL_RenderClear(appRenderer);
+      renderCopyTiles();
+      renderCopyPlayer();
+      gfxController.applyUi();
+      SDL_RenderPresent(appRenderer);
+    }
+    return 1;
+  }
 };
 
 #endif
