@@ -17,8 +17,8 @@ int GameEngine::init()
   registerController<controller::MovementController>(movementController);
   registerController<controller::RenderController>(renderController);
   registerController<controller::GraphicsController>(graphicsController);
-  gfxController.tileSize = &tileSize;
-  gfxController.spriteSize = const_cast<int*>(&spriteSize);
+  // engine::controller<controller::GraphicsController>.tileSize = &tileSize;
+  // engine::controller<controller::GraphicsController>.spriteSize = const_cast<int*>(&spriteSize);
 
   std::srand(std::time(nullptr));
   if (!tileSize)
@@ -26,11 +26,11 @@ int GameEngine::init()
   if (movementSpeed > tileSize)
     movementSpeed = tileSize;
 
-  gfxController.initializeSDL();
+  //engine::controller<controller::GraphicsController>.initializeSDL();
 
   // Create app window and renderer
   appWindow = SDL_CreateWindow(
-    "tile-project", 0, 0, gfxController.displayMode.w/2, gfxController.displayMode.h/2, SDL_WINDOW_RESIZABLE
+    "tile-project", 0, 0, engine::controller<controller::GraphicsController>.displayMode.w/2, engine::controller<controller::GraphicsController>.displayMode.h/2, SDL_WINDOW_RESIZABLE
   ); // SDL_WINDOW_FULLSCREEN
   if (appWindow == NULL)
   {
@@ -39,7 +39,7 @@ int GameEngine::init()
   }
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Window created.");
-  gfxController.appWindow = appWindow;
+  engine::controller<controller::GraphicsController>.appWindow = appWindow;
   appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
   if (appRenderer == NULL)
   {
@@ -48,9 +48,9 @@ int GameEngine::init()
   }
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Renderer created.");
-  gameTexture = SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, gfxController.windowWidth, gfxController.windowHeight);
+  gameTexture = SDL_CreateTexture(appRenderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, engine::controller<controller::GraphicsController>.windowWidth, engine::controller<controller::GraphicsController>.windowHeight);
   SDL_SetTextureBlendMode(gameTexture, SDL_BLENDMODE_BLEND);
-  gfxController.appRenderer = appRenderer;
+  engine::controller<controller::GraphicsController>.appRenderer = appRenderer;
 
   // Load spritesheet
   SDL_Surface *surface = IMG_Load("assets/tilemap640x640x32.png");
@@ -79,8 +79,8 @@ int GameEngine::init()
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Tilemap loaded.");
   tilemapImage = { surface, texture };
-  gfxController.tilemapImage = &tilemapImage;
-  gfxController.tilemapTexture = texture;
+  engine::controller<controller::GraphicsController>.tilemapImage = &tilemapImage;
+  engine::controller<controller::GraphicsController>.tilemapTexture = texture;
   std::map<std::string, Sprite> spriteMap;
   for (auto i = 0; i < surface->w; i += spriteSize)
   {
@@ -92,7 +92,7 @@ int GameEngine::init()
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created sprite: %s", name.c_str());
     }
   }
-  gfxController.sprites = spriteMap;
+  engine::controller<controller::GraphicsController>.sprites = spriteMap;
   SDL_Log("Spritesheet processed.");
 
   SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
@@ -122,7 +122,7 @@ int GameEngine::run ()
     SDL_RenderClear(appRenderer);
     controller<controller::RenderController>()->renderCopyTiles();
     controller<controller::RenderController>()->renderCopyPlayer();
-    gfxController.applyUi();
+    engine::controller<controller::GraphicsController>.applyUi();
     SDL_RenderPresent(appRenderer);
   }
   return 1;

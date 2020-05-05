@@ -1,3 +1,5 @@
+
+#include "engine/graphics.h"
 #include "engine/render.h"
 #include "engine/movement.h"
 
@@ -5,13 +7,13 @@ using namespace controller;
 
 void MovementController::processMap(int directions)
 {
-  auto [_w, _h] = e->gfxController.getWindowGridDimensions();
-  SDL_Point checkCoordinates = { e->gfxController.camera.x, e->gfxController.camera.y };
+  auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
+  SDL_Point checkCoordinates = { engine::controller<controller::GraphicsController>.camera.x, engine::controller<controller::GraphicsController>.camera.y };
   Rect chunkRect = {
-    e->gfxController.camera.x-e->configController.gameSize*2,
-    e->gfxController.camera.y-e->configController.gameSize*2,
-    e->gfxController.camera.x+e->configController.gameSize*2,
-    e->gfxController.camera.y+e->configController.gameSize*2
+    engine::controller<controller::GraphicsController>.camera.x-e->configController.gameSize*2,
+    engine::controller<controller::GraphicsController>.camera.y-e->configController.gameSize*2,
+    engine::controller<controller::GraphicsController>.camera.x+e->configController.gameSize*2,
+    engine::controller<controller::GraphicsController>.camera.y+e->configController.gameSize*2
   };
   if (directions & input::RIGHT)
     checkCoordinates.x += _w;
@@ -36,7 +38,7 @@ void MovementController::processMap(int directions)
 
 void MovementController::scrollGameSurface(int directions)
 {
-  auto [_w, _h] = e->gfxController.getWindowDimensions();
+  auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowDimensions();
   SDL_Rect dest {0, 0, _w, _h};
   std::pair<int, int> offset = {0, 0};
   if (directions & input::RIGHT)
@@ -58,9 +60,9 @@ void MovementController::scrollGameSurface(int directions)
       dest.y += e->movementSpeed;
     if (directions & input::DOWN)
       dest.y -= e->movementSpeed;
-    SDL_RenderCopy(e->appRenderer, e->gfxController.getGameSurfaceTexture(), NULL, &dest);
+    SDL_RenderCopy(e->appRenderer, engine::graphics::controller<engine::graphics::SurfaceController>.getGameSurfaceTexture(), NULL, &dest);
     e->controller<controller::RenderController>()->renderCopyPlayer();
-    e->gfxController.applyUi();;
+    engine::controller<controller::GraphicsController>.applyUi();;
     SDL_RenderPresent(e->appRenderer);
   }
   if (SDL_SetRenderTarget(e->appRenderer, NULL) < 0)

@@ -1,3 +1,4 @@
+#include "engine/graphics.h"
 #include "engine/graphics/render.h"
 
 using namespace engine::graphics;
@@ -8,7 +9,7 @@ int RenderController::renderCopySprite(Sprite *s, std::tuple<int, int, int, int>
   int tS = e->getTileSize();
   SDL_Rect src {s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
   SDL_Rect dest {(x*tS)+o_x, (y*tS)+o_y, tS, tS};
-  if (SDL_RenderCopy(e->appRenderer, e->gfxController.tilemapTexture, &src, &dest) < -1)
+  if (SDL_RenderCopy(e->appRenderer, engine::controller<controller::GraphicsController>.tilemapTexture, &src, &dest) < -1)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
     return 3;
@@ -21,7 +22,7 @@ int RenderController::renderCopySprite(Sprite *s, int x, int y)
   int tS = e->getTileSize();
   SDL_Rect src {s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
   SDL_Rect dest {x*tS, y*tS, tS, tS};
-  if (SDL_RenderCopy(e->appRenderer, e->gfxController.tilemapTexture, &src, &dest) < -1)
+  if (SDL_RenderCopy(e->appRenderer, engine::controller<controller::GraphicsController>.tilemapTexture, &src, &dest) < -1)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
     return 3;

@@ -1,6 +1,8 @@
-### Build on macOS with g++
+### Build on macOS >=10.14.6 with g++
 
 #### Install build dependencies
+
+This assumes that your systen already has Homebrew (https://brew.sh/) and python >= 3.0. 
 
 `$ pip3 install conan`
 

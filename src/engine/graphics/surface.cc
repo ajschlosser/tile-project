@@ -1,11 +1,9 @@
-#ifndef GAME_GRAPHICS_SURFACE_H
-#define GAME_GRAPHICS_SURFACE_H
+#include "engine/graphics/window.h"
+#include "engine/graphics/surface.h"
 
-#include "graphics.h"
+using namespace engine::graphics;
 
-using namespace graphics;
-
-SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
+SDL_Surface* SurfaceController::getGameSurfaceFromWindow ()
 {
   #if SDL_BYTEORDER == SDL_BIG_ENDIAN
       auto rmask = 0xff000000;
@@ -18,7 +16,8 @@ SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
       auto bmask = 0x00ff0000;
       auto amask = 0xff000000;
   #endif
-  auto [_w, _h] = getWindowDimensions();
+  auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowDimensions();
+  //auto [_w, _h] = e->controller<controller::GraphicsController>()->controller<engine::graphics::WindowController>()->getWindowDimensions();
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Current window is %dx%dpx.", _w, _h );
   SDL_Surface* s = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
   if (s == NULL)
@@ -29,26 +28,26 @@ SDL_Surface* GraphicsController::getGameSurfaceFromWindow ()
   return s;
 }
 
-SDL_Texture* GraphicsController::getTextureFromSurface (SDL_Surface* s)
+SDL_Texture* SurfaceController::getTextureFromSurface (SDL_Surface* s)
 {
   if (SDL_MUSTLOCK(s))
   {
     if (SDL_LockSurface(s) < 0)
       return NULL;
-    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
+    if (SDL_RenderReadPixels(e->appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
       return NULL;
     SDL_UnlockSurface(s);
   }
   else
   {
-    if (SDL_RenderReadPixels(appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
+    if (SDL_RenderReadPixels(e->appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
       return NULL;
   }
-  SDL_Texture* t = SDL_CreateTextureFromSurface(appRenderer, s);
+  SDL_Texture* t = SDL_CreateTextureFromSurface(e->appRenderer, s);
   return t;
 }
 
-SDL_Texture* GraphicsController::getGameSurfaceTexture ()
+SDL_Texture* SurfaceController::getGameSurfaceTexture ()
 {
   SDL_Surface* s = getGameSurfaceFromWindow();
   if (s)
@@ -56,5 +55,3 @@ SDL_Texture* GraphicsController::getGameSurfaceTexture ()
   else
     return NULL;
 }
-
-#endif

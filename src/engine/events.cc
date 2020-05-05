@@ -1,3 +1,4 @@
+#include "engine/graphics.h"
 #include "engine/camera.h"
 #include "engine/movement.h"
 #include "engine/events.h"
@@ -24,7 +25,7 @@ void EventsController::handleEvents()
     }
     else if (event->type == SDL_KEYDOWN)
     {
-      auto t = &e->mapController.terrainMap[e->zLevel][{e->gfxController.camera.x, e->gfxController.camera.y}];
+      auto t = &e->mapController.terrainMap[e->zLevel][{engine::controller<controller::GraphicsController>.camera.x, engine::controller<controller::GraphicsController>.camera.y}];
       std::string objs;
       switch(event->key.keysym.sym)
       {
@@ -35,10 +36,10 @@ void EventsController::handleEvents()
         case SDLK_SPACE:
           SDL_Log(
             "\nCamera: %dx%dx%dx%d\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent terrain type sprite name: %s\nInitialized: %d",
-            e->gfxController.camera.x,
-            e->gfxController.camera.y,
-            e->gfxController.camera.w,
-            e->gfxController.camera.h,
+            engine::controller<controller::GraphicsController>.camera.x,
+            engine::controller<controller::GraphicsController>.camera.y,
+            engine::controller<controller::GraphicsController>.camera.w,
+            engine::controller<controller::GraphicsController>.camera.h,
             t->terrainType->name.c_str(),
             t->biomeType->name.c_str(),
             t->terrainType->getFrame(0)->name.c_str(),

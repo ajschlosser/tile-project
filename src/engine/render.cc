@@ -1,3 +1,4 @@
+#include "engine/graphics.h"
 #include "engine/camera.h"
 #include "engine/render.h"
 #include "engine/graphics/render.h"
@@ -44,12 +45,12 @@ void RenderController::renderCopyTiles()
     auto terrainObject = e->mapController.terrainMap[e->zLevel].find({ i, j });
     if (terrainObject != e->mapController.terrainMap[e->zLevel].end())
       engine::graphics::controller<engine::graphics::RenderController>.renderCopyTerrain(&terrainObject->second, x, y);
-    else
-      engine::graphics::controller<engine::graphics::RenderController>.renderCopySprite("Sprite 0x128", x, y);
+    else {}
+      //engine::graphics::controller<engine::graphics::RenderController>.renderCopySprite("Sprite 0x128", x, y);
     auto worldObject = e->mapController.worldMap[e->zLevel].find({ i, j });
     if (worldObject != e->mapController.worldMap[e->zLevel].end())
       for ( auto w : worldObject->second )
-        e->gfxController.renderCopyObject(w, x, y);
+        engine::graphics::controller<engine::graphics::RenderController>.renderCopyObject(w, x, y);
     auto mobObject = e->mapController.mobMap[e->zLevel].find({ i, j });
     if (mobObject != e->mapController.mobMap[e->zLevel].end())
       for ( auto &w : mobObject->second )
@@ -82,9 +83,9 @@ void RenderController::renderCopyTiles()
 
 int RenderController::renderCopyPlayer()
 {
-  e->player.x = e->gfxController.camera.x;
-  e->player.y = e->gfxController.camera.y;
-  auto [_w, _h] = e->gfxController.getWindowGridDimensions();
+  e->player.x = engine::controller<controller::GraphicsController>.camera.x;
+  e->player.y = engine::controller<controller::GraphicsController>.camera.y;
+  auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
   SDL_Rect playerRect = { _w/2*e->tileSize, _h/2*e->tileSize, e->tileSize, e->tileSize };
   return SDL_RenderFillRect(e->appRenderer, &playerRect);
 }

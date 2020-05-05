@@ -8,7 +8,6 @@
 #include "config.h"
 #include "input.h"
 #include "map.h"
-#include "graphics.h"
 
 #include <cmath>
 #include <map>
@@ -25,6 +24,8 @@ namespace engine
   {
     template <typename T1> T1 controller;
     struct RenderController;
+    struct SurfaceController;
+    struct WindowController;
   }
   template <typename T1> T1 controller;
 }
@@ -45,7 +46,6 @@ struct GameEngine
     engine::controller<T> = t;
   };
   config::ConfigurationController configController;
-  graphics::GraphicsController gfxController;
   input::UserInputHandler userInputHandler;
   bool running;
   int movementSpeed;
