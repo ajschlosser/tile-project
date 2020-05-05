@@ -84,7 +84,7 @@ int GameEngine::init()
   configController = config::ConfigurationController("tilemap.config.json", spriteMap);
   auto [biomeTypes, biomeTypeKeys, terrainTypes, mobTypes, objectTypes, tileTypes] = configController.getTypeMaps();
   player = {configController.gameSize/2, configController.gameSize/2, &configController.tileTypes["water"]};
-  mapController = MapController(
+  mapController = map::MapController(
     zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes, &configController
   );
 

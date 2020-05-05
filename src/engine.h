@@ -37,7 +37,7 @@ struct GameEngine
   const int spriteSize;
   int zLevel;
   const int zMaxLevel;
-  MapController mapController;
+  map::MapController mapController;
   objects::mobTypesMap* mobTypes;
   objects::objectTypesMap* objectTypes;
   objects::biomeTypesMap* biomeTypes;

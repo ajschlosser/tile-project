@@ -1,5 +1,7 @@
 #include "chunk.h"
 
+// TODO: Integrate this into the map namespace
+
 using namespace chunk;
 
 void ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, BiomeType*> f)
