@@ -32,7 +32,10 @@ void GameEngine::renderCopyTiles()
     }
   };
   std::thread p (
-    [this](std::function<void(std::tuple<int, int, int, int>)> f) { iterateOverTilesInView(f); }, processor
+    [this](std::function<void(std::tuple<int, int, int, int>)> f)
+    {
+      engine::controller<camera::CameraController>.iterateOverTilesInView(f);
+    }, processor
   );
   std::vector<std::pair<std::shared_ptr<MobObject>, std::tuple<int, int>>> movers;
   auto terrainRenderer = [this,&movers](std::tuple<int, int, int, int> locationData){
@@ -68,7 +71,7 @@ void GameEngine::renderCopyTiles()
   std::thread r (
     [this, &movers](std::function<void(std::tuple<int, int, int, int>)> f1)
     {
-      iterateOverTilesInView(f1);
+      engine::controller<camera::CameraController>.iterateOverTilesInView(f1);
       auto it = movers.begin();
       while (it != movers.end())
       {

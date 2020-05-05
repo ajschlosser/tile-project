@@ -1,6 +1,7 @@
 #ifndef GAME_ENGINE_INIT_H
 #define GAME_ENGINE_INIT_H
 
+#include "engine/camera.h"
 #include "engine.h"
 
 int GameEngine::init()

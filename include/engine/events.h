@@ -7,7 +7,7 @@ void GameEngine::handleEvents()
 {
   auto keyboardMovementHandler = [this](int directions)
   {
-    std::thread graphicalThread([this](int d) { scrollCamera(d); }, directions);
+    std::thread graphicalThread([this](int d) { engine::controller<camera::CameraController>.scrollCamera(d); }, directions);
     std::thread mapProcessingThread([this](int d) { processMap(d); }, directions);
     mapProcessingThread.detach();
     graphicalThread.join();
