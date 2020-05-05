@@ -1,5 +1,7 @@
 #include "input.h"
 
+using namespace input;
+
 void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
 {
   auto *ks = SDL_GetKeyboardState(NULL);

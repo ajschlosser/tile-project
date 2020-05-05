@@ -21,8 +21,8 @@
 struct GameEngine
 {
   config::ConfigurationController configController;
-  GraphicsController gfxController;
-  UserInputHandler userInputHandler;
+  graphics::GraphicsController gfxController;
+  input::UserInputHandler userInputHandler;
   bool running;
   int movementSpeed;
   SDL_Window* appWindow;
@@ -62,38 +62,9 @@ struct GameEngine
   void scrollCamera(int);
   void handleEvents();
   int renderCopyPlayer();
+  void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)>);
   int run();
-  void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)> f)
-  {
-    auto [_w, _h] = gfxController.getWindowGridDimensions();
-    int x = 0;
-    int y = 0;
-    for (auto i = gfxController.camera.x - _w/2; i < gfxController.camera.x + _w/2 + 5; i++)
-    {
-      for (auto j = gfxController.camera.y - _h/2; j < gfxController.camera.y + _h/2 + 5; j++) {
-        std::tuple<int, int, int, int> locationData = {x, y, i, j};
-        f(locationData);
-        y++;
-      }
-      y = 0;
-      x++;
-    }
-  }
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
-  int run ()
-  {
-    init();
-    while (running)
-    {
-      handleEvents();
-      SDL_RenderClear(appRenderer);
-      renderCopyTiles();
-      renderCopyPlayer();
-      gfxController.applyUi();
-      SDL_RenderPresent(appRenderer);
-    }
-    return 1;
-  }
 };
 
 #endif

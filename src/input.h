@@ -13,13 +13,12 @@ namespace input
     LEFT      = 0x04,
     RIGHT     = 0x08
   };
+  struct UserInputHandler
+  {
+    SDL_Event appEvent;
+    void handleKeyboardMovement (std::function<void(int)>);
+    void handleAppEvents (std::function<void(SDL_Event*)>);
+  };
 }
-
-struct UserInputHandler
-{
-  SDL_Event appEvent;
-  void handleKeyboardMovement (std::function<void(int)>);
-  void handleAppEvents (std::function<void(SDL_Event*)>);
-};
 
 #endif
