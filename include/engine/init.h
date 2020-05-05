@@ -5,6 +5,8 @@
 
 int GameEngine::init()
 {
+  auto cameraController = camera::CameraController(this);
+  registerController<camera::CameraController>(cameraController);
   gfxController.tileSize = &tileSize;
   gfxController.spriteSize = const_cast<int*>(&spriteSize);
 

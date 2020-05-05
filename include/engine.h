@@ -18,8 +18,29 @@
 #include <thread>
 #include <memory>
 
+namespace engine
+{
+  struct CameraController;
+  struct EventsController;
+  struct InitHandler;
+  struct MovementController;
+  struct Renderer;
+  template <typename T1> T1 controller;
+}
+
+namespace camera
+{
+  struct CameraController;
+}
+
+
 struct GameEngine
 {
+  template <typename T> void registerController (T t)
+  {
+    engine::controller<T> = t;
+  };
+  template <typename T> T* controller() { return &engine::controller<T>; }
   config::ConfigurationController configController;
   graphics::GraphicsController gfxController;
   input::UserInputHandler userInputHandler;
@@ -65,6 +86,38 @@ struct GameEngine
   void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)>);
   int run();
   GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
+};
+
+struct camera::CameraController
+{
+  GameEngine* e;
+  CameraController () {}
+  CameraController (GameEngine* e)
+  {
+    this->e = e;
+  }
+  void scrollCamera(int directions)
+  {
+    int x = e->gfxController.camera.x;
+    int y = e->gfxController.camera.y;
+    if (directions & input::LEFT)
+      x--;
+    if (directions & input::RIGHT)
+      x++;
+    if (directions & input::DOWN)
+      y++;
+    if (directions & input::UP)
+      y--;
+    if (e->mapController.isPassable({e->zLevel, x, y}))
+    {
+      if (e->tileSize > 8)
+        e->scrollGameSurface(directions);
+      else
+        SDL_Delay(15);
+      e->gfxController.camera.x = x;
+      e->gfxController.camera.y = y;
+    }
+  }
 };
 
 #endif
