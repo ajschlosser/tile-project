@@ -56,7 +56,7 @@ void RenderController::renderCopyTiles()
       for ( auto &w : mobObject->second )
       {
         if (w->relativeX == 0 && w->relativeY == 0)
-          engine::graphics::controller<engine::graphics::RenderController>.renderCopyTerrain(&terrainObject->second, x, y);
+          engine::graphics::controller<engine::graphics::RenderController>.renderCopyMobObject(w, x, y);
         else
           movers.push_back({w, { x, y }});
       }
