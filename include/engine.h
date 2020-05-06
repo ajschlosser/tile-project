@@ -91,7 +91,7 @@ struct GameEngine
   int getSpriteSize() { return spriteSize; }
   int getTileSize() { return tileSize; }
   template <typename T> T* controller() { return &engine::controller<T>; }
-  GameEngine() : tileSize(32), spriteSize(32), running(true), zLevel(0), movementSpeed(8), zMaxLevel(2) {}
+  GameEngine() : running(true), movementSpeed(8), tileSize(32), spriteSize(32), zLevel(0), zMaxLevel(2) {}
 };
 
 #endif

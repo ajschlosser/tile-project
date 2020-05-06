@@ -17,7 +17,7 @@ $ g++ src/**/*.cc \
     -ljsoncpp \
     -stdlib=libc++ \
     -std=gnu++2a \
-    -m64 -O3
+    -m64 -O3 -Wall
 ```
 
 #### Run

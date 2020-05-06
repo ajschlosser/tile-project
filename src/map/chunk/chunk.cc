@@ -51,7 +51,7 @@ void ChunkProcessor::multiProcess (Rect* r, multiprocessFunctorArray functors, i
       BiomeType* b = f.second(this, 0, it->getMid());
       auto fn = std::get<chunkProcessorCallbackFunctor>(f.first);
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Post-processing chunk (%d, %d)", it->x1, it->x2);
-      std::thread t([this, fn, &b, it]() {
+      std::thread t([fn, &b, it]() {
         fn(&(*it), b);
       });
       t.join();

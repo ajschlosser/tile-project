@@ -3,6 +3,7 @@
 
 #include "SDL2/SDL.h"
 #include <functional>
+#include "timer.h"
 
 namespace input
 {
@@ -16,6 +17,11 @@ namespace input
   struct UserInputHandler
   {
     SDL_Event appEvent;
+    Timer lock;
+    UserInputHandler()
+    {
+      lock.start();
+    }
     void handleKeyboardMovement (std::function<void(int)>);
     void handleAppEvents (std::function<void(SDL_Event*)>);
   };

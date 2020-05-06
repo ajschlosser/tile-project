@@ -62,7 +62,7 @@ void RenderController::renderCopyTiles()
       }
   };
   std::thread r (
-    [this, &movers](std::function<void(std::tuple<int, int, int, int>)> f1)
+    [&movers](std::function<void(std::tuple<int, int, int, int>)> f1)
     {
       engine::controller<controller::CameraController>.iterateOverTilesInView(f1);
       auto it = movers.begin();
@@ -78,6 +78,7 @@ void RenderController::renderCopyTiles()
   );
   p.join();
   r.join();
+  SDL_SetRenderDrawColor(e->appRenderer, 0, 0, 0, 255);
 }
 
 
@@ -92,9 +93,11 @@ int RenderController::renderCopyPlayer()
 
 int RenderController::renderUI()
 {
-  for (auto w : engine::controller<controller::UIController>.windows)
-  {
-    engine::graphics::controller<engine::graphics::RenderController>.renderFillUIWindow(&w);
-  }
+
+  if (engine::controller<controller::UIController>.windows.size() != 0)
+    for (auto w : engine::controller<controller::UIController>.windows)
+    {
+      engine::graphics::controller<engine::graphics::RenderController>.renderFillUIWindow(&w);
+    }
   return 0;
 }

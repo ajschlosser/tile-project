@@ -5,6 +5,10 @@ using namespace input;
 void UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
 {
   auto *ks = SDL_GetKeyboardState(NULL);
+  if (ks[SDL_SCANCODE_ESCAPE] && ks[SDL_SCANCODE_LCTRL])
+  {
+    f(-1);
+  }
   while(ks[SDL_SCANCODE_LEFT]
       || ks[SDL_SCANCODE_RIGHT]
       || ks[SDL_SCANCODE_UP]

@@ -19,9 +19,9 @@ struct Rect
   std::vector<Rect> rects;
   Rect () {}
   Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
-  void set(std::tuple<int, int, int, int> data) { auto [x1, y1, x2, y2] = data; }
+  void set(std::tuple<int, int, int, int> data) { auto [_x1, _y1, _x2, _y2] = data; x1 = _x1; y1 =_y1; x2 =_x2; y2 = _y2; }
   std::tuple<int, int, int, int> get(){ return std::make_tuple(x1, y1, x2, y2 ); };
-  SDL_Rect* getSDL_Rect () { SDL_Rect* r; r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
+  SDL_Rect* getSDL_Rect () { auto r = new SDL_Rect(); r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
   int getWidth () { return std::abs(x1) + std::abs(x2); }
   int getHeight () { return std::abs(y1) + std::abs(y2); }
   std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
@@ -57,7 +57,7 @@ struct Rect
     for (auto i = x1; i < x2; i += 1 + std::rand() % fuzz)
       for (auto j = y1; j < y2; j += 1 + std::rand() % fuzz)
       {
-        std::thread t([this, &f, i, j]() { f(i, j); });
+        std::thread t([&f, i, j]() { f(i, j); });
         t.join();
       }
   }

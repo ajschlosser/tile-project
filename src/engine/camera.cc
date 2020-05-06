@@ -1,5 +1,6 @@
 #include "engine/graphics.h"
 #include "engine/movement.h"
+#include "engine/render.h"
 #include "engine/camera.h"
 
 using namespace controller;
@@ -24,6 +25,14 @@ void CameraController::scrollCamera(int directions)
       SDL_Delay(15);
     engine::controller<controller::GraphicsController>.camera.x = x;
     engine::controller<controller::GraphicsController>.camera.y = y;
+  }
+  else
+  {
+    e->controller<controller::RenderController>()->renderCopyTiles();
+    e->controller<controller::RenderController>()->renderCopyPlayer();
+    e->controller<controller::GraphicsController>()->applyUi();
+    e->controller<controller::RenderController>()->renderUI();
+    SDL_RenderPresent(e->appRenderer);    
   }
 }
 

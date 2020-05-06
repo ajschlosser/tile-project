@@ -110,6 +110,8 @@ int GameEngine::init()
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
   engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(0, 0, 300, 300));
+  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(100, 100, 300, 300));
+  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(0, 200, 600, 300));
 
   SDL_Log("Tilemap created.");
 
@@ -126,7 +128,7 @@ int GameEngine::run ()
     controller<controller::RenderController>()->renderCopyTiles();
     controller<controller::RenderController>()->renderCopyPlayer();
     engine::controller<controller::GraphicsController>.applyUi();
-    //engine::controller<controller::RenderController>.renderUI();
+    engine::controller<controller::RenderController>.renderUI();
     SDL_RenderPresent(appRenderer);
   }
   return 1;
