@@ -89,3 +89,12 @@ int RenderController::renderCopyPlayer()
   SDL_Rect playerRect = { _w/2*e->tileSize, _h/2*e->tileSize, e->tileSize, e->tileSize };
   return SDL_RenderFillRect(e->appRenderer, &playerRect);
 }
+
+int RenderController::renderUI()
+{
+  for (auto w : engine::controller<controller::UIController>.windows)
+  {
+    engine::graphics::controller<engine::graphics::RenderController>.renderFillUIWindow(&w);
+  }
+  return 0;
+}

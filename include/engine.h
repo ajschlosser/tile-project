@@ -27,6 +27,11 @@ namespace engine
     struct SurfaceController;
     struct WindowController;
   }
+  namespace ui
+  {
+    template <typename T1> T1 controller;
+    struct UIWindowController;
+  }
   template <typename T1> T1 controller;
 }
 
@@ -37,6 +42,7 @@ namespace controller
   struct MovementController;
   struct RenderController;
   struct GraphicsController;
+  struct UIController;
 }
 
 struct GameEngine

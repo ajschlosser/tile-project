@@ -13,6 +13,7 @@ struct controller::RenderController
   }
   void renderCopyTiles();
   int renderCopyPlayer();
+  int renderUI();
 };
 
 #endif

@@ -2,6 +2,7 @@
 #define GAME_ENGINE_GRAPHICS_RENDER_H
 
 #include "engine.h"
+#include "engine/ui.h"
 
 struct engine::graphics::RenderController
 {
@@ -17,6 +18,7 @@ struct engine::graphics::RenderController
   int renderCopyObject(std::shared_ptr<WorldObject>, int, int);
   int renderCopyMobObject(std::shared_ptr<MobObject>, int, int);
   int renderCopyTerrain(TerrainObject*, int, int);
+  int renderFillUIWindow(UIRect*);
 };
 
 #endif

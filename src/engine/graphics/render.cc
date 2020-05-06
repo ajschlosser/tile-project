@@ -114,3 +114,19 @@ int RenderController::renderCopyTerrain(TerrainObject* t, int x, int y) {
       return renderCopySprite(it->second, x, y);
   }
 }
+
+int RenderController::renderFillUIWindow(UIRect* window)
+{
+  SDL_SetRenderDrawColor(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    window->backgroundColor.r,
+    window->backgroundColor.g,
+    window->backgroundColor.b,
+    window->backgroundColor.a
+  );
+  SDL_Rect r {window->x, window->y, window->w, window->h};
+  return SDL_RenderFillRect(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    &r
+  );
+}

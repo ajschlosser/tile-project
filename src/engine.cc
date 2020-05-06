@@ -12,11 +12,13 @@ int GameEngine::init()
   auto movementController = controller::MovementController(this);
   auto renderController = controller::RenderController(this);
   auto graphicsController = controller::GraphicsController(this);
+  auto uiController = controller::UIController(this);
   registerController<controller::CameraController>(cameraController);
   registerController<controller::EventsController>(eventsController);
   registerController<controller::MovementController>(movementController);
   registerController<controller::RenderController>(renderController);
   registerController<controller::GraphicsController>(graphicsController);
+  registerController<controller::UIController>(uiController);
   // engine::controller<controller::GraphicsController>.tileSize = &tileSize;
   // engine::controller<controller::GraphicsController>.spriteSize = const_cast<int*>(&spriteSize);
 
@@ -107,6 +109,7 @@ int GameEngine::init()
   SDL_Log("Generating default tilemap...");
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
+  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(0, 0, 300, 300));
 
   SDL_Log("Tilemap created.");
 
@@ -123,6 +126,7 @@ int GameEngine::run ()
     controller<controller::RenderController>()->renderCopyTiles();
     controller<controller::RenderController>()->renderCopyPlayer();
     engine::controller<controller::GraphicsController>.applyUi();
+    //engine::controller<controller::RenderController>.renderUI();
     SDL_RenderPresent(appRenderer);
   }
   return 1;
