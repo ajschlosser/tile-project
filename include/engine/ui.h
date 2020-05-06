@@ -6,9 +6,12 @@
 struct UIRect : SDL_Rect
 {
   int borderWidth;
+  SDL_Color foregroundColor;
   SDL_Color borderColor;
   SDL_Color backgroundColor;
   SDL_Color textColor;
+  std::string title;
+  std::string content;
 };
 
 struct controller::UIController
@@ -20,7 +23,7 @@ struct controller::UIController
   {
     this->e = e;
   }
-  void createUIWindow (std::tuple<int, int, int, int>);
+  void createUIWindow (int, int, int, int, std::string = "", std::string = "");
 };
 
 #endif

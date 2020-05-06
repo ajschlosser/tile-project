@@ -71,6 +71,13 @@ int GameEngine::init()
     );
   }
 
+  gameFont = TTF_OpenFont("assets/FifteenNarrow.ttf", 16);
+  if (!gameFont)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "TTF_OpenFont error: %s", TTF_GetError());
+    return 3;    
+  }
+
   // Create sprites from spritesheet
   SDL_Texture *texture = SDL_CreateTextureFromSurface(appRenderer, surface);
   if (!texture)
@@ -109,9 +116,7 @@ int GameEngine::init()
   SDL_Log("Generating default tilemap...");
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
-  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(0, 0, 300, 300));
-  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(100, 100, 300, 300));
-  engine::controller<controller::UIController>.createUIWindow(std::make_tuple<int, int, int, int>(0, 200, 600, 300));
+  engine::controller<controller::UIController>.createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
 
   SDL_Log("Tilemap created.");
 

@@ -4,7 +4,7 @@
 
 This assumes that your systen already has Homebrew (https://brew.sh/).
 
-`$ brew install sdl2 sdl2_image jsoncpp`
+`$ brew install sdl2 sdl2_image sdl2_ttf jsoncpp`
 
 #### Build
 
@@ -14,6 +14,7 @@ $ g++ src/**/*.cc \
     -o bin/game \
     -lSDL2 \
     -lSDL2_image \
+    -lSDL2_ttf \
     -ljsoncpp \
     -stdlib=libc++ \
     -std=gnu++2a \

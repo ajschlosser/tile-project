@@ -17,6 +17,7 @@ struct controller::GraphicsController
   Image* tilemapImage;
   SDL_DisplayMode displayMode;
   SDL_Rect camera;
+  TTF_Font* font;
   std::map<std::string, Sprite> sprites;
   int windowWidth;
   int windowHeight;
@@ -64,7 +65,13 @@ struct controller::GraphicsController
       displayMode.w,
       displayMode.h
     );
-
+    if(TTF_Init()==-1) {
+      SDL_Log("TTF_Init: %s\n", TTF_GetError());
+    }
+    else
+    {
+      SDL_Log("SDL_ttf initialized.");
+    }
     auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
     SDL_Log("Current window grid is %dx%d tiles.", _w, _h);
     camera = { 0, 0, _w/e->getTileSize(), _h/e->getTileSize() };

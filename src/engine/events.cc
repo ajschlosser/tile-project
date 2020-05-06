@@ -7,7 +7,7 @@ using namespace controller;
 
 void EventsController::handleEvents()
 {
-  if (e->userInputHandler.lock.elapsed() > 10)
+  if (e->userInputHandler.lock.elapsed() > 50)
   {
     auto keyboardMovementHandler = [this](int directions)
     {

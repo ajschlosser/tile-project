@@ -3,6 +3,7 @@
 
 #include "SDL2/SDL.h"
 #include "SDL2/SDL_image.h"
+#include "SDL2/SDL_ttf.h"
 #include "objects.h"
 #include "rect.h"
 #include "config.h"
@@ -59,6 +60,7 @@ struct GameEngine
   SDL_Renderer* appRenderer;
   SDL_Surface* gameSurface;
   SDL_Texture* gameTexture;
+  TTF_Font* gameFont;
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;

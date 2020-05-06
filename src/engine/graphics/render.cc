@@ -125,8 +125,60 @@ int RenderController::renderFillUIWindow(UIRect* window)
     window->backgroundColor.a
   );
   SDL_Rect r {window->x, window->y, window->w, window->h};
-  return SDL_RenderFillRect(
+  SDL_RenderFillRect(
     engine::controller<controller::GraphicsController>.appRenderer,
     &r
   );
+  SDL_Surface* title = TTF_RenderText_Solid(e->gameFont, window->title.c_str(), window->foregroundColor);
+  SDL_Texture* tex = SDL_CreateTextureFromSurface(e->appRenderer, title);
+  if (!title)
+  {
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "TTF_RenderText_Solid error: %s", TTF_GetError());
+  }
+  else
+  {
+    SDL_Rect titleRect {window->x+5, window->y+5, title->w, title->h};
+    SDL_RenderCopy(e->appRenderer, tex, NULL, &titleRect);
+  }
+
+  std::vector<std::string> lines;
+  int _w, _h;
+  TTF_SizeUTF8(e->gameFont,window->content.c_str(),&_w,&_h);
+  int nLines = 1 + _w / window->w;
+  int lineLen = static_cast<int>(window->content.length()) / nLines;
+
+  int i = 0;
+  int a = 0;
+  window->content = " " + window->content + " ";
+  while (i < nLines)
+  {
+    int b = a;
+    std::string line = window->content.substr((i*lineLen)+b, lineLen);
+    //a = 0;
+    while (line.substr(line.length()-1) != " ")
+    {
+      a--;
+      line = window->content.substr((i*lineLen)+b, lineLen + a);
+      // SDL_Log("better line: %s", line.c_str());
+    }
+    lines.push_back(line);
+    ++i;
+  }
+
+
+  i = 0;
+  for ( auto l : lines )
+  {
+    SDL_Surface* t = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
+    SDL_Texture* txt = SDL_CreateTextureFromSurface(e->appRenderer, t);
+    SDL_Rect titleRect {window->x+15, window->y+15+_h*i+5, t->w, t->h};
+    SDL_RenderCopy(e->appRenderer, txt, NULL, &titleRect);
+    SDL_FreeSurface(t);
+    SDL_DestroyTexture(txt);
+    ++i;
+  }
+
+  SDL_FreeSurface(title);
+  SDL_DestroyTexture(tex);
+  return 0;
 }
