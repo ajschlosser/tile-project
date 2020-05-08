@@ -117,6 +117,37 @@ int RenderController::renderCopyTerrain(TerrainObject* t, int x, int y) {
 
 int RenderController::renderFillUIWindow(UIRect* window)
 {
+  SDL_Rect shadow {window->x, window->y, window->w, window->h+5};
+  SDL_SetRenderDrawColor(engine::controller<controller::GraphicsController>.appRenderer, 0, 0, 0, 128);
+  SDL_RenderFillRect(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    &shadow
+  );
+  SDL_Rect border {window->x, window->y, window->w, window->h};
+  SDL_SetRenderDrawColor(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    window->borderColor.r,
+    window->borderColor.g,
+    window->borderColor.b,
+    window->borderColor.a
+  );
+  SDL_RenderFillRect(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    &border
+  );
+  SDL_Rect bezel {window->x+2, window->y+2,window->w-4, window->h-4};
+  SDL_SetRenderDrawColor(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    window->backgroundColor.r,
+    window->backgroundColor.g,
+    window->backgroundColor.b,
+    std::floor(window->backgroundColor.a / 2)
+  );
+  SDL_RenderFillRect(
+    engine::controller<controller::GraphicsController>.appRenderer,
+    &bezel
+  );
+  SDL_Rect w {window->x+4, window->y+4,window->w-8, window->h-8};
   SDL_SetRenderDrawColor(
     engine::controller<controller::GraphicsController>.appRenderer,
     window->backgroundColor.r,
@@ -124,10 +155,9 @@ int RenderController::renderFillUIWindow(UIRect* window)
     window->backgroundColor.b,
     window->backgroundColor.a
   );
-  SDL_Rect r {window->x, window->y, window->w, window->h};
   SDL_RenderFillRect(
     engine::controller<controller::GraphicsController>.appRenderer,
-    &r
+    &w
   );
   SDL_Surface* title = TTF_RenderText_Solid(e->gameFont, window->title.c_str(), window->foregroundColor);
   SDL_Texture* tex = SDL_CreateTextureFromSurface(e->appRenderer, title);
@@ -142,31 +172,65 @@ int RenderController::renderFillUIWindow(UIRect* window)
   }
 
   std::vector<std::string> lines;
+  int *offset = 0;
+
+
+  auto getLines = [this](UIRect* w, std::vector<std::string>* l, int* offset)
+  {
+    int _w, _h;
+    TTF_SizeUTF8(e->gameFont,w->content.c_str(),&_w,&_h);
+    int nLines = 1 + _w / w->w;
+    int lineLen = static_cast<int>(w->content.length()) / nLines;
+
+    int i = 0;
+    w->content += " ";
+    while (i < nLines)
+    {
+      int a = 0;
+      int b = (*offset);
+      std::string line = w->content.substr((i*lineLen)+b, lineLen);
+      //a = 0;
+      while (line.substr(line.length()-1) != " ")
+      {
+        a--;
+        offset--;
+        line = w->content.substr((i*lineLen)+b, lineLen + a);
+        // SDL_Log("better line: %s", line.c_str());
+      }
+      l->push_back(line);
+      ++i;
+    }
+  };
+
+  getLines(window, &lines, offset);
+
   int _w, _h;
   TTF_SizeUTF8(e->gameFont,window->content.c_str(),&_w,&_h);
-  int nLines = 1 + _w / window->w;
-  int lineLen = static_cast<int>(window->content.length()) / nLines;
+  // int nLines = 1 + _w / window->w;
+  // int lineLen = static_cast<int>(window->content.length()) / nLines;
+
+  // int i = 0;
+  // int offset = 0;
+  // window->content += " ";
+  // while (i < nLines)
+  // {
+  //   int a = 0;
+  //   int b = offset;
+  //   std::string line = window->content.substr((i*lineLen)+b, lineLen);
+  //   //a = 0;
+  //   while (line.substr(line.length()-1) != " ")
+  //   {
+  //     a--;
+  //     offset--;
+  //     line = window->content.substr((i*lineLen)+b, lineLen + a);
+  //     // SDL_Log("better line: %s", line.c_str());
+  //   }
+  //   lines.push_back(line);
+  //   ++i;
+  // }
+
 
   int i = 0;
-  int a = 0;
-  window->content = " " + window->content + " ";
-  while (i < nLines)
-  {
-    int b = a;
-    std::string line = window->content.substr((i*lineLen)+b, lineLen);
-    //a = 0;
-    while (line.substr(line.length()-1) != " ")
-    {
-      a--;
-      line = window->content.substr((i*lineLen)+b, lineLen + a);
-      // SDL_Log("better line: %s", line.c_str());
-    }
-    lines.push_back(line);
-    ++i;
-  }
-
-
-  i = 0;
   for ( auto l : lines )
   {
     SDL_Surface* t = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
