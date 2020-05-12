@@ -1,6 +1,3 @@
-#include "engine/graphics.h"
-#include "engine/camera.h"
-#include "engine/movement.h"
 #include "engine/events.h"
 
 using namespace controller;

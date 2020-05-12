@@ -117,10 +117,10 @@ int GameEngine::init()
   SDL_Log("Generating default tilemap...");
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
-  engine::controller<controller::UIController>.createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  engine::controller<controller::UIController>.createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  engine::controller<controller::UIController>.createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  engine::controller<controller::UIController>.createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // engine::controller<controller::UIController>.createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // engine::controller<controller::UIController>.createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // engine::controller<controller::UIController>.createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // engine::controller<controller::UIController>.createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
 
   SDL_Log("Tilemap created.");
 

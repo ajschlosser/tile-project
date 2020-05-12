@@ -8,6 +8,8 @@ This assumes that your systen already has Homebrew (https://brew.sh/).
 
 #### Build
 
+##### command line
+
 ```
 $ g++ src/**/*.cc \
     -I./include \
@@ -19,6 +21,12 @@ $ g++ src/**/*.cc \
     -stdlib=libc++ \
     -std=gnu++2a \
     -m64 -O3 -Wall
+```
+
+##### make
+
+```
+$ make
 ```
 
 #### Run

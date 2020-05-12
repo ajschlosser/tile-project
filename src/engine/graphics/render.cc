@@ -172,40 +172,45 @@ int RenderController::renderFillUIWindow(UIRect* window)
   }
 
   std::vector<std::string> lines;
-  int *offset = 0;
+  int offset = 0;
 
 
-  auto getLines = [this](UIRect* w, std::vector<std::string>* l, int* offset)
+  auto getLines = [this](UIRect* w, std::string s, std::vector<std::string>* l, int offset)
   {
+
     int _w, _h;
-    TTF_SizeUTF8(e->gameFont,w->content.c_str(),&_w,&_h);
+    TTF_SizeUTF8(e->gameFont,s.c_str(),&_w,&_h);
     int nLines = 1 + _w / w->w;
-    int lineLen = static_cast<int>(w->content.length()) / nLines;
+    int lineLen = static_cast<int>(s.length()) / nLines;
 
     int i = 0;
-    w->content += " ";
+    //s = s.substr(s.length() - offset == 0 ? s.length() : offset) + " ";
+    //s += " ";
     while (i < nLines)
     {
       int a = 0;
-      int b = (*offset);
-      std::string line = w->content.substr((i*lineLen)+b, lineLen);
+      int b = offset;
+      std::string line = s.substr((i*lineLen)+b, lineLen);
       //a = 0;
       while (line.substr(line.length()-1) != " ")
       {
         a--;
         offset--;
-        line = w->content.substr((i*lineLen)+b, lineLen + a);
+        line = s.substr((i*lineLen)+b, lineLen + a);
         // SDL_Log("better line: %s", line.c_str());
       }
       l->push_back(line);
       ++i;
     }
+    return offset;
   };
 
-  getLines(window, &lines, offset);
+  offset = getLines(window, window->content, &lines, offset);
+  offset = getLines(window, window->content, &lines, offset);
+  //SDL_Log("%s", window->content.substr(window->content.length()+offset).c_str());
 
   int _w, _h;
-  TTF_SizeUTF8(e->gameFont,window->content.c_str(),&_w,&_h);
+  TTF_SizeUTF8(e->gameFont,window->title.c_str(),&_w,&_h);
   // int nLines = 1 + _w / window->w;
   // int lineLen = static_cast<int>(window->content.length()) / nLines;
 
