@@ -117,10 +117,11 @@ int GameEngine::init()
   SDL_Log("Generating default tilemap...");
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
-  // engine::controller<controller::UIController>.createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // engine::controller<controller::UIController>.createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // engine::controller<controller::UIController>.createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // engine::controller<controller::UIController>.createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  engine::controller<controller::UIController>.createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  engine::controller<controller::UIController>.createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  engine::controller<controller::UIController>.createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  engine::controller<controller::UIController>.createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  engine::controller<controller::UIController>.createUIWindow(15, 15, 360 , 360, "This is just another test window.", "This window will include some different text. This will demonstrate that line-breaking is functioning correctly. Lines should break on words. Words should not be broken. Cheers.");
 
   SDL_Log("Tilemap created.");
 

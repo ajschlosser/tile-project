@@ -171,82 +171,68 @@ int RenderController::renderFillUIWindow(UIRect* window)
     SDL_RenderCopy(e->appRenderer, tex, NULL, &titleRect);
   }
 
-  std::vector<std::string> lines;
-  int offset = 0;
-
-
-  auto getLines = [this](UIRect* w, std::string s, std::vector<std::string>* l, int offset)
+  auto getLines = [this](UIRect* window, std::string fullString, std::vector<std::string>* l, int remainderIndex = 0)
   {
-
-    int _w, _h;
-    TTF_SizeUTF8(e->gameFont,s.c_str(),&_w,&_h);
-    int nLines = 1 + _w / w->w;
-    int lineLen = static_cast<int>(s.length()) / nLines;
-
+    std::string offsetString = fullString.substr(remainderIndex) + " ";
+    //SDL_Log("%s",offsetString.c_str());
+    int lineWidth, lineHeight;
+    TTF_SizeUTF8(e->gameFont, offsetString.c_str(), &lineWidth, &lineHeight);
+    int totalLines = 1 + lineWidth / window->w;
+    int lineLen = offsetString.length() / totalLines;
     int i = 0;
-    //s = s.substr(s.length() - offset == 0 ? s.length() : offset) + " ";
-    //s += " ";
-    while (i < nLines)
+    int offset = 0;
+    while (i < totalLines)
     {
       int a = 0;
       int b = offset;
-      std::string line = s.substr((i*lineLen)+b, lineLen);
-      //a = 0;
+      int lineIndex = (i*lineLen)+b;
+      if (lineIndex < 0) lineIndex = 0;
+      std::string line = offsetString.substr(lineIndex, lineLen);
+      // Calculate word-break
       while (line.substr(line.length()-1) != " ")
       {
         a--;
         offset--;
-        line = s.substr((i*lineLen)+b, lineLen + a);
-        // SDL_Log("better line: %s", line.c_str());
+        int reducedLineLength = lineLen + a;
+        if (lineIndex + reducedLineLength > offsetString.length())
+        {
+          reducedLineLength = offsetString.length() - lineIndex;
+        }
+        remainderIndex = lineIndex + reducedLineLength;
+        line = offsetString.substr(lineIndex, reducedLineLength);
+        //SDL_Log("%d + %d: '%s'", lineIndex, reducedLineLength, line.c_str());
       }
       l->push_back(line);
       ++i;
     }
-    return offset;
+    return remainderIndex;
   };
 
-  offset = getLines(window, window->content, &lines, offset);
-  offset = getLines(window, window->content, &lines, offset);
-  //SDL_Log("%s", window->content.substr(window->content.length()+offset).c_str());
+  std::vector<std::string> lines;
+  int remainderIndex = getLines(window, window->content, &lines);
+  while (remainderIndex != getLines(window, window->content, &lines, remainderIndex))
+  {
+    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "chomp");
+  }
 
-  int _w, _h;
-  TTF_SizeUTF8(e->gameFont,window->title.c_str(),&_w,&_h);
-  // int nLines = 1 + _w / window->w;
-  // int lineLen = static_cast<int>(window->content.length()) / nLines;
-
-  // int i = 0;
-  // int offset = 0;
-  // window->content += " ";
-  // while (i < nLines)
-  // {
-  //   int a = 0;
-  //   int b = offset;
-  //   std::string line = window->content.substr((i*lineLen)+b, lineLen);
-  //   //a = 0;
-  //   while (line.substr(line.length()-1) != " ")
-  //   {
-  //     a--;
-  //     offset--;
-  //     line = window->content.substr((i*lineLen)+b, lineLen + a);
-  //     // SDL_Log("better line: %s", line.c_str());
-  //   }
-  //   lines.push_back(line);
-  //   ++i;
-  // }
-
-
+  int _, lineHeight;
+  TTF_SizeUTF8(e->gameFont, window->title.c_str(), &_, &lineHeight);
   int i = 0;
   for ( auto l : lines )
   {
     SDL_Surface* t = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
     SDL_Texture* txt = SDL_CreateTextureFromSurface(e->appRenderer, t);
-    SDL_Rect titleRect {window->x+15, window->y+15+_h*i+5, t->w, t->h};
+    SDL_Rect titleRect {
+      window->x + 15,
+      window->y + 15 + lineHeight * i + 5,
+      t->w,
+      t->h
+    };
     SDL_RenderCopy(e->appRenderer, txt, NULL, &titleRect);
     SDL_FreeSurface(t);
     SDL_DestroyTexture(txt);
     ++i;
   }
-
   SDL_FreeSurface(title);
   SDL_DestroyTexture(tex);
   return 0;
