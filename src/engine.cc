@@ -19,16 +19,12 @@ int GameEngine::init()
   registerController<controller::RenderController>(renderController);
   registerController<controller::GraphicsController>(graphicsController);
   registerController<controller::UIController>(uiController);
-  // engine::controller<controller::GraphicsController>.tileSize = &tileSize;
-  // engine::controller<controller::GraphicsController>.spriteSize = const_cast<int*>(&spriteSize);
 
   std::srand(std::time(nullptr));
   if (!tileSize)
     tileSize = spriteSize;
   if (movementSpeed > tileSize)
     movementSpeed = tileSize;
-
-  //engine::controller<controller::GraphicsController>.initializeSDL();
 
   // Create app window and renderer
   appWindow = SDL_CreateWindow(
@@ -136,7 +132,7 @@ int GameEngine::run ()
     SDL_RenderClear(appRenderer);
     controller<controller::RenderController>()->renderCopyTiles();
     controller<controller::RenderController>()->renderCopyPlayer();
-    engine::controller<controller::GraphicsController>.applyUi();
+    engine::controller<controller::GraphicsController>.applyUI();
     engine::controller<controller::RenderController>.renderUI();
     SDL_RenderPresent(appRenderer);
   }
