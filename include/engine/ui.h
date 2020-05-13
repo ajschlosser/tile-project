@@ -3,6 +3,22 @@
 
 #include "engine.h"
 
+struct Element
+{
+  int offsetX;
+  int offsetY;
+};
+
+struct Button : Element
+{
+  std::function<void()> onClick;
+};
+
+struct TextBox : Element
+{
+  std::string content;
+};
+
 struct UIRect : SDL_Rect
 {
   int borderWidth;
@@ -12,6 +28,11 @@ struct UIRect : SDL_Rect
   SDL_Color textColor;
   std::string title;
   std::string content;
+  std::vector<Button> buttons;
+  std::vector<TextBox> textBoxes;
+  void addTextBox (TextBox t) { textBoxes.push_back(t); }
+  void addButton (Button b) { buttons.push_back(b); }
+  void getLines (std::vector<std::string>*, TTF_Font*);
 };
 
 struct controller::UIController

@@ -171,49 +171,8 @@ int RenderController::renderFillUIWindow(UIRect* window)
     SDL_RenderCopy(e->appRenderer, tex, NULL, &titleRect);
   }
 
-  auto getLines = [this](UIRect* window, std::string fullString, std::vector<std::string>* l, int remainderIndex = 0)
-  {
-    std::string offsetString = fullString.substr(remainderIndex) + " ";
-    //SDL_Log("%s",offsetString.c_str());
-    int lineWidth, lineHeight;
-    TTF_SizeUTF8(e->gameFont, offsetString.c_str(), &lineWidth, &lineHeight);
-    int totalLines = 1 + lineWidth / window->w;
-    int lineLen = offsetString.length() / totalLines;
-    int i = 0;
-    int offset = 0;
-    while (i < totalLines)
-    {
-      int a = 0;
-      int b = offset;
-      int lineIndex = (i*lineLen)+b;
-      if (lineIndex < 0) lineIndex = 0;
-      std::string line = offsetString.substr(lineIndex, lineLen);
-      // Calculate word-break
-      while (line.substr(line.length()-1) != " ")
-      {
-        a--;
-        offset--;
-        int reducedLineLength = lineLen + a;
-        if (lineIndex + reducedLineLength > offsetString.length())
-        {
-          reducedLineLength = offsetString.length() - lineIndex;
-        }
-        remainderIndex = lineIndex + reducedLineLength;
-        line = offsetString.substr(lineIndex, reducedLineLength);
-        //SDL_Log("%d + %d: '%s'", lineIndex, reducedLineLength, line.c_str());
-      }
-      l->push_back(line);
-      ++i;
-    }
-    return remainderIndex;
-  };
-
   std::vector<std::string> lines;
-  int remainderIndex = getLines(window, window->content, &lines);
-  while (remainderIndex != getLines(window, window->content, &lines, remainderIndex))
-  {
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "chomp");
-  }
+  window->getLines(&lines, e->gameFont);
 
   int _, lineHeight;
   TTF_SizeUTF8(e->gameFont, window->title.c_str(), &_, &lineHeight);

@@ -30,7 +30,7 @@ void CameraController::scrollCamera(int directions)
   {
     e->controller<controller::RenderController>()->renderCopyTiles();
     e->controller<controller::RenderController>()->renderCopyPlayer();
-    e->controller<controller::GraphicsController>()->applyUi();
+    e->controller<controller::GraphicsController>()->applyUI();
     e->controller<controller::RenderController>()->renderUI();
     SDL_RenderPresent(e->appRenderer);    
   }

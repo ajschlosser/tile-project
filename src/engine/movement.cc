@@ -62,7 +62,7 @@ void MovementController::scrollGameSurface(int directions)
       dest.y -= e->movementSpeed;
     SDL_RenderCopy(e->appRenderer, engine::graphics::controller<engine::graphics::SurfaceController>.getGameSurfaceTexture(), NULL, &dest);
     e->controller<controller::RenderController>()->renderCopyPlayer();
-    engine::controller<controller::GraphicsController>.applyUi();;
+    engine::controller<controller::GraphicsController>.applyUI();;
     engine::controller<controller::RenderController>.renderUI();
     SDL_RenderPresent(e->appRenderer);
   }
