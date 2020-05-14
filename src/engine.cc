@@ -125,7 +125,8 @@ int GameEngine::init()
     ->setDimensions(30, 30, 125, 300)
     ->setTitle("hello! there")
     ->setFont(gameFont) //
-    ->addTextBox("ok", 10, 10, 100, 100);
+    ->addTextBox("ok this is a test of a text box. it should only be 100 px wide so let's see some line breaks! by the way, whatever.", 10, 10, 50, 100)
+    ->addTextBox("fine", 50, 250, 100, 100);
 
   SDL_Log("Tilemap created.");
 

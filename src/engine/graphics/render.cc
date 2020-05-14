@@ -171,27 +171,30 @@ int RenderController::renderFillUIWindow(UIRect* window)
     SDL_RenderCopy(e->appRenderer, tex, NULL, &titleRect);
   }
 
-  std::vector<std::string> lines;
-  window->getLines(&lines, e->gameFont);
-
-  int _, lineHeight;
-  TTF_SizeUTF8(e->gameFont, window->title.c_str(), &_, &lineHeight);
-  int i = 0;
-  for ( auto l : lines )
+  for (auto box : window->textBoxes)
   {
-    SDL_Surface* t = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
-    SDL_Texture* txt = SDL_CreateTextureFromSurface(e->appRenderer, t);
-    SDL_Rect titleRect {
-      window->x + 15,
-      window->y + 15 + lineHeight * i + 5,
-      t->w,
-      t->h
-    };
-    SDL_RenderCopy(e->appRenderer, txt, NULL, &titleRect);
-    SDL_FreeSurface(t);
-    SDL_DestroyTexture(txt);
-    ++i;
+    std::vector<std::string> lines;
+    box.getLines(&lines);
+    int _, lineHeight;
+    TTF_SizeUTF8(e->gameFont, "test", &_, &lineHeight);
+    int i = 0;
+    for ( auto l : lines )
+    {
+      SDL_Surface* textSurface = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
+      SDL_Texture* textTexture = SDL_CreateTextureFromSurface(e->appRenderer, textSurface);
+      SDL_Rect lineRect {
+        window->x + box.offsetX + 15,
+        window->y + box.offsetY + 15 + lineHeight * i + 5,
+        textSurface->w,
+        textSurface->h
+      };
+      SDL_RenderCopy(e->appRenderer, textTexture, NULL, &lineRect);
+      SDL_FreeSurface(textSurface);
+      SDL_DestroyTexture(textTexture);
+      ++i;
+    }
   }
+
   SDL_FreeSurface(title);
   SDL_DestroyTexture(tex);
   return 0;

@@ -10,7 +10,7 @@ void TextBox::getLines (std::vector<std::string>* l)
     int lineWidth, lineHeight;
     TTF_SizeUTF8(font, offsetString.c_str(), &lineWidth, &lineHeight);
     SDL_Log("%d", this->w);
-    int totalLines = 1 + lineWidth / this->w;
+    int totalLines = 1 + std::floor(lineWidth / this->w);
     int lineLen = offsetString.length() / totalLines;
     int i = 0;
     int offset = 0;
@@ -40,8 +40,10 @@ void TextBox::getLines (std::vector<std::string>* l)
     return r;
   };
   int remainderIndex = process();
-  while (remainderIndex != process(remainderIndex))
-    SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Processing line");
+  SDL_Log("remainderIndex: %d", remainderIndex);
+  if (remainderIndex > 0)
+    while (remainderIndex != process(remainderIndex))
+      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Processing line");
 }
 
 void UIRect::getLines (std::vector<std::string>* l, TTF_Font* f)

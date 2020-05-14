@@ -21,16 +21,16 @@ struct TextBox : Element
   int h;
   TTF_Font* font;
   void getLines (std::vector<std::string>*);
-  TextBox (TTF_Font* f, std::string c, int x = 0, int y = 0, int w = 1, int h = 0)
+  TextBox (TTF_Font* f, std::string c, int x, int y, int w, int h)
   {
     font = f;
     offsetX = x;
     offsetY = y;
     content = c;
-    if (!w && !h)
-    {
-      TTF_SizeUTF8(font, c.c_str(), &w, &h);
-    }
+    // if (!w && !h)
+    // {
+    //   TTF_SizeUTF8(font, c.c_str(), &w, &h);
+    // }
     this->w = w;
     this->h = h;
   }
