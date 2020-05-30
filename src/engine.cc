@@ -114,10 +114,10 @@ int GameEngine::init()
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
   auto UI = &engine::controller<controller::UIController>;
-  UI->createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  UI->createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  UI->createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  UI->createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // UI->createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // UI->createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // UI->createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
+  // UI->createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
   UI->createUIWindow(15, 15, 360 , 360, "White House names heads of 'warp speed' coronavirus vaccine effort", "The Department of Health and Human Services division tasked with vaccine development, BARDA, has seen its leadership in flux after the former director Dr. Rick Bright was ousted. Bright filed a formal whistleblower complaint on Tuesday alleging his early warnings about coronavirus were ignored that that his concerns about promoting an untested therapeutic heralded by the President led to his ouster.");
 
 

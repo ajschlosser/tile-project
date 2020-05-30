@@ -9,20 +9,35 @@ void TextBox::getLines (std::vector<std::string>* l)
     std::string offsetString = content.substr(r) + " ";
     int lineWidth, lineHeight;
     TTF_SizeUTF8(font, offsetString.c_str(), &lineWidth, &lineHeight);
-    SDL_Log("%d", this->w);
     int totalLines = 1 + std::floor(lineWidth / this->w);
     int lineLen = offsetString.length() / totalLines;
     int i = 0;
     int offset = 0;
+    SDL_Log("this->w: %d\ntotalLines: %d\nlineLen: %d", this->w, totalLines, lineLen);
     while (i < totalLines)
     {
       int a = 0;
       int b = offset;
       int lineIndex = (i*lineLen)+b;
-      if (lineIndex < 0) lineIndex = 0;
-      std::string line = offsetString.substr(lineIndex, lineLen);
+      if (lineIndex < 0)
+      {
+        lineIndex = 0;
+      }
+      std::string line;
+      try
+      {
+        line = offsetString.substr(lineIndex, lineLen);
+      }
+      catch (const std::out_of_range& err)
+      {
+        line = offsetString;
+      }
+      if (line.find(" ") == std::string::npos)
+      {
+        line += " ";
+      }
       // Calculate word-break
-      while (line.substr(line.length()-1) != " ")
+      while (line.length() && line.substr(line.length()-1) != " ")
       {
         a--;
         offset--;
@@ -37,13 +52,14 @@ void TextBox::getLines (std::vector<std::string>* l)
       l->push_back(line);
       ++i;
     }
+    SDL_Log("r: %d", r);
     return r;
   };
   int remainderIndex = process();
   SDL_Log("remainderIndex: %d", remainderIndex);
   if (remainderIndex > 0)
     while (remainderIndex != process(remainderIndex))
-      SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Processing line");
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Processing line. remainderIndex: %d", remainderIndex);
 }
 
 void UIRect::getLines (std::vector<std::string>* l, TTF_Font* f)
