@@ -7,13 +7,14 @@ void TextBox::getLines (std::vector<std::string>* l)
   auto process = [this, l](int r = 0)
   {
     std::string offsetString = content.substr(r) + " ";
+    SDL_Log("Processing string: '%s'", offsetString.c_str());
     int lineWidth, lineHeight;
     TTF_SizeUTF8(font, offsetString.c_str(), &lineWidth, &lineHeight);
     int totalLines = 1 + std::floor(lineWidth / this->w);
     int lineLen = offsetString.length() / totalLines;
     int i = 0;
     int offset = 0;
-    SDL_Log("this->w: %d\ntotalLines: %d\nlineLen: %d", this->w, totalLines, lineLen);
+    SDL_Log("Calculations:\nString width: %d\nTextBox width: %d\nLines necessary: %d\nMax length of each line: %d",  lineWidth, this->w, totalLines, lineLen);
     while (i < totalLines)
     {
       int a = 0;
@@ -49,10 +50,11 @@ void TextBox::getLines (std::vector<std::string>* l)
         r = lineIndex + reducedLineLength;
         line = offsetString.substr(lineIndex, reducedLineLength);
       }
+      SDL_Log("Created line: '%s'", line.c_str());
       l->push_back(line);
       ++i;
     }
-    SDL_Log("r: %d", r);
+    SDL_Log("Remainder index: %d", r);
     return r;
   };
   int remainderIndex = process();

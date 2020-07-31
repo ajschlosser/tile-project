@@ -114,22 +114,12 @@ int GameEngine::init()
   Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
   mapController.generateMapChunk(&initialChunk);
   auto UI = &engine::controller<controller::UIController>;
-  // UI->createUIWindow(0, 0, 300, 300, "TEST WINDOW 1", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // UI->createUIWindow(100, 100, 600, 300, "TEST WINDOW 2", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // UI->createUIWindow(100, 200, 200, 600, "TEST WINDOW 3", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  // UI->createUIWindow(300, 300, 200, 200, "TEST WINDOW 4", "The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. The lazy fox overjumped the quick brown dog. End.");
-  UI->createUIWindow(15, 15, 360 , 360, "White House names heads of 'warp speed' coronavirus vaccine effort", "The Department of Health and Human Services division tasked with vaccine development, BARDA, has seen its leadership in flux after the former director Dr. Rick Bright was ousted. Bright filed a formal whistleblower complaint on Tuesday alleging his early warnings about coronavirus were ignored that that his concerns about promoting an untested therapeutic heralded by the President led to his ouster.");
-
-
-  UI->createUIWindow()
-    ->setDimensions(30, 30, 125, 300)
-    ->setTitle("hello! there")
-    ->setFont(gameFont) //
-    ->addTextBox("ok this is a test of a text box. it should only be 100 px wide so let's see some line breaks! by the way, whatever.", 10, 10, 50, 100)
-    ->addTextBox("fine", 50, 250, 100, 100);
-
+  // UI->createUIWindow()
+  //   ->setDimensions(30, 30, 125, 300)
+  //   ->setTitle("Welcome!")
+  //   ->setFont(gameFont) //
+  //   ->addTextBox("This is a demo of `tile-project`.", 10, 10, 100, 200);
   SDL_Log("Tilemap created.");
-
   return 0;
 }
 
