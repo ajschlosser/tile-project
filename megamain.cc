@@ -3,24 +3,29 @@
 #include "SDL2/SDL_ttf.h"
 #include "json/json.h"
 
+#include <algorithm>
+#include <array>
+#include <chrono>
 #include <cmath>
+#include <functional>
+#include <fstream>
 #include <map>
+#include <memory>
+#include <mutex>
+#include <random>
+#include <shared_mutex>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <tuple>
 #include <utility>
-#include <vector>
-#include <thread>
-#include <array>
-#include <memory>
-#include <algorithm>
-#include <chrono>
-#include <random>
-#include <functional>
-#include <sstream>
-#include <fstream>
-#include <mutex>
-#include <shared_mutex>
 #include <variant>
+#include <vector>
+
+
+////////////////////
+//  PRIMITIVES
+///////////////////
 
 struct Image
 {
@@ -94,6 +99,100 @@ struct Timer {
   Timer () : last(0), current(0), paused(false), started(false) {}
 };
 
+struct Rect
+{
+  int x1;
+  int y1;
+  int x2;
+  int y2;
+  std::vector<Rect> rects;
+  Rect () {}
+  Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
+  void set(std::tuple<int, int, int, int> data) { auto [_x1, _y1, _x2, _y2] = data; x1 = _x1; y1 =_y1; x2 =_x2; y2 = _y2; }
+  std::tuple<int, int, int, int> get(){ return std::make_tuple(x1, y1, x2, y2 ); };
+  SDL_Rect* getSDL_Rect () { auto r = new SDL_Rect(); r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
+  int getWidth () { return std::abs(x1) + std::abs(x2); }
+  int getHeight () { return std::abs(y1) + std::abs(y2); }
+  std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
+  std::tuple<int, int> getMid (){ return std::make_tuple(std::floor((x1 + x2)/2), std::floor((y1 + y2)/2)); }
+  std::vector<Rect>* getRects(bool shuffle = false) // TODO: Don't clear every time, create different method
+  {
+    int small_w = 25;
+    int small_h = 25;
+    int w = getWidth();
+    int h = getHeight();
+    auto result_w = std::div(w, small_w);
+    auto result_h = std::div(h, small_h);
+    rects.clear();
+    for (auto x = x1; x <= x2; x += result_w.quot)
+      for (auto y = y1; y <= y2; y += result_h.quot)
+      {
+        Rect r { x, y, x + result_w.quot, y + result_h.quot };
+        rects.push_back(r);
+      }
+    if (shuffle == true)
+    {
+      unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+      std::default_random_engine rng(seed);
+      std::shuffle(rects.begin(), rects.end(), rng);
+    }
+    return &rects;
+  }
+  std::vector<Rect>* getShuffledRects() { return getRects(true); }
+  void multiprocess(std::function<void(int, int)> f, Rect* r = NULL, int fuzz = 1)
+  {
+    if (r == NULL)
+      r->set({ x1, y1, x2, y2 });
+    for (auto i = x1; i < x2; i += 1 + std::rand() % fuzz)
+      for (auto j = y1; j < y2; j += 1 + std::rand() % fuzz)
+      {
+        std::thread t([&f, i, j]() { f(i, j); });
+        t.join();
+      }
+  }
+};
+
+////////////////////
+//  UUID
+///////////////////
+
+namespace uuid
+{
+  std::string generate_uuid_v4();
+}
+
+static std::random_device rd;
+static std::mt19937 gen(rd());
+static std::uniform_int_distribution<> dis(0, 15);
+static std::uniform_int_distribution<> dis2(8, 11);
+
+std::string uuid::generate_uuid_v4()
+{
+  std::stringstream ss;
+  int i;
+  ss << std::hex;
+  for (i = 0; i < 8; i++)
+    ss << dis(gen);
+  ss << "-";
+  for (i = 0; i < 4; i++)
+    ss << dis(gen);
+  ss << "-4";
+  for (i = 0; i < 3; i++)
+    ss << dis(gen);
+  ss << "-";
+  ss << dis2(gen);
+  for (i = 0; i < 3; i++)
+    ss << dis(gen);
+  ss << "-";
+  for (i = 0; i < 12; i++)
+    ss << dis(gen);
+  return ss.str();
+}
+
+////////////////////
+//  INPUT
+///////////////////
+
 namespace input
 {
   enum directions
@@ -153,38 +252,9 @@ void input::UserInputHandler::handleAppEvents (std::function<void(SDL_Event*)> f
   f(&appEvent);
 };
 
-namespace uuid
-{
-  std::string generate_uuid_v4();
-}
-
-static std::random_device rd;
-static std::mt19937 gen(rd());
-static std::uniform_int_distribution<> dis(0, 15);
-static std::uniform_int_distribution<> dis2(8, 11);
-
-std::string uuid::generate_uuid_v4()
-{
-  std::stringstream ss;
-  int i;
-  ss << std::hex;
-  for (i = 0; i < 8; i++)
-    ss << dis(gen);
-  ss << "-";
-  for (i = 0; i < 4; i++)
-    ss << dis(gen);
-  ss << "-4";
-  for (i = 0; i < 3; i++)
-    ss << dis(gen);
-  ss << "-";
-  ss << dis2(gen);
-  for (i = 0; i < 3; i++)
-    ss << dis(gen);
-  ss << "-";
-  for (i = 0; i < 12; i++)
-    ss << dis(gen);
-  return ss.str();
-}
+////////////////////
+//  TYPES
+///////////////////
 
 struct GenericType
 {
@@ -314,6 +384,10 @@ struct BiomeType
   std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(std::rand() % terrainTypeProbabilities.size()); }
 };
 
+////////////////////
+//  OBJECTS
+///////////////////
+
 namespace tileObject
 {
   enum directions
@@ -392,6 +466,19 @@ struct WorldObject : Tile
     biomeType = b;
   }
 };
+
+struct BiomeObject
+{
+  int x;
+  int y;
+  BiomeType* biomeType;
+  int type;
+  BiomeObject () { type = tileObject::BIOME; }
+};
+
+////////////////////
+//  SIMULATOR
+///////////////////
 
 namespace simulated
 {
@@ -474,68 +561,6 @@ struct MobObject : SimulatedObject
   }
 };
 
-struct BiomeObject
-{
-  int x;
-  int y;
-  BiomeType* biomeType;
-  int type;
-  BiomeObject () { type = tileObject::BIOME; }
-};
-
-struct Rect
-{
-  int x1;
-  int y1;
-  int x2;
-  int y2;
-  std::vector<Rect> rects;
-  Rect () {}
-  Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
-  void set(std::tuple<int, int, int, int> data) { auto [_x1, _y1, _x2, _y2] = data; x1 = _x1; y1 =_y1; x2 =_x2; y2 = _y2; }
-  std::tuple<int, int, int, int> get(){ return std::make_tuple(x1, y1, x2, y2 ); };
-  SDL_Rect* getSDL_Rect () { auto r = new SDL_Rect(); r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
-  int getWidth () { return std::abs(x1) + std::abs(x2); }
-  int getHeight () { return std::abs(y1) + std::abs(y2); }
-  std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
-  std::tuple<int, int> getMid (){ return std::make_tuple(std::floor((x1 + x2)/2), std::floor((y1 + y2)/2)); }
-  std::vector<Rect>* getRects(bool shuffle = false) // TODO: Don't clear every time, create different method
-  {
-    int small_w = 25;
-    int small_h = 25;
-    int w = getWidth();
-    int h = getHeight();
-    auto result_w = std::div(w, small_w);
-    auto result_h = std::div(h, small_h);
-    rects.clear();
-    for (auto x = x1; x <= x2; x += result_w.quot)
-      for (auto y = y1; y <= y2; y += result_h.quot)
-      {
-        Rect r { x, y, x + result_w.quot, y + result_h.quot };
-        rects.push_back(r);
-      }
-    if (shuffle == true)
-    {
-      unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-      std::default_random_engine rng(seed);
-      std::shuffle(rects.begin(), rects.end(), rng);
-    }
-    return &rects;
-  }
-  std::vector<Rect>* getShuffledRects() { return getRects(true); }
-  void multiprocess(std::function<void(int, int)> f, Rect* r = NULL, int fuzz = 1)
-  {
-    if (r == NULL)
-      r->set({ x1, y1, x2, y2 });
-    for (auto i = x1; i < x2; i += 1 + std::rand() % fuzz)
-      for (auto j = y1; j < y2; j += 1 + std::rand() % fuzz)
-      {
-        std::thread t([&f, i, j]() { f(i, j); });
-        t.join();
-      }
-  }
-};
-
 struct Player {
   int x;
   int y;
@@ -555,6 +580,10 @@ namespace objects
   typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<WorldObject>>>> worldMap;
   typedef std::map<int, std::map<std::pair<int, int>, std::vector<std::shared_ptr<MobObject>>>> mobMap;
 }
+
+////////////////////
+//  CONFIG
+///////////////////
 
 namespace config
 {
@@ -803,6 +832,10 @@ config::ConfigurationController::ConfigurationController (std::string configFile
   };
 }
 
+////////////////////
+//  CHUNK
+///////////////////
+
 namespace map::chunk
 {
   struct ChunkProcessor;
@@ -933,6 +966,10 @@ map::chunk::ChunkReport map::chunk::getRangeReport(std::function<void(int, int, 
       f(i, j, &report);
   return report;
 }
+
+////////////////////
+//  MAP
+///////////////////
 
 namespace map
 {
@@ -1563,6 +1600,71 @@ int map::MapController::generateMapChunk(Rect* chunkRect)
   return 0;
 }
 
+////////////////////
+//  UI
+///////////////////
+
+struct Element
+{
+  int offsetX;
+  int offsetY;
+};
+
+struct Button : Element
+{
+  std::function<void()> onClick;
+};
+
+struct TextBox : Element
+{
+  std::string content;
+  int w;
+  int h;
+  TTF_Font* font;
+  void getLines (std::vector<std::string>*);
+  TextBox (TTF_Font* f, std::string c, int x, int y, int w, int h)
+  {
+    font = f;
+    offsetX = x;
+    offsetY = y;
+    content = c;
+    // if (!w && !h)
+    // {
+    //   TTF_SizeUTF8(font, c.c_str(), &w, &h);
+    // }
+    this->w = w;
+    this->h = h;
+  }
+};
+
+struct UIRect : SDL_Rect
+{
+  int borderWidth;
+  SDL_Color foregroundColor;
+  SDL_Color borderColor;
+  SDL_Color backgroundColor;
+  SDL_Color textColor;
+  std::string title;
+  std::string content;
+  std::vector<Button> buttons;
+  std::vector<TextBox> textBoxes;
+  TTF_Font* font;
+  void getLines (std::vector<std::string>*, TTF_Font*);
+  UIRect* setDimensions (int, int, int, int);
+  UIRect* setTitle (std::string t) { this->title = t; return this; }
+  UIRect* setFont (TTF_Font* f) { this->font = f; return this; }
+  UIRect* addTextBox (std::string s, int x = 0, int y = 0, int w = 0, int h = 0) {
+    TextBox t{font, s, x, y, w, h};
+    textBoxes.push_back(t);
+    return this;
+  }
+  UIRect* addButton (Button b) { buttons.push_back(b); return this; }
+};
+
+////////////////////
+//  ENGINE
+////////////////////
+
 namespace engine
 {
   namespace graphics
@@ -1630,63 +1732,6 @@ struct GameEngine
   GameEngine() : running(true), movementSpeed(8), tileSize(32), spriteSize(32), zLevel(0), zMaxLevel(2) {}
 };
 
-struct Element
-{
-  int offsetX;
-  int offsetY;
-};
-
-struct Button : Element
-{
-  std::function<void()> onClick;
-};
-
-struct TextBox : Element
-{
-  std::string content;
-  int w;
-  int h;
-  TTF_Font* font;
-  void getLines (std::vector<std::string>*);
-  TextBox (TTF_Font* f, std::string c, int x, int y, int w, int h)
-  {
-    font = f;
-    offsetX = x;
-    offsetY = y;
-    content = c;
-    // if (!w && !h)
-    // {
-    //   TTF_SizeUTF8(font, c.c_str(), &w, &h);
-    // }
-    this->w = w;
-    this->h = h;
-  }
-};
-
-struct UIRect : SDL_Rect
-{
-  int borderWidth;
-  SDL_Color foregroundColor;
-  SDL_Color borderColor;
-  SDL_Color backgroundColor;
-  SDL_Color textColor;
-  std::string title;
-  std::string content;
-  std::vector<Button> buttons;
-  std::vector<TextBox> textBoxes;
-  TTF_Font* font;
-  void getLines (std::vector<std::string>*, TTF_Font*);
-  UIRect* setDimensions (int, int, int, int);
-  UIRect* setTitle (std::string t) { this->title = t; return this; }
-  UIRect* setFont (TTF_Font* f) { this->font = f; return this; }
-  UIRect* addTextBox (std::string s, int x = 0, int y = 0, int w = 0, int h = 0) {
-    TextBox t{font, s, x, y, w, h};
-    textBoxes.push_back(t);
-    return this;
-  }
-  UIRect* addButton (Button b) { buttons.push_back(b); return this; }
-};
-
 struct engine::graphics::RenderController
 {
   GameEngine* e;
@@ -1728,6 +1773,10 @@ struct engine::graphics::WindowController
   std::tuple<int, int> getWindowGridDimensions();
   std::tuple<int, int> getWindowDimensions();
 };
+
+////////////////////
+//  CONTROLLERS
+////////////////////
 
 namespace controller
 {
@@ -2319,6 +2368,10 @@ UIRect* UIRect::setDimensions(int x, int y, int w, int h)
   return this;
 }
 
+////////////////////
+//  GRAPHICS
+////////////////////
+
 int engine::graphics::RenderController::renderCopySprite(Sprite *s, std::tuple<int, int, int, int> coords)
 {
   auto [x, y, o_x, o_y] = coords;
@@ -2590,7 +2643,6 @@ std::tuple<int, int> engine::graphics::WindowController::getWindowDimensions()
   return std::make_tuple(_w, _h);
 }
 
-
 int GameEngine::init()
 {
   auto cameraController = controller::CameraController(this);
@@ -2725,8 +2777,9 @@ int GameEngine::run ()
   return 1;
 }
 
-
-
+////////////////////
+//  MAIN
+////////////////////
 
 int main(int argc, char *argv[])
 {
