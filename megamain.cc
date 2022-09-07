@@ -22,15 +22,14 @@
 #include <variant>
 #include <vector>
 
-
 ////////////////////
 //  PRIMITIVES
 ///////////////////
 
 struct Image
 {
-  SDL_Surface* surface;
-  SDL_Texture* texture;
+  SDL_Surface *surface;
+  SDL_Texture *texture;
 };
 
 struct Sprite
@@ -40,7 +39,8 @@ struct Sprite
   std::string name;
 };
 
-struct Timer {
+struct Timer
+{
   int last;
   int current;
   bool paused;
@@ -59,7 +59,8 @@ struct Timer {
     last = 0;
     current = 0;
   }
-  void reset() {
+  void reset()
+  {
     stop();
     start();
   }
@@ -74,7 +75,8 @@ struct Timer {
   }
   void unpause()
   {
-    if (started && paused) {
+    if (started && paused)
+    {
       paused = false;
       last = SDL_GetTicks() - current;
       current = 0;
@@ -96,7 +98,7 @@ struct Timer {
     }
     return time;
   }
-  Timer () : last(0), current(0), paused(false), started(false) {}
+  Timer() : last(0), current(0), paused(false), started(false) {}
 };
 
 struct Rect
@@ -106,16 +108,37 @@ struct Rect
   int x2;
   int y2;
   std::vector<Rect> rects;
-  Rect () {}
-  Rect (int a, int b, int c, int d) { x1 = a; y1 = b; x2 = c; y2 = d; }
-  void set(std::tuple<int, int, int, int> data) { auto [_x1, _y1, _x2, _y2] = data; x1 = _x1; y1 =_y1; x2 =_x2; y2 = _y2; }
-  std::tuple<int, int, int, int> get(){ return std::make_tuple(x1, y1, x2, y2 ); };
-  SDL_Rect* getSDL_Rect () { auto r = new SDL_Rect(); r->x = x1; r->y = y1; r->w = x2; r->h = y2; return r; }
-  int getWidth () { return std::abs(x1) + std::abs(x2); }
-  int getHeight () { return std::abs(y1) + std::abs(y2); }
-  std::pair<int, int> getDimensions () { return { getWidth(), getHeight() }; }
-  std::tuple<int, int> getMid (){ return std::make_tuple(std::floor((x1 + x2)/2), std::floor((y1 + y2)/2)); }
-  std::vector<Rect>* getRects(bool shuffle = false) // TODO: Don't clear every time, create different method
+  Rect() {}
+  Rect(int a, int b, int c, int d)
+  {
+    x1 = a;
+    y1 = b;
+    x2 = c;
+    y2 = d;
+  }
+  void set(std::tuple<int, int, int, int> data)
+  {
+    auto [_x1, _y1, _x2, _y2] = data;
+    x1 = _x1;
+    y1 = _y1;
+    x2 = _x2;
+    y2 = _y2;
+  }
+  std::tuple<int, int, int, int> get() { return std::make_tuple(x1, y1, x2, y2); };
+  SDL_Rect *getSDL_Rect()
+  {
+    auto r = new SDL_Rect();
+    r->x = x1;
+    r->y = y1;
+    r->w = x2;
+    r->h = y2;
+    return r;
+  }
+  int getWidth() { return std::abs(x1) + std::abs(x2); }
+  int getHeight() { return std::abs(y1) + std::abs(y2); }
+  std::pair<int, int> getDimensions() { return {getWidth(), getHeight()}; }
+  std::tuple<int, int> getMid() { return std::make_tuple(std::floor((x1 + x2) / 2), std::floor((y1 + y2) / 2)); }
+  std::vector<Rect> *getRects(bool shuffle = false) // TODO: Don't clear every time, create different method
   {
     int small_w = 25;
     int small_h = 25;
@@ -127,7 +150,7 @@ struct Rect
     for (auto x = x1; x <= x2; x += result_w.quot)
       for (auto y = y1; y <= y2; y += result_h.quot)
       {
-        Rect r { x, y, x + result_w.quot, y + result_h.quot };
+        Rect r{x, y, x + result_w.quot, y + result_h.quot};
         rects.push_back(r);
       }
     if (shuffle == true)
@@ -138,15 +161,16 @@ struct Rect
     }
     return &rects;
   }
-  std::vector<Rect>* getShuffledRects() { return getRects(true); }
-  void multiprocess(std::function<void(int, int)> f, Rect* r = NULL, int fuzz = 1)
+  std::vector<Rect> *getShuffledRects() { return getRects(true); }
+  void multiprocess(std::function<void(int, int)> f, Rect *r = NULL, int fuzz = 1)
   {
     if (r == NULL)
-      r->set({ x1, y1, x2, y2 });
+      r->set({x1, y1, x2, y2});
     for (auto i = x1; i < x2; i += 1 + std::rand() % fuzz)
       for (auto j = y1; j < y2; j += 1 + std::rand() % fuzz)
       {
-        std::thread t([&f, i, j]() { f(i, j); });
+        std::thread t([&f, i, j]()
+                      { f(i, j); });
         t.join();
       }
   }
@@ -197,10 +221,10 @@ namespace input
 {
   enum directions
   {
-    UP        = 0x01,
-    DOWN      = 0x02,
-    LEFT      = 0x04,
-    RIGHT     = 0x08
+    UP = 0x01,
+    DOWN = 0x02,
+    LEFT = 0x04,
+    RIGHT = 0x08
   };
   struct UserInputHandler
   {
@@ -210,27 +234,21 @@ namespace input
     {
       lock.start();
     }
-    void handleKeyboardMovement (std::function<void(int)>);
-    void handleAppEvents (std::function<void(SDL_Event*)>);
+    void handleKeyboardMovement(std::function<void(int)>);
+    void handleAppEvents(std::function<void(SDL_Event *)>);
   };
 }
 
-void input::UserInputHandler::handleKeyboardMovement (std::function<void(int)> f)
+void input::UserInputHandler::handleKeyboardMovement(std::function<void(int)> f)
 {
   auto *ks = SDL_GetKeyboardState(NULL);
   if (ks[SDL_SCANCODE_ESCAPE] && ks[SDL_SCANCODE_LCTRL])
   {
     f(-1);
   }
-  while(ks[SDL_SCANCODE_LEFT]
-      || ks[SDL_SCANCODE_RIGHT]
-      || ks[SDL_SCANCODE_UP]
-      || ks[SDL_SCANCODE_DOWN]
-    )
+  while (ks[SDL_SCANCODE_LEFT] || ks[SDL_SCANCODE_RIGHT] || ks[SDL_SCANCODE_UP] || ks[SDL_SCANCODE_DOWN])
   {
-    if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP])
-        || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT])
-      )
+    if ((ks[SDL_SCANCODE_DOWN] && ks[SDL_SCANCODE_UP]) || (ks[SDL_SCANCODE_LEFT] && ks[SDL_SCANCODE_RIGHT]))
       break;
     int directions = 0x00;
     if (ks[SDL_SCANCODE_LEFT])
@@ -246,7 +264,7 @@ void input::UserInputHandler::handleKeyboardMovement (std::function<void(int)> f
   }
 };
 
-void input::UserInputHandler::handleAppEvents (std::function<void(SDL_Event*)> f)
+void input::UserInputHandler::handleAppEvents(std::function<void(SDL_Event *)> f)
 {
   SDL_PollEvent(&appEvent);
   f(&appEvent);
@@ -262,21 +280,26 @@ struct GenericType
   bool impassable;
   float multiplier;
   bool clusters;
-  std::map<int, std::map<int, Sprite*>> animationMap;
+  std::map<int, std::map<int, Sprite *>> animationMap;
   int animationSpeed;
   int maxFrames(int direction = 0x02) { return animationMap[direction].size(); }
-  Sprite* getFrame(int n, int direction = 0x02) { return animationMap[direction][n]; }
+  Sprite *getFrame(int n, int direction = 0x02) { return animationMap[direction][n]; }
   bool isAnimated() { return animationSpeed > 0; }
-  float getMultiplier() { if (multiplier > 0) return multiplier; else return 1; }
-  GenericType() {};
+  float getMultiplier()
+  {
+    if (multiplier > 0)
+      return multiplier;
+    else
+      return 1;
+  }
+  GenericType(){};
   GenericType(
-    std::string name,
-    bool impassable,
-    float multiplier,
-    bool clusters,
-    std::map<int, std::map<int, Sprite*>> animationMap,
-    int animationSpeed
-  )
+      std::string name,
+      bool impassable,
+      float multiplier,
+      bool clusters,
+      std::map<int, std::map<int, Sprite *>> animationMap,
+      int animationSpeed)
   {
     this->name = name;
     this->impassable = impassable;
@@ -292,16 +315,15 @@ struct TerrainType : GenericType
   std::vector<std::string> objects;
   int objectFrequencyMultiplier;
   std::vector<std::string> objectTypeProbabilities;
-  TerrainType () {}
+  TerrainType() {}
   TerrainType(
-    std::string name,
-    std::vector<std::string> relatedObjectTypes,
-    float objectFrequencyMultiplier,
-    std::vector<std::string> relatedObjectTypeProbabilities,
-    bool impassable,
-    float multiplier,
-    bool clusters
-  )
+      std::string name,
+      std::vector<std::string> relatedObjectTypes,
+      float objectFrequencyMultiplier,
+      std::vector<std::string> relatedObjectTypeProbabilities,
+      bool impassable,
+      float multiplier,
+      bool clusters)
   {
     this->name = name;
     this->objects = relatedObjectTypes;
@@ -311,7 +333,13 @@ struct TerrainType : GenericType
     this->multiplier = multiplier;
     this->clusters = clusters;
   };
-  int getObjectFrequencyMultiplier() { if (objectFrequencyMultiplier > 0) return objectFrequencyMultiplier; else return 1; }
+  int getObjectFrequencyMultiplier()
+  {
+    if (objectFrequencyMultiplier > 0)
+      return objectFrequencyMultiplier;
+    else
+      return 1;
+  }
   std::string getRandomObjectTypeName()
   {
     return objectTypeProbabilities.at(rand() % objectTypeProbabilities.size());
@@ -320,23 +348,22 @@ struct TerrainType : GenericType
 
 struct TileType : GenericType
 {
-  TileType () {}
-  TileType (std::string n) { this->name = n; }
+  TileType() {}
+  TileType(std::string n) { this->name = n; }
 };
 
 struct ObjectType : GenericType
 {
   std::map<std::string, int> biomes;
-  ObjectType() {};
+  ObjectType(){};
   ObjectType(
-    std::string name,
-    bool impassable,
-    float multiplier,
-    bool clusters,
-    std::map<int, std::map<int, Sprite*>> animationMap,
-    int animationSpeed,
-    std::map<std::string, int> biomes
-  )
+      std::string name,
+      bool impassable,
+      float multiplier,
+      bool clusters,
+      std::map<int, std::map<int, Sprite *>> animationMap,
+      int animationSpeed,
+      std::map<std::string, int> biomes)
   {
     this->name = name;
     this->impassable = impassable;
@@ -351,16 +378,15 @@ struct ObjectType : GenericType
 
 struct MobType : ObjectType
 {
-  MobType() {};
+  MobType(){};
   MobType(
-    std::string name,
-    bool impassable,
-    float multiplier,
-    bool clusters,
-    std::map<int, std::map<int, Sprite*>> animationMap,
-    int animationSpeed,
-    std::map<std::string, int> biomes
-  )
+      std::string name,
+      bool impassable,
+      float multiplier,
+      bool clusters,
+      std::map<int, std::map<int, Sprite *>> animationMap,
+      int animationSpeed,
+      std::map<std::string, int> biomes)
   {
     this->name = name;
     this->impassable = impassable;
@@ -380,7 +406,7 @@ struct BiomeType
   std::map<int, std::pair<std::string, float>> terrainTypes;
   float multiplier;
   std::vector<std::string> terrainTypeProbabilities;
-  BiomeType () {}
+  BiomeType() {}
   std::string getRandomTerrainTypeName() { return terrainTypeProbabilities.at(std::rand() % terrainTypeProbabilities.size()); }
 };
 
@@ -392,19 +418,19 @@ namespace tileObject
 {
   enum directions
   {
-    UP        = 0x01,
-    DOWN      = 0x02,
-    LEFT      = 0x04,
-    RIGHT     = 0x08
+    UP = 0x01,
+    DOWN = 0x02,
+    LEFT = 0x04,
+    RIGHT = 0x08
   };
   enum types
   {
-    BIOME       = 0x01,
-    MOB         = 0x02,
-    WORLD       = 0x04,
-    SIMULATED   = 0x08,
-    TERRAIN     = 0x16,
-    TILE        = 0x32
+    BIOME = 0x01,
+    MOB = 0x02,
+    WORLD = 0x04,
+    SIMULATED = 0x08,
+    TERRAIN = 0x16,
+    TILE = 0x32
   };
 }
 
@@ -413,8 +439,8 @@ struct Tile
   int z;
   int x;
   int y;
-  BiomeType* biomeType;
-  TerrainType* terrainType;
+  BiomeType *biomeType;
+  TerrainType *terrainType;
   Timer animationTimer;
   int animationFrame;
   int animationSpeed;
@@ -427,7 +453,13 @@ struct Tile
   int drawX;
   int drawY;
   Tile() : initialized(false), direction(tileObject::DOWN) { type = tileObject::TILE; }
-  Tile (int x, int y, int z) { this->x = x; this->y = y; this->z = z; type = tileObject::TILE; }
+  Tile(int x, int y, int z)
+  {
+    this->x = x;
+    this->y = y;
+    this->z = z;
+    type = tileObject::TILE;
+  }
   std::tuple<int, int, int, int> getPosition() { return std::make_tuple(z, x, y, direction); }
   void setPosition(std::tuple<int, int, int> position)
   {
@@ -439,9 +471,9 @@ struct Tile
 
 struct TerrainObject : Tile
 {
-  TerrainType* terrainType;
-  TerrainObject () { type = tileObject::TERRAIN; }
-  TerrainObject (int x, int y, int z, BiomeType* b, TerrainType* t)
+  TerrainType *terrainType;
+  TerrainObject() { type = tileObject::TERRAIN; }
+  TerrainObject(int x, int y, int z, BiomeType *b, TerrainType *t)
   {
     type = tileObject::TERRAIN;
     this->x = x;
@@ -454,9 +486,9 @@ struct TerrainObject : Tile
 
 struct WorldObject : Tile
 {
-  ObjectType* objectType;
+  ObjectType *objectType;
   WorldObject() { type = tileObject::WORLD; }
-  WorldObject(int x, int y, int z, ObjectType* o, BiomeType* b)
+  WorldObject(int x, int y, int z, ObjectType *o, BiomeType *b)
   {
     type = tileObject::WORLD;
     this->x = x;
@@ -471,9 +503,9 @@ struct BiomeObject
 {
   int x;
   int y;
-  BiomeType* biomeType;
+  BiomeType *biomeType;
   int type;
-  BiomeObject () { type = tileObject::BIOME; }
+  BiomeObject() { type = tileObject::BIOME; }
 };
 
 ////////////////////
@@ -484,47 +516,48 @@ namespace simulated
 {
   enum actions
   {
-    MOVE      = 0x01,
-    DIE       = 0x02,
-    DELETE    = 0x04
+    MOVE = 0x01,
+    DIE = 0x02,
+    DELETE = 0x04
   };
   template <class T>
   class Simulator
   {
-    private:
-      std::string _id;
-      Timer _timer;
-      int _frequency;
-      int _variation;
-      std::function<void()> _fn;
-    public:
-      Simulator () {}
-      Simulator (std::function<void()> fn)
+  private:
+    std::string _id;
+    Timer _timer;
+    int _frequency;
+    int _variation;
+    std::function<void()> _fn;
+
+  public:
+    Simulator() {}
+    Simulator(std::function<void()> fn)
+    {
+      _fn = fn;
+      _id = uuid::generate_uuid_v4();
+      _timer.start();
+      _frequency = 3000 + std::rand() % 1000;
+    }
+    void simulate()
+    {
+      auto elapsed = _timer.elapsed();
+      if (elapsed > _frequency)
       {
-        _fn = fn;
-        _id = uuid::generate_uuid_v4();
-        _timer.start();
-        _frequency = 3000 + std::rand() % 1000;
+        _fn();
+        _timer.reset();
       }
-      void simulate ()
-      {
-        auto elapsed = _timer.elapsed();
-        if (elapsed > _frequency)
-        {
-          _fn();
-          _timer.reset();
-        }
-      }
+    }
   };
 }
 
 struct SimulatedObject : Tile
 {
-  std::map<std::string, Timer*> objectTimers;
+  std::map<std::string, Timer *> objectTimers;
   bool dead;
   int orders;
   int status;
-  SimulatedObject () : dead(false) { type = tileObject::SIMULATED; }
+  SimulatedObject() : dead(false) { type = tileObject::SIMULATED; }
   void kill()
   {
     dead = true;
@@ -541,10 +574,10 @@ struct MobObject : SimulatedObject
 {
   std::string id;
   int speed;
-  MobType* mobType;
+  MobType *mobType;
   std::map<std::string, Timer> mobTimers;
   std::vector<std::shared_ptr<simulated::Simulator<MobObject>>> simulators;
-  MobObject (int x, int y, int z, MobType* m, BiomeType* b)
+  MobObject(int x, int y, int z, MobType *m, BiomeType *b)
   {
     type = tileObject::MOB;
     id = uuid::generate_uuid_v4();
@@ -561,10 +594,11 @@ struct MobObject : SimulatedObject
   }
 };
 
-struct Player {
+struct Player
+{
   int x;
   int y;
-  TileType* tileType;
+  TileType *tileType;
 };
 
 namespace objects
@@ -587,54 +621,53 @@ namespace objects
 
 namespace config
 {
-typedef std::map<int, std::map<int, Sprite*>> animationMap;
+  typedef std::map<int, std::map<int, Sprite *>> animationMap;
 
-struct ConfigurationController
-{
-  int gameSize;
-  int tileSize;
-  int spriteSize;
-  int chunkFuzz;
-  objects::mobTypesMap mobTypes;
-  objects::objectTypesMap objectTypes;
-  objects::biomeTypesMap biomeTypes;
-  std::map<int, std::map<std::string, BiomeType*>> biomeLevelMap;
-  std::map<int, std::vector<std::string>> biomeTypeProbabilities;
-  std::vector<std::string> biomeTypeKeys;
-  std::vector<std::string> terrainTypesKeys;
-  objects::terrainTypesMap terrainTypes;
-  objects::tileTypesMap tileTypes;
-  Json::Value configJson;
-  std::map<std::string, Sprite> sprites;
-  ConfigurationController () {}
-  ConfigurationController (std::string, std::map<std::string, Sprite>);
-  animationMap configureAnimationMap (int, std::string);
-  std::tuple<
-    objects::biomeTypesMap*,
-    std::vector<std::string>*,
-    objects::terrainTypesMap*,
-    objects::mobTypesMap*,
-    objects::objectTypesMap*,
-    objects::tileTypesMap*
-  > getTypeMaps()
+  struct ConfigurationController
   {
-    return std::make_tuple(
-      &biomeTypes, &biomeTypeKeys, &terrainTypes, &mobTypes, &objectTypes, &tileTypes
-    );
-  }
-  BiomeType* getRandomBiomeType(int z = 0) { return &biomeTypes[biomeTypeProbabilities[z][std::rand() % biomeTypeProbabilities[z].size()]]; }
-  TerrainType* getRandomTerrainType() { return &terrainTypes[terrainTypesKeys[std::rand() % terrainTypesKeys.size()]]; }
-  TerrainType* getRandomTerrainType(std::string biomeType)
-  {
-    auto t = biomeTypes[biomeType].terrainTypes.at(std::rand() % biomeTypes[biomeType].terrainTypes.size());
-    return &terrainTypes[t.first];
-  }
-  bool biomeExistsOnLevel(std::string name, int z) { return biomeLevelMap[z].find(name) != biomeLevelMap[z].end(); }
-};
+    int gameSize;
+    int tileSize;
+    int spriteSize;
+    int chunkFuzz;
+    objects::mobTypesMap mobTypes;
+    objects::objectTypesMap objectTypes;
+    objects::biomeTypesMap biomeTypes;
+    std::map<int, std::map<std::string, BiomeType *>> biomeLevelMap;
+    std::map<int, std::vector<std::string>> biomeTypeProbabilities;
+    std::vector<std::string> biomeTypeKeys;
+    std::vector<std::string> terrainTypesKeys;
+    objects::terrainTypesMap terrainTypes;
+    objects::tileTypesMap tileTypes;
+    Json::Value configJson;
+    std::map<std::string, Sprite> sprites;
+    ConfigurationController() {}
+    ConfigurationController(std::string, std::map<std::string, Sprite>);
+    animationMap configureAnimationMap(int, std::string);
+    std::tuple<
+        objects::biomeTypesMap *,
+        std::vector<std::string> *,
+        objects::terrainTypesMap *,
+        objects::mobTypesMap *,
+        objects::objectTypesMap *,
+        objects::tileTypesMap *>
+    getTypeMaps()
+    {
+      return std::make_tuple(
+          &biomeTypes, &biomeTypeKeys, &terrainTypes, &mobTypes, &objectTypes, &tileTypes);
+    }
+    BiomeType *getRandomBiomeType(int z = 0) { return &biomeTypes[biomeTypeProbabilities[z][std::rand() % biomeTypeProbabilities[z].size()]]; }
+    TerrainType *getRandomTerrainType() { return &terrainTypes[terrainTypesKeys[std::rand() % terrainTypesKeys.size()]]; }
+    TerrainType *getRandomTerrainType(std::string biomeType)
+    {
+      auto t = biomeTypes[biomeType].terrainTypes.at(std::rand() % biomeTypes[biomeType].terrainTypes.size());
+      return &terrainTypes[t.first];
+    }
+    bool biomeExistsOnLevel(std::string name, int z) { return biomeLevelMap[z].find(name) != biomeLevelMap[z].end(); }
+  };
 
 }
 
-config::animationMap config::ConfigurationController::configureAnimationMap (int i, std::string n)
+config::animationMap config::ConfigurationController::configureAnimationMap(int i, std::string n)
 {
   animationMap m;
   if (configJson[n][i]["sprite"].isString())
@@ -643,7 +676,7 @@ config::animationMap config::ConfigurationController::configureAnimationMap (int
   }
   else if (configJson[n][i]["sprite"].isArray())
   {
-    const Json::Value& animationArr = configJson[n][i]["sprite"];
+    const Json::Value &animationArr = configJson[n][i]["sprite"];
     for (int i = 0; i < animationArr.size(); i++)
     {
       m[tileObject::DOWN][i] = &sprites[animationArr[i].asString()];
@@ -653,10 +686,10 @@ config::animationMap config::ConfigurationController::configureAnimationMap (int
   {
     if (configJson[n][i]["sprite"]["directions"].isObject())
     {
-      const Json::Value& uArr = configJson[n][i]["sprite"]["directions"]["up"];
-      const Json::Value& dArr = configJson[n][i]["sprite"]["directions"]["down"];
-      const Json::Value& lArr = configJson[n][i]["sprite"]["directions"]["left"];
-      const Json::Value& rArr = configJson[n][i]["sprite"]["directions"]["right"];
+      const Json::Value &uArr = configJson[n][i]["sprite"]["directions"]["up"];
+      const Json::Value &dArr = configJson[n][i]["sprite"]["directions"]["down"];
+      const Json::Value &lArr = configJson[n][i]["sprite"]["directions"]["left"];
+      const Json::Value &rArr = configJson[n][i]["sprite"]["directions"]["right"];
       for (auto i = 0; i < uArr.size(); i++)
         m[tileObject::UP][i] = &sprites[uArr[i].asString()];
       for (auto i = 0; i < dArr.size(); i++)
@@ -670,13 +703,12 @@ config::animationMap config::ConfigurationController::configureAnimationMap (int
   return m;
 };
 
-config::ConfigurationController::ConfigurationController (std::string configFilePath, std::map<std::string, Sprite> s)
+config::ConfigurationController::ConfigurationController(std::string configFilePath, std::map<std::string, Sprite> s)
 {
 
   sprites = s;
   std::ifstream configFile(configFilePath.c_str());
   configFile >> configJson;
-
 
   ////////////////
   //  GENERAL
@@ -699,7 +731,7 @@ config::ConfigurationController::ConfigurationController (std::string configFile
     float objectFrequencyMultiplier = configJson["terrains"][i]["objectFrequencyMultiplier"].asFloat();
     std::vector<std::string> relatedObjectTypes;
     std::vector<std::string> relatedObjectTypeProbabilities;
-    const Json::Value& relatedObjectsArray = configJson["terrains"][i]["objects"];
+    const Json::Value &relatedObjectsArray = configJson["terrains"][i]["objects"];
     for (int i = 0; i < relatedObjectsArray.size(); i++)
     {
       if (relatedObjectsArray[i].isString())
@@ -717,16 +749,15 @@ config::ConfigurationController::ConfigurationController (std::string configFile
           relatedObjectTypeProbabilities.push_back(objectTypeName);
       }
     }
-    TileType tileType { tileTypeName };
-    TerrainType terrainType {
-      tileTypeName,
-      relatedObjectTypes,
-      objectFrequencyMultiplier,
-      relatedObjectTypeProbabilities,
-      impassable,
-      multiplier,
-      clusters
-    };
+    TileType tileType{tileTypeName};
+    TerrainType terrainType{
+        tileTypeName,
+        relatedObjectTypes,
+        objectFrequencyMultiplier,
+        relatedObjectTypeProbabilities,
+        impassable,
+        multiplier,
+        clusters};
     terrainType.animationMap = aMap;
     if (aMap[tileObject::DOWN].size() > 1)
     {
@@ -752,14 +783,14 @@ config::ConfigurationController::ConfigurationController (std::string configFile
     b.multiplier = configJson["biomes"][i]["multiplier"].asFloat();
     if (b.multiplier <= 0)
       b.multiplier = 1;
-    const Json::Value& terrainsArray = configJson["biomes"][i]["terrains"];
+    const Json::Value &terrainsArray = configJson["biomes"][i]["terrains"];
     for (int i = 0; i < terrainsArray.size(); i++)
     {
       auto t = terrainsArray[i];
       auto m = t["multiplier"].asFloat();
       if (m <= 0)
         m = 1;
-      b.terrainTypes[b.terrainTypes.size()] = { t["name"].asString(), m };
+      b.terrainTypes[b.terrainTypes.size()] = {t["name"].asString(), m};
       for (int i = 0; i < 10 * m; i++)
         b.terrainTypeProbabilities.push_back(t["name"].asString());
     }
@@ -784,23 +815,23 @@ config::ConfigurationController::ConfigurationController (std::string configFile
     std::string objectTypeName = configJson["objects"][i]["name"].asString();
     bool impassable = configJson["objects"][i]["impassable"].asBool();
     bool clusters = configJson["objects"][i]["clusters"].asBool();
-    const Json::Value& biomesArray = configJson["objects"][i]["biomes"];
+    const Json::Value &biomesArray = configJson["objects"][i]["biomes"];
     std::map<std::string, int> bM;
     for (int i = 0; i < biomesArray.size(); i++)
     {
       bM[biomesArray[i].asString()] = 1;
     }
 
-    animationMap aMap = configureAnimationMap(i, "objects");;
-    auto o = ObjectType( 
-      objectTypeName,
-      impassable,
-      configJson["objects"][i]["multiplier"].asFloat(),
-      clusters,
-      aMap,
-      1000,
-      bM
-    );
+    animationMap aMap = configureAnimationMap(i, "objects");
+    ;
+    auto o = ObjectType(
+        objectTypeName,
+        impassable,
+        configJson["objects"][i]["multiplier"].asFloat(),
+        clusters,
+        aMap,
+        1000,
+        bM);
     objectTypes[objectTypeName] = o;
     SDL_Log("- Loaded '%s' object", objectTypeName.c_str());
   }
@@ -811,7 +842,7 @@ config::ConfigurationController::ConfigurationController (std::string configFile
   for (auto i = 0; i < configJson["mobs"].size(); ++i)
   {
     std::string mobTypeName = configJson["mobs"][i]["name"].asString();
-    const Json::Value& biomesArray = configJson["mobs"][i]["biomes"];
+    const Json::Value &biomesArray = configJson["mobs"][i]["biomes"];
     std::map<std::string, int> bM;
     for (int i = 0; i < biomesArray.size(); i++)
     {
@@ -819,15 +850,14 @@ config::ConfigurationController::ConfigurationController (std::string configFile
     }
     SDL_Log("- Loaded '%s' mob", mobTypeName.c_str());
     animationMap aMap = configureAnimationMap(i, "mobs");
-    MobType mobType { 
-      mobTypeName,
-      false,
-      configJson["mobs"][i]["multiplier"].asFloat(),
-      0,
-      aMap,
-      1000,
-      bM
-    };
+    MobType mobType{
+        mobTypeName,
+        false,
+        configJson["mobs"][i]["multiplier"].asFloat(),
+        0,
+        aMap,
+        1000,
+        bM};
     mobTypes[mobType.name] = mobType;
   };
 }
@@ -840,17 +870,17 @@ namespace map::chunk
 {
   struct ChunkProcessor;
   typedef std::function<void(int, int, int)> chunkFunctor;
-  typedef std::function<void(int, int, int, BiomeType*)> chunkProcessorFunctor;
-  typedef std::function<void(Rect*, BiomeType* b)> chunkProcessorCallbackFunctor;
-  typedef std::function<BiomeType*(ChunkProcessor*,int,std::tuple<int,int>)> chunkCallbackFn;
+  typedef std::function<void(int, int, int, BiomeType *)> chunkProcessorFunctor;
+  typedef std::function<void(Rect *, BiomeType *b)> chunkProcessorCallbackFunctor;
+  typedef std::function<BiomeType *(ChunkProcessor *, int, std::tuple<int, int>)> chunkCallbackFn;
   typedef std::variant<chunkFunctor, chunkProcessorFunctor, chunkProcessorCallbackFunctor> genericChunkFunctor;
   typedef std::vector<std::pair<genericChunkFunctor, chunkCallbackFn>> multiprocessFunctorVec;
   typedef std::array<multiprocessFunctorVec, 2> multiprocessFunctorArray;
 
   struct ChunkReport
   {
-    std::map<int, std::map<std::string, int >> terrainCounts;
-    std::map<int, std::map<std::string, int >> biomeCounts;
+    std::map<int, std::map<std::string, int>> terrainCounts;
+    std::map<int, std::map<std::string, int>> biomeCounts;
     std::map<int, std::tuple<int, std::string>> topTerrain;
     std::map<int, std::tuple<int, std::string>> topBiome;
     std::map<int, std::map<std::string, std::string>> meta;
@@ -858,56 +888,61 @@ namespace map::chunk
 
   struct ChunkProcessor
   {
-    Rect* chunk;
-    std::vector<Rect>* smallchunks;
+    Rect *chunk;
+    std::vector<Rect> *smallchunks;
     int zMax;
-    BiomeType* brush;
+    BiomeType *brush;
     std::shared_mutex brushMtx;
-    ChunkProcessor (Rect* r, int zMax = 3)
+    ChunkProcessor(Rect *r, int zMax = 3)
     {
       chunk = r;
       bool shuffle = true;
       smallchunks = r->getRects(shuffle);
       this->zMax = zMax;
     };
-    BiomeType* getBrush() { std::shared_lock lock(brushMtx); return brush; }
-    void setBrush(BiomeType* b)
+    BiomeType *getBrush()
+    {
+      std::shared_lock lock(brushMtx);
+      return brush;
+    }
+    void setBrush(BiomeType *b)
     {
       std::unique_lock lock(brushMtx);
       brush = b;
     }
-    void processEdges(Rect*, std::pair<chunkProcessorFunctor, BiomeType*>);
-    void multiProcess (Rect*, multiprocessFunctorArray, int);
-    void lazyProcess (Rect* r, std::vector<chunkFunctor>, int);
-    void process (Rect*, std::vector<chunkFunctor>);
-    void processChunk (std::vector<chunkFunctor> functors) { process(chunk, functors); }
-    void lazyProcessChunk (std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
-    void multiProcessChunk (multiprocessFunctorArray functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
+    void processEdges(Rect *, std::pair<chunkProcessorFunctor, BiomeType *>);
+    void multiProcess(Rect *, multiprocessFunctorArray, int);
+    void lazyProcess(Rect *r, std::vector<chunkFunctor>, int);
+    void process(Rect *, std::vector<chunkFunctor>);
+    void processChunk(std::vector<chunkFunctor> functors) { process(chunk, functors); }
+    void lazyProcessChunk(std::vector<chunkFunctor> functors, int fuzz = 1) { lazyProcess(chunk, functors, fuzz); }
+    void multiProcessChunk(multiprocessFunctorArray functors, int fuzz = 1) { multiProcess(chunk, functors, fuzz); }
   };
 
-  ChunkReport getRangeReport(std::function<void(int, int, ChunkReport*)>, Rect*, int, int);
+  ChunkReport getRangeReport(std::function<void(int, int, ChunkReport *)>, Rect *, int, int);
 }
 
-void map::chunk::ChunkProcessor::processEdges(Rect* r, std::pair<chunkProcessorFunctor, BiomeType*> f)
+void map::chunk::ChunkProcessor::processEdges(Rect *r, std::pair<chunkProcessorFunctor, BiomeType *> f)
 {
-  Rect top { chunk->x1, chunk->y1, chunk->x2, chunk->y1 };
-  Rect bottom { chunk->x1, chunk->y2, chunk->x2, chunk->y2 };
-  Rect left { chunk->x1, chunk->y1, chunk->x1, chunk->y2 };
-  Rect right { chunk->x2, chunk->y1, chunk->x2, chunk->y2 };
-  std::vector<Rect> edges { top, bottom, left, right };
+  Rect top{chunk->x1, chunk->y1, chunk->x2, chunk->y1};
+  Rect bottom{chunk->x1, chunk->y2, chunk->x2, chunk->y2};
+  Rect left{chunk->x1, chunk->y1, chunk->x1, chunk->y2};
+  Rect right{chunk->x2, chunk->y1, chunk->x2, chunk->y2};
+  std::vector<Rect> edges{top, bottom, left, right};
   for (auto it = edges.begin(); it != edges.end(); ++it)
   {
-    std::thread t([this, f](int x1, int y1, int x2, int y2) {
+    std::thread t([this, f](int x1, int y1, int x2, int y2)
+                  {
       for (auto h = 0; h < zMax; h++)
         for (auto i = x1; i <= x2; i++)
           for (auto j = y1; j <= y2; j++)
-            f.first(h, i, j, f.second);
-    }, it->x1, it->y1, it->x2, it->y2);
+            f.first(h, i, j, f.second); },
+                  it->x1, it->y1, it->x2, it->y2);
     t.detach();
   }
 }
 
-void map::chunk::ChunkProcessor::multiProcess (Rect* r, multiprocessFunctorArray functors, int fuzz = 1)
+void map::chunk::ChunkProcessor::multiProcess(Rect *r, multiprocessFunctorArray functors, int fuzz = 1)
 {
 
   // Process every tile in every chunk
@@ -915,16 +950,17 @@ void map::chunk::ChunkProcessor::multiProcess (Rect* r, multiprocessFunctorArray
   {
     for (auto f : functors[0])
     {
-      BiomeType* b = f.second(this, 0, it->getMid());
+      BiomeType *b = f.second(this, 0, it->getMid());
       auto fn = std::get<chunkProcessorFunctor>(f.first);
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Generating '%s' chunk", b->name.c_str());
       int n = std::rand() % 10;
-      std::thread t([this, n, fn, b, fuzz](int x1, int y1, int x2, int y2) {
+      std::thread t([this, n, fn, b, fuzz](int x1, int y1, int x2, int y2)
+                    {
         for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
           for (auto i = n > 5 ? x1 : x2; [i,x2,x1,n](){if(n>5)return i<=x2;else return i>=x1;}() ; [&i,n, fuzz](){if(n>5)i+=std::rand()%fuzz+1;else i-=(std::rand()%fuzz+1);}())
             for (auto j = n > 5 ? y1 : y2; [j,y2,y1,n](){if(n>5)return j<=y2;else return j>=y1;}() ; [&j,n, fuzz](){if(n>5)j+=std::rand()%fuzz+1;else j-=(std::rand()%fuzz+1);}())
-              fn(h, i, j, b);
-      }, it->x1, it->y1, it->x2, it->y2);
+              fn(h, i, j, b); },
+                    it->x1, it->y1, it->x2, it->y2);
       t.join();
     }
     // TODO: This may be unnecessary
@@ -932,33 +968,33 @@ void map::chunk::ChunkProcessor::multiProcess (Rect* r, multiprocessFunctorArray
     // Post-process chunk thread
     for (auto f : functors[1])
     {
-      BiomeType* b = f.second(this, 0, it->getMid());
+      BiomeType *b = f.second(this, 0, it->getMid());
       auto fn = std::get<chunkProcessorCallbackFunctor>(f.first);
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Post-processing chunk (%d, %d)", it->x1, it->x2);
-      std::thread t([fn, &b, it]() {
-        fn(&(*it), b);
-      });
+      std::thread t([fn, &b, it]()
+                    { fn(&(*it), b); });
       t.join();
     }
   }
-  
 }
-void map::chunk::ChunkProcessor::lazyProcess (Rect* r, std::vector<chunkFunctor> functors, int fuzz = 1)
+void map::chunk::ChunkProcessor::lazyProcess(Rect *r, std::vector<chunkFunctor> functors, int fuzz = 1)
 {
   for (auto h = 0; h < zMax; h += std::rand() % fuzz + 1)
     for (auto i = r->x1; i < r->x2; i += std::rand() % fuzz + 1)
       for (auto j = r->y1; j < r->y2; j += std::rand() % fuzz + 1)
-        for (auto f : functors) f(h, i, j);
+        for (auto f : functors)
+          f(h, i, j);
 }
-void map::chunk::ChunkProcessor::process (Rect* r, std::vector<chunkFunctor> functors)
+void map::chunk::ChunkProcessor::process(Rect *r, std::vector<chunkFunctor> functors)
 {
   for (auto h = 0; h < zMax; h++)
     for (auto i = r->x1; i != r->x2; i++)
       for (auto j = r->y1; j != r->y2; j++)
-        for (auto f : functors) f(h, i, j);
+        for (auto f : functors)
+          f(h, i, j);
 }
 
-map::chunk::ChunkReport map::chunk::getRangeReport(std::function<void(int, int, map::chunk::ChunkReport*)> f, Rect* r, int fuzz = 1, int base = 1)
+map::chunk::ChunkReport map::chunk::getRangeReport(std::function<void(int, int, map::chunk::ChunkReport *)> f, Rect *r, int fuzz = 1, int base = 1)
 {
   ChunkReport report;
   for (auto i = r->x1; i < r->x2; i += base + std::rand() % fuzz)
@@ -976,14 +1012,14 @@ namespace map
   struct MapGenerator
   {
     bool processing;
-    MapGenerator () : processing(false){}
-    void init(std::shared_mutex* mtx)
+    MapGenerator() : processing(false) {}
+    void init(std::shared_mutex *mtx)
     {
       mtx->lock();
       processing = true;
       mtx->unlock();
     }
-    void reset(std::shared_mutex* mtx)
+    void reset(std::shared_mutex *mtx)
     {
       mtx->lock();
       processing = false;
@@ -995,53 +1031,60 @@ namespace map
   {
     MapGenerator mapGenerator;
     int maxDepth;
-    objects::mobTypesMap* mobTypes;
-    objects::objectTypesMap* objectTypes;
-    std::map<std::string, BiomeType>* biomeTypes;
-    std::vector<std::string>* biomeTypeKeys;
-    objects::terrainTypesMap* terrainTypes;
-    objects::tileTypesMap* tileTypes;
+    objects::mobTypesMap *mobTypes;
+    objects::objectTypesMap *objectTypes;
+    std::map<std::string, BiomeType> *biomeTypes;
+    std::vector<std::string> *biomeTypeKeys;
+    objects::terrainTypesMap *terrainTypes;
+    objects::tileTypesMap *tileTypes;
     objects::biomeMap biomeMap;
     objects::terrainMap terrainMap;
     objects::worldMap worldMap;
     objects::mobMap mobMap;
-    config::ConfigurationController* cfg;
-    MapController () : maxDepth(0) {}
-    MapController (
+    config::ConfigurationController *cfg;
+    MapController() : maxDepth(0) {}
+    MapController(
         int d,
-        objects::mobTypesMap* mTypes,
-        objects::objectTypesMap* oTypes,
-        objects::biomeTypesMap* bTypes,
-        std::vector<std::string>* bTypeKeys,
-        objects::terrainTypesMap* tnTypes,
-        objects::tileTypesMap* tlTypes,
-        config::ConfigurationController* c
-    )
+        objects::mobTypesMap *mTypes,
+        objects::objectTypesMap *oTypes,
+        objects::biomeTypesMap *bTypes,
+        std::vector<std::string> *bTypeKeys,
+        objects::terrainTypesMap *tnTypes,
+        objects::tileTypesMap *tlTypes,
+        config::ConfigurationController *c)
     {
-      maxDepth = d; mobTypes = mTypes; objectTypes = oTypes; biomeTypes = bTypes; biomeTypeKeys = bTypeKeys;
-      terrainTypes = tnTypes; tileTypes = tlTypes; cfg = c;
+      maxDepth = d;
+      mobTypes = mTypes;
+      objectTypes = oTypes;
+      biomeTypes = bTypes;
+      biomeTypeKeys = bTypeKeys;
+      terrainTypes = tnTypes;
+      tileTypes = tlTypes;
+      cfg = c;
     }
-    bool isPassable (std::tuple<int, int, int>);
-    BiomeType* updateTile (int, int, int, BiomeType*, TerrainType*, std::vector<std::shared_ptr<WorldObject>>);
-    void updateTile (int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
-    std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
-    std::vector<std::shared_ptr<MobObject>>::iterator moveMob (std::vector<std::shared_ptr<MobObject>>::iterator, std::tuple<int, int, int>, int directions);
-    std::map<int, std::map<std::string, int>> getTilesInRange (Rect*);
-    std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (Rect*);
-    std::map<int, std::map<std::string, int>> getBiomesInRange (Rect* rangeRect);
-    map::chunk::ChunkReport generateRangeReport(Rect*, int);
-    void processChunk(Rect*, std::function<void(int, int, int)>);
-    template<typename F> void iterateOverChunk(Rect*, F);
-    template<typename F> void iterateOverChunkEdges(Rect*, F);
-    void randomlyAccessAllTilesInChunk(Rect*, std::function<void(int, int, int)>);
-    std::map<int, std::vector<SDL_Point>> getAllPointsInRect(Rect*);
-    int generateMapChunk(Rect*);
+    bool isPassable(std::tuple<int, int, int>);
+    BiomeType *updateTile(int, int, int, BiomeType *, TerrainType *, std::vector<std::shared_ptr<WorldObject>>);
+    void updateTile(int, int, int, std::shared_ptr<WorldObject>, std::shared_ptr<MobObject>);
+    std::vector<std::shared_ptr<MobObject>>::iterator moveMob(std::string, std::tuple<int, int, int>, std::tuple<int, int, int>);
+    std::vector<std::shared_ptr<MobObject>>::iterator moveMob(std::vector<std::shared_ptr<MobObject>>::iterator, std::tuple<int, int, int>, int directions);
+    std::map<int, std::map<std::string, int>> getTilesInRange(Rect *);
+    std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange(Rect *);
+    std::map<int, std::map<std::string, int>> getBiomesInRange(Rect *rangeRect);
+    map::chunk::ChunkReport generateRangeReport(Rect *, int);
+    void processChunk(Rect *, std::function<void(int, int, int)>);
+    template <typename F>
+    void iterateOverChunk(Rect *, F);
+    template <typename F>
+    void iterateOverChunkEdges(Rect *, F);
+    void randomlyAccessAllTilesInChunk(Rect *, std::function<void(int, int, int)>);
+    std::map<int, std::vector<SDL_Point>> getAllPointsInRect(Rect *);
+    int generateMapChunk(Rect *);
   };
 }
 
 std::shared_mutex mtx;
 
-std::map<int, std::vector<SDL_Point>> map::MapController::getAllPointsInRect(Rect* r)
+std::map<int, std::vector<SDL_Point>> map::MapController::getAllPointsInRect(Rect *r)
 {
   std::map<int, std::vector<SDL_Point>> results;
   for (auto h = 0; h < maxDepth; h++)
@@ -1051,7 +1094,7 @@ std::map<int, std::vector<SDL_Point>> map::MapController::getAllPointsInRect(Rec
     {
       for (auto j = r->y1; j != r->y2; j++)
       {
-        SDL_Point p = { i, j };
+        SDL_Point p = {i, j};
         points.push_back(p);
       }
     }
@@ -1060,26 +1103,24 @@ std::map<int, std::vector<SDL_Point>> map::MapController::getAllPointsInRect(Rec
   return results;
 }
 
-
-std::map<int, std::map<std::string, int>> map::MapController::getTilesInRange (Rect* r)
+std::map<int, std::map<std::string, int>> map::MapController::getTilesInRange(Rect *r)
 {
   std::map<int, std::map<std::string, int>> t;
   auto lambda = [this, &t](int h, int i, int j)
   {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+    if (terrainMap[h].find({i, j}) != terrainMap[h].end())
       t[h][terrainMap[h][{i, j}].terrainType->name] += 1;
   };
   processChunk(r, lambda);
   return t;
 }
 
-
-std::map<int, std::map<std::string, std::map<std::string, int>>> map::MapController::getCountsInRange (Rect* r)
+std::map<int, std::map<std::string, std::map<std::string, int>>> map::MapController::getCountsInRange(Rect *r)
 {
   std::map<int, std::map<std::string, std::map<std::string, int>>> res;
   auto lambda = [this, &res](int h, int i, int j)
   {
-    auto it = terrainMap[h].find({ i, j });
+    auto it = terrainMap[h].find({i, j});
     if (it != terrainMap[h].end())
     {
       res[h]["terrain"][it->second.terrainType->name]++;
@@ -1090,25 +1131,23 @@ std::map<int, std::map<std::string, std::map<std::string, int>>> map::MapControl
   return res;
 }
 
-
-
-std::map<int, std::map<std::string, int>> map::MapController::getBiomesInRange (Rect* rangeRect)
+std::map<int, std::map<std::string, int>> map::MapController::getBiomesInRange(Rect *rangeRect)
 {
   std::map<int, std::map<std::string, int>> results;
   auto lambda = [this, &results](int h, int i, int j)
   {
-    if (terrainMap[h].find({ i, j }) != terrainMap[h].end())
+    if (terrainMap[h].find({i, j}) != terrainMap[h].end())
       results[h][terrainMap[h][{i, j}].biomeType->name] += 1;
   };
   processChunk(rangeRect, lambda);
   return results;
 }
 
-
-map::chunk::ChunkReport map::MapController::generateRangeReport(Rect* range, int h = 0)
+map::chunk::ChunkReport map::MapController::generateRangeReport(Rect *range, int h = 0)
 {
   std::unique_lock lock(mtx);
-  auto t = map::chunk::getRangeReport([this, h](int x, int y, map::chunk::ChunkReport* r){
+  auto t = map::chunk::getRangeReport([this, h](int x, int y, map::chunk::ChunkReport *r)
+                                      {
     auto it = terrainMap[h].find({x, y});
     if (it != terrainMap[h].end())
     {
@@ -1129,14 +1168,14 @@ map::chunk::ChunkReport map::MapController::generateRangeReport(Rect* range, int
           r->topBiome[h] = { r->biomeCounts[h][it->second.biomeType->name], it->second.biomeType->name };
         }
       }
-    }
-  }, range, 1, 1);
+    } },
+                                      range, 1, 1);
   return t;
 }
 
 std::shared_mutex tileMutex;
 
-BiomeType* map::MapController::updateTile (int z, int x, int y, BiomeType* biomeType, TerrainType* terrainType, objects::objectsVector worldObjects = objects::objectsVector ())
+BiomeType *map::MapController::updateTile(int z, int x, int y, BiomeType *biomeType, TerrainType *terrainType, objects::objectsVector worldObjects = objects::objectsVector())
 {
   if (!cfg->biomeExistsOnLevel(biomeType->name, z))
   {
@@ -1154,27 +1193,25 @@ BiomeType* map::MapController::updateTile (int z, int x, int y, BiomeType* biome
     t.animationTimer.start();
     t.animationSpeed = terrainType->animationSpeed + std::rand() % 3000;
   }
-  terrainMap[z][{ x, y }] = t;
+  terrainMap[z][{x, y}] = t;
 
-
-  for (auto o : worldMap[z][{ x, y }])
+  for (auto o : worldMap[z][{x, y}])
     if (!o->objectType->biomes[biomeType->name])
     {
-      worldMap[z][{ x, y }].clear();
+      worldMap[z][{x, y}].clear();
       break;
     }
-  
-  
-  mobMap[z][{ x, y }].clear();
+
+  mobMap[z][{x, y}].clear();
   BiomeObject b;
   b.biomeType = biomeType;
   b.x = x;
   b.y = y;
-  biomeMap[z][{ x, y }] = b;
+  biomeMap[z][{x, y}] = b;
   return biomeType;
 }
 
-void map::MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldObject> w = nullptr, std::shared_ptr<MobObject> m = nullptr)
+void map::MapController::updateTile(int z, int x, int y, std::shared_ptr<WorldObject> w = nullptr, std::shared_ptr<MobObject> m = nullptr)
 {
   std::unique_lock lock(tileMutex);
   if (w != nullptr)
@@ -1187,20 +1224,20 @@ void map::MapController::updateTile (int z, int x, int y, std::shared_ptr<WorldO
   }
 }
 
-bool map::MapController::isPassable (std::tuple<int, int, int> coords)
+bool map::MapController::isPassable(std::tuple<int, int, int> coords)
 {
   auto [_z, _x, _y] = coords;
-  auto terrainIt = terrainMap[_z].find({ _x, _y });
+  auto terrainIt = terrainMap[_z].find({_x, _y});
   if (terrainIt == terrainMap[_z].end())
     return false;
   else if (terrainIt->second.terrainType->impassable)
     return false;
-  auto worldIt = worldMap[_z].find({ _x, _y });
+  auto worldIt = worldMap[_z].find({_x, _y});
   if (worldIt != worldMap[_z].end())
     for (auto o : worldIt->second)
       if (o->objectType->impassable)
         return false;
-  auto mobIt = mobMap[_z].find({ _x, _y });
+  auto mobIt = mobMap[_z].find({_x, _y});
   if (mobIt != mobMap[_z].end())
     for (auto o : mobIt->second)
       if (o->mobType->impassable)
@@ -1211,7 +1248,7 @@ bool map::MapController::isPassable (std::tuple<int, int, int> coords)
 std::shared_mutex mobMtx;
 
 std::vector<std::shared_ptr<MobObject>>::iterator
-map::MapController::moveMob (std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
+map::MapController::moveMob(std::string id, std::tuple<int, int, int> origin, std::tuple<int, int, int> destination)
 {
   auto [z1, x1, y1] = origin;
   auto [z2, x2, y2] = destination;
@@ -1223,7 +1260,7 @@ map::MapController::moveMob (std::string id, std::tuple<int, int, int> origin, s
   {
     if (it->get()->id == id)
     {
-      it->get()->setPosition({ z2, x2, y2 });
+      it->get()->setPosition({z2, x2, y2});
       mobMap[z2][{x2, y2}].push_back((*it));
       it = mobMap[z1][{x1, y1}].erase(it);
       return it;
@@ -1237,7 +1274,7 @@ map::MapController::moveMob (std::string id, std::tuple<int, int, int> origin, s
 }
 
 std::vector<std::shared_ptr<MobObject>>::iterator
-map::MapController::moveMob (std::vector<std::shared_ptr<MobObject>>::iterator mobIt, std::tuple<int, int, int> coords, int directions)
+map::MapController::moveMob(std::vector<std::shared_ptr<MobObject>>::iterator mobIt, std::tuple<int, int, int> coords, int directions)
 {
   auto mob = mobIt->get();
   auto [z1, x1, y1] = coords;
@@ -1304,34 +1341,41 @@ map::MapController::moveMob (std::vector<std::shared_ptr<MobObject>>::iterator m
   return moveMob(mob->id, {z1, x1, y1}, {z2, x2, y2});
 }
 
-void map::MapController::processChunk(Rect* chunkRect, std::function<void(int, int, int)> f)
+void map::MapController::processChunk(Rect *chunkRect, std::function<void(int, int, int)> f)
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
-    maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2
-  );
+               "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+               maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2);
   int n = std::rand() % 10;
   for (auto h = 0; h < maxDepth; h++)
-    for (auto i = n > 5 ? chunkRect->x1 : chunkRect->x2; [i,chunkRect,n](){if(n>5)return i<=chunkRect->x2;else return i>=chunkRect->x1;}() ; [&i,n](){if(n>5)i+=1;else i-=1;}())
-      for (auto j = n > 5 ? chunkRect->y1 : chunkRect->y2; [j,chunkRect,n](){if(n>5)return j<=chunkRect->y2;else return j>=chunkRect->y1;}() ; [&j,n](){if(n>5)j+=1;else j-=1;}())
-        f(h, i ,j);
+    for (
+        auto i = n > 5 ? chunkRect->x1 : chunkRect->x2; [i, chunkRect, n]()
+        {if(n>5)return i<=chunkRect->x2;else return i>=chunkRect->x1; }();
+        [&i, n]()
+        {if(n>5)i+=1;else i-=1; }())
+      for (
+          auto j = n > 5 ? chunkRect->y1 : chunkRect->y2; [j, chunkRect, n]()
+          {if(n>5)return j<=chunkRect->y2;else return j>=chunkRect->y1; }();
+          [&j, n]()
+          {if(n>5)j+=1;else j-=1; }())
+        f(h, i, j);
 }
 
 template <typename F>
-void map::MapController::iterateOverChunk(Rect* chunkRect, F functors)
+void map::MapController::iterateOverChunk(Rect *chunkRect, F functors)
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
-    maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2
-  );
+               "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+               maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2);
 
-  Rect r { chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2 };
+  Rect r{chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2};
   auto rects = r.getRects();
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Analyzing chunk: (x1: %d, y1: %d) (x2: %d, y2: %d) [%d]", chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2, static_cast<int>(rects->size()));
   auto it = rects->begin();
   while (it != rects->end())
   {
-    std::thread t([this, functors](int x1, int y1, int x2, int y2) {
+    std::thread t([this, functors](int x1, int y1, int x2, int y2)
+                  {
       for (auto h = 0; h < maxDepth; h++)
       {
         BiomeType* b = cfg->getRandomBiomeType(h);
@@ -1339,8 +1383,8 @@ void map::MapController::iterateOverChunk(Rect* chunkRect, F functors)
           for (auto j = y1; j != y2; j++)
             for (auto f : functors)
               f(h, i, j, b);
-      }
-    }, it->x1, it->y1, it->x2, it->y2);
+      } },
+                  it->x1, it->y1, it->x2, it->y2);
     t.detach();
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "\t- (x1: %d, y1: %d) (x2: %d, y2: %d)", it->x1, it->x2, it->y1, it->y2);
     ++it;
@@ -1348,31 +1392,31 @@ void map::MapController::iterateOverChunk(Rect* chunkRect, F functors)
 }
 
 template <typename F>
-void map::MapController::iterateOverChunkEdges(Rect* chunk, F f)
+void map::MapController::iterateOverChunkEdges(Rect *chunk, F f)
 {
-  Rect top { chunk->x1, chunk->y1, chunk->x2, chunk->y1 };
-  Rect bottom { chunk->x1, chunk->y2, chunk->x2, chunk->y2 };
-  Rect left { chunk->x1, chunk->y1, chunk->x1, chunk->y2 };
-  Rect right { chunk->x2, chunk->y1, chunk->x2, chunk->y2 };
-  std::vector<Rect> edges { top, bottom, left, right };
+  Rect top{chunk->x1, chunk->y1, chunk->x2, chunk->y1};
+  Rect bottom{chunk->x1, chunk->y2, chunk->x2, chunk->y2};
+  Rect left{chunk->x1, chunk->y1, chunk->x1, chunk->y2};
+  Rect right{chunk->x2, chunk->y1, chunk->x2, chunk->y2};
+  std::vector<Rect> edges{top, bottom, left, right};
   for (auto it = edges.begin(); it != edges.end(); ++it)
   {
-    std::thread t([this, f](int x1, int y1, int x2, int y2) {
+    std::thread t([this, f](int x1, int y1, int x2, int y2)
+                  {
       for (auto h = 0; h < maxDepth; h++)
         for (auto i = x1; i <= x2; i++)
           for (auto j = y1; j <= y2; j++)
-            f(h, i, j);
-    }, it->x1, it->y1, it->x2, it->y2);
+            f(h, i, j); },
+                  it->x1, it->y1, it->x2, it->y2);
     t.detach();
   }
 }
 
-void map::MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::function<void(int, int, int)> f)
+void map::MapController::randomlyAccessAllTilesInChunk(Rect *chunkRect, std::function<void(int, int, int)> f)
 {
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
-    maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2
-  );
+               "Processing chunk: on %d levels from ( %d, %d ) to ( %d, %d )",
+               maxDepth, chunkRect->x1, chunkRect->y1, chunkRect->x2, chunkRect->y2);
   auto coordinates = getAllPointsInRect(chunkRect);
   for (auto h = 0; h < maxDepth; h++)
   {
@@ -1386,7 +1430,7 @@ void map::MapController::randomlyAccessAllTilesInChunk(Rect* chunkRect, std::fun
   }
 }
 
-int map::MapController::generateMapChunk(Rect* chunkRect)
+int map::MapController::generateMapChunk(Rect *chunkRect)
 {
   if (mapGenerator.processing)
   {
@@ -1397,20 +1441,20 @@ int map::MapController::generateMapChunk(Rect* chunkRect)
 
   mapGenerator.init(&mtx);
 
-  auto createTerrainObjects = [this](int h, int i, int j, BiomeType* b)
+  auto createTerrainObjects = [this](int h, int i, int j, BiomeType *b)
   {
     auto it = terrainMap[h].find({i, j});
     if (it == terrainMap[h].end())
     {
-      TerrainType* tt;
-      Rect range = { i-1, j-1, i+1, j+1 };
+      TerrainType *tt;
+      Rect range = {i - 1, j - 1, i + 1, j + 1};
       auto t = generateRangeReport(&range, h);
       auto [tCount, topTerrainName] = t.topTerrain[h];
       auto [bCount, topBiomeName] = t.topBiome[h];
       if (topTerrainName.length() > 0 && cfg->terrainTypes[topTerrainName].clusters == true && cfg->biomeExistsOnLevel(topBiomeName, h))
       {
         tt = &cfg->terrainTypes[topTerrainName];
-        b = &cfg->biomeTypes[topBiomeName]; 
+        b = &cfg->biomeTypes[topBiomeName];
       }
       else
         tt = &cfg->terrainTypes[b->getRandomTerrainTypeName()];
@@ -1421,52 +1465,47 @@ int map::MapController::generateMapChunk(Rect* chunkRect)
         if (cfg->objectTypes[n].biomes[b->name] && worldMap[h][{i, j}].begin() == worldMap[h][{i, j}].end())
         {
           std::shared_ptr<WorldObject> o = std::make_shared<WorldObject>(
-            i, j, h, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]
-          );
+              i, j, h, &cfg->objectTypes[n], &cfg->biomeTypes[b->name]);
           if (cfg->objectTypes[n].isAnimated())
           {
             o->animationTimer.start();
             o->animationSpeed = cfg->objectTypes[n].animationSpeed + std::rand() % 3000;
           }
           updateTile(h, i, j, o, nullptr);
-        }  
+        }
       }
     }
   };
 
-
-  auto addMobs = [this](int h, int i, int j, BiomeType* b)
+  auto addMobs = [this](int h, int i, int j, BiomeType *b)
   {
     auto it = terrainMap[h].find({i, j});
     if (isPassable({h, i, j}) && it != terrainMap[h].end() && it->second.initialized == false)
     {
       if (std::rand() % 1000 > 975)
       {
-        
+
         for (auto mob = cfg->mobTypes.begin(); mob != cfg->mobTypes.end(); mob++)
         {
           if (mob->second.biomes.find(it->second.biomeType->name) != mob->second.biomes.end())
           {
             std::shared_ptr<MobObject> m = std::make_shared<MobObject>(
-              i, j, h, &mob->second, &cfg->biomeTypes[it->second.biomeType->name]
-            );
+                i, j, h, &mob->second, &cfg->biomeTypes[it->second.biomeType->name]);
 
             if (mob->second.isAnimated())
             {
 
               m->simulators.push_back(std::make_shared<simulated::Simulator<MobObject>>(
-                [this,h,i,j,m]()
-                {
-                  
-                  int n = std::rand() % 100;
-                  if (n > 50)
-                    m->x += std::rand() % 100 > 50 ? 1 : -1;
-                  else
-                    m->y += std::rand() % 100 > 50 ? 1 : -1;
-                  if (isPassable({h, i, j}))
-                    m->orders += simulated::MOVE;
-                }
-              ));
+                  [this, h, i, j, m]()
+                  {
+                    int n = std::rand() % 100;
+                    if (n > 50)
+                      m->x += std::rand() % 100 > 50 ? 1 : -1;
+                    else
+                      m->y += std::rand() % 100 > 50 ? 1 : -1;
+                    if (isPassable({h, i, j}))
+                      m->orders += simulated::MOVE;
+                  }));
 
               m->animationTimer.start();
               m->animationSpeed = mob->second.animationSpeed + std::rand() % 3000;
@@ -1481,78 +1520,86 @@ int map::MapController::generateMapChunk(Rect* chunkRect)
     it->second.initialized = true;
   };
 
-  auto hammerChunk = [this](Rect* r, BiomeType* b)
+  auto hammerChunk = [this](Rect *r, BiomeType *b)
   {
     auto hammerProcessor = [this](int h, int i, int j)
     {
-      auto it = terrainMap[h].find({ i, j });
+      auto it = terrainMap[h].find({i, j});
       if (it != terrainMap[h].end() && it->second.initialized == false)
       {
-        Rect range = { i-3, j-3, i+3, j+3 };
+        Rect range = {i - 3, j - 3, i + 3, j + 3};
         auto t = generateRangeReport(&range, h);
         auto [bCount, topBiomeName] = t.topBiome[h];
-        if (std::rand() % 1000 > 985) topBiomeName = cfg->getRandomBiomeType(h)->name;
-        if (terrainMap[h].find({ i, j })->second.initialized == false) updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        if (terrainMap[h].find({ i+1, j })->second.initialized == false) updateTile(h, i+1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        if (terrainMap[h].find({ i-1, j })->second.initialized == false) updateTile(h, i-1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        if (terrainMap[h].find({ i, j+1 })->second.initialized == false) updateTile(h, i, j+1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-        if (terrainMap[h].find({ i, j-1 })->second.initialized == false) updateTile(h, i, j-1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (std::rand() % 1000 > 985)
+          topBiomeName = cfg->getRandomBiomeType(h)->name;
+        if (terrainMap[h].find({i, j})->second.initialized == false)
+          updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+        if (terrainMap[h].find({i + 1, j})->second.initialized == false)
+          updateTile(h, i + 1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+        if (terrainMap[h].find({i - 1, j})->second.initialized == false)
+          updateTile(h, i - 1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+        if (terrainMap[h].find({i, j + 1})->second.initialized == false)
+          updateTile(h, i, j + 1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+        if (terrainMap[h].find({i, j - 1})->second.initialized == false)
+          updateTile(h, i, j - 1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
       }
     };
     processChunk(r, hammerProcessor);
   };
 
-  auto cleanChunk = [this](Rect* r, BiomeType* b)
+  auto cleanChunk = [this](Rect *r, BiomeType *b)
   {
     auto processor = [this](int h, int i, int j)
     {
-      auto it = terrainMap[h].find({ i, j });
+      auto it = terrainMap[h].find({i, j});
       if (it != terrainMap[h].end() && it->second.initialized == false)
       {
-        Rect range = { i-3, j-3, i+3, j+3 };
+        Rect range = {i - 3, j - 3, i + 3, j + 3};
         auto t = generateRangeReport(&range, h);
         auto [bCount, topBiomeName] = t.topBiome[h];
-        if (t.biomeCounts[h][it->second.biomeType->name] <= 2) updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
+        if (t.biomeCounts[h][it->second.biomeType->name] <= 2)
+          updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
       }
     };
     processChunk(r, processor);
   };
 
-  auto fudgeChunk = [this](Rect* r, BiomeType* b)
+  auto fudgeChunk = [this](Rect *r, BiomeType *b)
   {
     auto fudgeProcessor = [this](int h, int i, int j)
     {
-      auto it = terrainMap[h].find({ i, j });
+      auto it = terrainMap[h].find({i, j});
       if (it == terrainMap[h].end())
       {
-        //make tile based on most common biome in range of 1
+        // make tile based on most common biome in range of 1
       }
       else if (it->second.initialized == false)
       {
-        Rect range = { i-2, j-2, i+2, j+2 };
+        Rect range = {i - 2, j - 2, i + 2, j + 2};
         auto t = generateRangeReport(&range, h);
         auto [bCount, topBiomeName] = t.topBiome[h];
         if (it->second.biomeType->name != topBiomeName && cfg->biomeExistsOnLevel(topBiomeName, h))
         {
-            if (std::rand() % 10 > 4)
-            {
-              updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-            }
-            else
-            {
-              updateTile(h, i+1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-              updateTile(h, i-1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-              updateTile(h, i, j+1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-              updateTile(h, i, j-1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName) );
-            }
+          if (std::rand() % 10 > 4)
+          {
+            updateTile(h, i, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+          }
+          else
+          {
+            updateTile(h, i + 1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+            updateTile(h, i - 1, j, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+            updateTile(h, i, j + 1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+            updateTile(h, i, j - 1, &cfg->biomeTypes[topBiomeName], cfg->getRandomTerrainType(topBiomeName));
+          }
         }
       }
     };
-    if (std::rand() % 100 > 65) processChunk(r, fudgeProcessor);
+    if (std::rand() % 100 > 65)
+      processChunk(r, fudgeProcessor);
   };
 
-  map::chunk::multiprocessFunctorVec terrainPlacement { { createTerrainObjects, [this](map::chunk::ChunkProcessor* p, int z, std::tuple<int, int> coords)
-  {
+  map::chunk::multiprocessFunctorVec terrainPlacement{{createTerrainObjects, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+                                                       {
     if (cfg->biomeExistsOnLevel(p->getBrush()->name, z) == false)
       p->setBrush(cfg->getRandomBiomeType(z)); 
     if (std::rand() % 10 > 5)
@@ -1566,37 +1613,40 @@ int map::MapController::generateMapChunk(Rect* chunkRect)
       else
         p->setBrush(cfg->getRandomBiomeType(z));
     }
-    return p->getBrush(); } }
+    return p->getBrush(); }}
 
   };
-  map::chunk::multiprocessFunctorVec chunkFudging {
-    { fudgeChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { hammerChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { fudgeChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} },
-    { cleanChunk, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(z);} }
-  };
-  map::chunk::multiprocessFunctorVec objectPlacement { { addMobs, [this](map::chunk::ChunkProcessor* p,int z,std::tuple<int,int>coords){return cfg->getRandomBiomeType(); } } };
+  map::chunk::multiprocessFunctorVec chunkFudging{
+      {fudgeChunk, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+       { return cfg->getRandomBiomeType(z); }},
+      {hammerChunk, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+       { return cfg->getRandomBiomeType(z); }},
+      {fudgeChunk, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+       { return cfg->getRandomBiomeType(z); }},
+      {cleanChunk, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+       { return cfg->getRandomBiomeType(z); }}};
+  map::chunk::multiprocessFunctorVec objectPlacement{{addMobs, [this](map::chunk::ChunkProcessor *p, int z, std::tuple<int, int> coords)
+                                                      { return cfg->getRandomBiomeType(); }}};
 
-  map::chunk::ChunkProcessor chunker ( chunkRect, maxDepth );
+  map::chunk::ChunkProcessor chunker(chunkRect, maxDepth);
   chunker.setBrush(cfg->getRandomBiomeType(0));
   SDL_Log("Adding terrain objects...");
   // std::thread t([this, &chunker](multiprocessChain o, multiprocessChain c){ chunker.multiProcessChunk({ o, c }); }, objectPlacers, chunkFuzzers);
   // t.join();
-  chunker.multiProcessChunk({ terrainPlacement, chunkFudging });
+  chunker.multiProcessChunk({terrainPlacement, chunkFudging});
   SDL_Log("Adding world and mob objects...");
-  
+
   // TODO: Chunkfuzz is fine but not in this case because this is what initializes all tiles. Need something else for that
-  chunker.multiProcessChunk({ objectPlacement });
+  chunker.multiProcessChunk({objectPlacement});
   SDL_Log("Done adding objects.");
 
   mapGenerator.reset(&mtx);
   std::unique_lock lock(mtx);
   SDL_Log("Created chunk. Map now has %lu terrain objects, %lu world objects, and %lu mob objects for a total of %lu",
-    terrainMap[0].size()*2,
-    worldMap[0].size()*2,
-    terrainMap[0].size()*2,
-    terrainMap[0].size()*2+worldMap[0].size()*2+mobMap[0].size()*2
-  );
+          terrainMap[0].size() * 2,
+          worldMap[0].size() * 2,
+          terrainMap[0].size() * 2,
+          terrainMap[0].size() * 2 + worldMap[0].size() * 2 + mobMap[0].size() * 2);
   return 0;
 }
 
@@ -1620,9 +1670,9 @@ struct TextBox : Element
   std::string content;
   int w;
   int h;
-  TTF_Font* font;
-  void getLines (std::vector<std::string>*);
-  TextBox (TTF_Font* f, std::string c, int x, int y, int w, int h)
+  TTF_Font *font;
+  void getLines(std::vector<std::string> *);
+  TextBox(TTF_Font *f, std::string c, int x, int y, int w, int h)
   {
     font = f;
     offsetX = x;
@@ -1648,17 +1698,30 @@ struct UIRect : SDL_Rect
   std::string content;
   std::vector<Button> buttons;
   std::vector<TextBox> textBoxes;
-  TTF_Font* font;
-  void getLines (std::vector<std::string>*, TTF_Font*);
-  UIRect* setDimensions (int, int, int, int);
-  UIRect* setTitle (std::string t) { this->title = t; return this; }
-  UIRect* setFont (TTF_Font* f) { this->font = f; return this; }
-  UIRect* addTextBox (std::string s, int x = 0, int y = 0, int w = 0, int h = 0) {
+  TTF_Font *font;
+  void getLines(std::vector<std::string> *, TTF_Font *);
+  UIRect *setDimensions(int, int, int, int);
+  UIRect *setTitle(std::string t)
+  {
+    this->title = t;
+    return this;
+  }
+  UIRect *setFont(TTF_Font *f)
+  {
+    this->font = f;
+    return this;
+  }
+  UIRect *addTextBox(std::string s, int x = 0, int y = 0, int w = 0, int h = 0)
+  {
     TextBox t{font, s, x, y, w, h};
     textBoxes.push_back(t);
     return this;
   }
-  UIRect* addButton (Button b) { buttons.push_back(b); return this; }
+  UIRect *addButton(Button b)
+  {
+    buttons.push_back(b);
+    return this;
+  }
 };
 
 ////////////////////
@@ -1669,22 +1732,26 @@ namespace engine
 {
   namespace graphics
   {
-    template <typename T1> T1 controller;
+    template <typename T1>
+    T1 controller;
     struct RenderController;
     struct SurfaceController;
     struct WindowController;
   }
   namespace ui
   {
-    template <typename T1> T1 controller;
+    template <typename T1>
+    T1 controller;
     struct UIWindowController;
   }
-  template <typename T1> T1 controller;
+  template <typename T1>
+  T1 controller;
 }
 
 struct GameEngine
 {
-  template <typename T> void registerController (T t)
+  template <typename T>
+  void registerController(T t)
   {
     engine::controller<T> = t;
   };
@@ -1692,11 +1759,11 @@ struct GameEngine
   input::UserInputHandler userInputHandler;
   bool running;
   int movementSpeed;
-  SDL_Window* appWindow;
-  SDL_Renderer* appRenderer;
-  SDL_Surface* gameSurface;
-  SDL_Texture* gameTexture;
-  TTF_Font* gameFont;
+  SDL_Window *appWindow;
+  SDL_Renderer *appRenderer;
+  SDL_Surface *gameSurface;
+  SDL_Texture *gameTexture;
+  TTF_Font *gameFont;
   Image tilemapImage;
   SDL_Event appEvent;
   SDL_DisplayMode displayMode;
@@ -1706,67 +1773,72 @@ struct GameEngine
   int zLevel;
   const int zMaxLevel;
   map::MapController mapController;
-  objects::mobTypesMap* mobTypes;
-  objects::objectTypesMap* objectTypes;
-  objects::biomeTypesMap* biomeTypes;
-  std::vector<std::string>* biomeTypeKeys;
-  objects::terrainTypesMap* terrainTypes;
-  objects::tileTypesMap* tileTypes;
-  objects::biomeMap* biomeMap;
-  objects::terrainMap* terrainMap;
-  objects::worldMap* worldMap;
-  objects::mobMap* mobMap;
+  objects::mobTypesMap *mobTypes;
+  objects::objectTypesMap *objectTypes;
+  objects::biomeTypesMap *biomeTypes;
+  std::vector<std::string> *biomeTypeKeys;
+  objects::terrainTypesMap *terrainTypes;
+  objects::tileTypesMap *tileTypes;
+  objects::biomeMap *biomeMap;
+  objects::terrainMap *terrainMap;
+  objects::worldMap *worldMap;
+  objects::mobMap *mobMap;
   std::map<int, std::vector<std::shared_ptr<MobObject>>> mobs;
-  std::map<std::string, Sprite>* sprites;
+  std::map<std::string, Sprite> *sprites;
   SDL_Rect camera;
   int init();
-  std::map<int, std::map<std::string, int>> getTilesInRange (SDL_Rect*);
-  std::map<int, std::map<std::string, int>> getBiomesInRange (SDL_Rect*);
-  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange (SDL_Rect*);
-  int generateMapChunk(SDL_Rect*);
+  std::map<int, std::map<std::string, int>> getTilesInRange(SDL_Rect *);
+  std::map<int, std::map<std::string, int>> getBiomesInRange(SDL_Rect *);
+  std::map<int, std::map<std::string, std::map<std::string, int>>> getCountsInRange(SDL_Rect *);
+  int generateMapChunk(SDL_Rect *);
   int run();
-  bool stopRunning() { running = false; return !running; }
+  bool stopRunning()
+  {
+    running = false;
+    return !running;
+  }
   int getSpriteSize() { return spriteSize; }
   int getTileSize() { return tileSize; }
-  template <typename T> T* controller() { return &engine::controller<T>; }
+  template <typename T>
+  T *controller() { return &engine::controller<T>; }
   GameEngine() : running(true), movementSpeed(8), tileSize(32), spriteSize(32), zLevel(0), zMaxLevel(2) {}
 };
 
 struct engine::graphics::RenderController
 {
-  GameEngine* e;
-  RenderController () {}
-  RenderController (GameEngine* e)
+  GameEngine *e;
+  RenderController() {}
+  RenderController(GameEngine *e)
   {
     this->e = e;
   }
-  int renderCopySprite(Sprite*, std::tuple<int, int, int, int>);
-  int renderCopySprite(Sprite*, int, int);
+  int renderCopySprite(Sprite *, std::tuple<int, int, int, int>);
+  int renderCopySprite(Sprite *, int, int);
   int renderCopySprite(std::string, int, int);
   int renderCopyObject(std::shared_ptr<WorldObject>, int, int);
   int renderCopyMobObject(std::shared_ptr<MobObject>, int, int);
-  int renderCopyTerrain(TerrainObject*, int, int);
-  int renderFillUIWindow(UIRect*);
+  int renderCopyTerrain(TerrainObject *, int, int);
+  int renderFillUIWindow(UIRect *);
 };
 
 struct engine::graphics::SurfaceController
 {
-  GameEngine* e;
-  SurfaceController () {}
-  SurfaceController (GameEngine* e)
+  GameEngine *e;
+  SurfaceController() {}
+  SurfaceController(GameEngine *e)
   {
     this->e = e;
   }
-  SDL_Surface* getGameSurfaceFromWindow ();
-  SDL_Texture* getTextureFromSurface (SDL_Surface*);
-  SDL_Texture* getGameSurfaceTexture ();
+  SDL_Surface *getGameSurfaceFromWindow();
+  SDL_Texture *getTextureFromSurface(SDL_Surface *);
+  SDL_Texture *getGameSurfaceTexture();
 };
 
 struct engine::graphics::WindowController
 {
-  GameEngine* e;
-  WindowController () {}
-  WindowController (GameEngine* e)
+  GameEngine *e;
+  WindowController() {}
+  WindowController(GameEngine *e)
   {
     this->e = e;
   }
@@ -1790,70 +1862,71 @@ namespace controller
 
 struct controller::MovementController
 {
-  GameEngine* e;
-  MovementController () {}
-  MovementController (GameEngine* e)
+  GameEngine *e;
+  MovementController() {}
+  MovementController(GameEngine *e)
   {
     this->e = e;
   }
   void processMap(int);
-  void scrollGameSurface (int);
+  void scrollGameSurface(int);
 };
 
 struct controller::UIController
 {
-  GameEngine* e;
+  GameEngine *e;
   std::vector<UIRect> windows;
-  UIController () {}
-  UIController (GameEngine* e)
+  UIController() {}
+  UIController(GameEngine *e)
   {
     this->e = e;
   }
-  void createUIWindow (int, int, int, int, std::string = "", std::string = "");
-  UIRect* createUIWindow (int = 0, int = 0, int = 0, int = 0);
+  void createUIWindow(int, int, int, int, std::string = "", std::string = "");
+  UIRect *createUIWindow(int = 0, int = 0, int = 0, int = 0);
 };
 
 struct controller::GraphicsController
 {
   GameEngine *e;
-  SDL_Window* appWindow;
-  SDL_Renderer* appRenderer;
-  SDL_Texture* tilemapTexture;
-  Image* tilemapImage;
+  SDL_Window *appWindow;
+  SDL_Renderer *appRenderer;
+  SDL_Texture *tilemapTexture;
+  Image *tilemapImage;
   SDL_DisplayMode displayMode;
   SDL_Rect camera;
-  TTF_Font* font;
+  TTF_Font *font;
   std::map<std::string, Sprite> sprites;
   int windowWidth;
   int windowHeight;
-  template <typename T> void registerController (T t)
+  template <typename T>
+  void registerController(T t)
   {
     engine::graphics::controller<T> = t;
   };
-  template <typename T> T* controller() { return &engine::graphics::controller<T>; }
-  GraphicsController () {}
-  GraphicsController (GameEngine* e);
+  template <typename T>
+  T *controller() { return &engine::graphics::controller<T>; }
+  GraphicsController() {}
+  GraphicsController(GameEngine *e);
   void applyUI();
 };
 
-
 struct controller::CameraController
 {
-  GameEngine* e;
-  CameraController () {}
-  CameraController (GameEngine* e)
+  GameEngine *e;
+  CameraController() {}
+  CameraController(GameEngine *e)
   {
     this->e = e;
   }
   void scrollCamera(int);
-  void iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)>);
+  void iterateOverTilesInView(std::function<void(std::tuple<int, int, int, int>)>);
 };
 
 struct controller::RenderController
 {
-  GameEngine* e;
-  RenderController () {}
-  RenderController (GameEngine* e)
+  GameEngine *e;
+  RenderController() {}
+  RenderController(GameEngine *e)
   {
     this->e = e;
   }
@@ -1864,7 +1937,8 @@ struct controller::RenderController
 
 void controller::RenderController::renderCopyTiles()
 {
-  auto processor = [this](std::tuple<int, int, int, int> locationData){
+  auto processor = [this](std::tuple<int, int, int, int> locationData)
+  {
     auto [x, y, i, j] = locationData;
     auto it = e->mapController.mobMap[e->zLevel][{i, j}].begin();
     while (it != e->mapController.mobMap[e->zLevel][{i, j}].end())
@@ -1876,13 +1950,13 @@ void controller::RenderController::renderCopyTiles()
       if (orders & simulated::MOVE)
       {
         mob->orders -= simulated::MOVE;
-        if (!e->mapController.isPassable(std::make_tuple(mob->z,mob->x,mob->y)))
+        if (!e->mapController.isPassable(std::make_tuple(mob->z, mob->x, mob->y)))
           continue;
         auto direction = i != mob->x
-          ? (i < mob->x ? tileObject::RIGHT : tileObject::LEFT)
-          : j != mob->y
-            ? (j < mob->y ? tileObject::DOWN : tileObject::UP)
-            : tileObject::DOWN;
+                             ? (i < mob->x ? tileObject::RIGHT : tileObject::LEFT)
+                         : j != mob->y
+                             ? (j < mob->y ? tileObject::DOWN : tileObject::UP)
+                             : tileObject::DOWN;
 
         it = e->mapController.moveMob(it, {e->zLevel, i, j}, direction);
         continue;
@@ -1890,49 +1964,51 @@ void controller::RenderController::renderCopyTiles()
       ++it;
     }
   };
-  std::thread p (
-    [this](std::function<void(std::tuple<int, int, int, int>)> f)
-    {
-      e->controller<controller::CameraController>()->iterateOverTilesInView(f);
-    }, processor
-  );
+  std::thread p(
+      [this](std::function<void(std::tuple<int, int, int, int>)> f)
+      {
+        e->controller<controller::CameraController>()->iterateOverTilesInView(f);
+      },
+      processor);
   std::vector<std::pair<std::shared_ptr<MobObject>, std::tuple<int, int>>> movers;
-  auto terrainRenderer = [this,&movers](std::tuple<int, int, int, int> locationData){
+  auto terrainRenderer = [this, &movers](std::tuple<int, int, int, int> locationData)
+  {
     auto [x, y, i, j] = locationData;
-    auto terrainObject = e->mapController.terrainMap[e->zLevel].find({ i, j });
+    auto terrainObject = e->mapController.terrainMap[e->zLevel].find({i, j});
     if (terrainObject != e->mapController.terrainMap[e->zLevel].end())
       engine::graphics::controller<engine::graphics::RenderController>.renderCopyTerrain(&terrainObject->second, x, y);
-    else {}
-      //engine::graphics::controller<engine::graphics::RenderController>.renderCopySprite("Sprite 0x128", x, y);
-    auto worldObject = e->mapController.worldMap[e->zLevel].find({ i, j });
+    else
+    {
+    }
+    // engine::graphics::controller<engine::graphics::RenderController>.renderCopySprite("Sprite 0x128", x, y);
+    auto worldObject = e->mapController.worldMap[e->zLevel].find({i, j});
     if (worldObject != e->mapController.worldMap[e->zLevel].end())
-      for ( auto w : worldObject->second )
+      for (auto w : worldObject->second)
         engine::graphics::controller<engine::graphics::RenderController>.renderCopyObject(w, x, y);
-    auto mobObject = e->mapController.mobMap[e->zLevel].find({ i, j });
+    auto mobObject = e->mapController.mobMap[e->zLevel].find({i, j});
     if (mobObject != e->mapController.mobMap[e->zLevel].end())
-      for ( auto &w : mobObject->second )
+      for (auto &w : mobObject->second)
       {
         if (w->relativeX == 0 && w->relativeY == 0)
           engine::graphics::controller<engine::graphics::RenderController>.renderCopyMobObject(w, x, y);
         else
-          movers.push_back({w, { x, y }});
+          movers.push_back({w, {x, y}});
       }
   };
-  std::thread r (
-    [&movers](std::function<void(std::tuple<int, int, int, int>)> f1)
-    {
-      engine::controller<controller::CameraController>.iterateOverTilesInView(f1);
-      auto it = movers.begin();
-      while (it != movers.end())
+  std::thread r(
+      [&movers](std::function<void(std::tuple<int, int, int, int>)> f1)
       {
-        auto mob = it->first;
-        auto [_x, _y] = it->second;
-        engine::graphics::controller<engine::graphics::RenderController>.renderCopyMobObject(mob, _x, _y);
-        movers.erase(it);
-      }
-    },
-    terrainRenderer
-  );
+        engine::controller<controller::CameraController>.iterateOverTilesInView(f1);
+        auto it = movers.begin();
+        while (it != movers.end())
+        {
+          auto mob = it->first;
+          auto [_x, _y] = it->second;
+          engine::graphics::controller<engine::graphics::RenderController>.renderCopyMobObject(mob, _x, _y);
+          movers.erase(it);
+        }
+      },
+      terrainRenderer);
   p.join();
   r.join();
   SDL_SetRenderDrawColor(e->appRenderer, 0, 0, 0, 255);
@@ -1943,7 +2019,7 @@ int controller::RenderController::renderCopyPlayer()
   e->player.x = engine::controller<controller::GraphicsController>.camera.x;
   e->player.y = engine::controller<controller::GraphicsController>.camera.y;
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
-  SDL_Rect playerRect = { _w/2*e->tileSize, _h/2*e->tileSize, e->tileSize, e->tileSize };
+  SDL_Rect playerRect = {_w / 2 * e->tileSize, _h / 2 * e->tileSize, e->tileSize, e->tileSize};
   return SDL_RenderFillRect(e->appRenderer, &playerRect);
 }
 
@@ -1958,7 +2034,7 @@ int controller::RenderController::renderUI()
   return 0;
 }
 
-controller::GraphicsController::GraphicsController (GameEngine* e)
+controller::GraphicsController::GraphicsController(GameEngine *e)
 {
   this->e = e;
   auto renderController = engine::graphics::RenderController(e);
@@ -1969,12 +2045,11 @@ controller::GraphicsController::GraphicsController (GameEngine* e)
   engine::graphics::controller<engine::graphics::WindowController> = windowController;
 
   SDL_Log("Initializing SDL libraries...");
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO))
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO))
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Could not initialize SDL: %s",
-      SDL_GetError()
-    );
+                 "Could not initialize SDL: %s",
+                 SDL_GetError());
   }
   else
   {
@@ -1983,9 +2058,8 @@ controller::GraphicsController::GraphicsController (GameEngine* e)
   if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG))
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-      "Could not initialize SDL_image: %s",
-      IMG_GetError()
-    );
+                 "Could not initialize SDL_image: %s",
+                 IMG_GetError());
   }
   else
   {
@@ -1993,10 +2067,10 @@ controller::GraphicsController::GraphicsController (GameEngine* e)
   }
   SDL_GetCurrentDisplayMode(0, &displayMode);
   SDL_Log("Current display is %dx%dpx.",
-    displayMode.w,
-    displayMode.h
-  );
-  if(TTF_Init()==-1) {
+          displayMode.w,
+          displayMode.h);
+  if (TTF_Init() == -1)
+  {
     SDL_Log("TTF_Init: %s\n", TTF_GetError());
   }
   else
@@ -2005,26 +2079,25 @@ controller::GraphicsController::GraphicsController (GameEngine* e)
   }
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
   SDL_Log("Current window grid is %dx%d tiles.", _w, _h);
-  camera = { 0, 0, _w/e->getTileSize(), _h/e->getTileSize() };
+  camera = {0, 0, _w / e->getTileSize(), _h / e->getTileSize()};
   SDL_Log("Camera created at (%d, %d) with %dx%d tile dimensions.", 0, 0,
-    displayMode.w/e->getTileSize(),
-    displayMode.h/e->getTileSize()
-  );
+          displayMode.w / e->getTileSize(),
+          displayMode.h / e->getTileSize());
 }
 
-void controller::GraphicsController::applyUI ()
+void controller::GraphicsController::applyUI()
 {
   int tS = e->getTileSize();
   SDL_Rect viewportRect;
   SDL_RenderGetViewport(appRenderer, &viewportRect);
   SDL_Rect leftRect = {0, 0, tS, viewportRect.h};
-  SDL_Rect rightRect = {viewportRect.w-tS, 0, tS, viewportRect.h};
+  SDL_Rect rightRect = {viewportRect.w - tS, 0, tS, viewportRect.h};
   SDL_Rect topRect = {0, 0, viewportRect.w, tS};
-  SDL_Rect bottomRect = {0, viewportRect.h-tS*2, viewportRect.w, tS*2};
+  SDL_Rect bottomRect = {0, viewportRect.h - tS * 2, viewportRect.w, tS * 2};
   SDL_RenderFillRect(appRenderer, &leftRect);
   SDL_RenderFillRect(appRenderer, &rightRect);
   SDL_RenderFillRect(appRenderer, &topRect);
-  SDL_RenderFillRect(appRenderer, &bottomRect);  
+  SDL_RenderFillRect(appRenderer, &bottomRect);
 }
 
 void controller::CameraController::scrollCamera(int directions)
@@ -2054,18 +2127,19 @@ void controller::CameraController::scrollCamera(int directions)
     e->controller<controller::RenderController>()->renderCopyPlayer();
     e->controller<controller::GraphicsController>()->applyUI();
     e->controller<controller::RenderController>()->renderUI();
-    SDL_RenderPresent(e->appRenderer);    
+    SDL_RenderPresent(e->appRenderer);
   }
 }
 
-void controller::CameraController::iterateOverTilesInView (std::function<void(std::tuple<int, int, int, int>)> f)
+void controller::CameraController::iterateOverTilesInView(std::function<void(std::tuple<int, int, int, int>)> f)
 {
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
   int x = 0;
   int y = 0;
-  for (auto i = engine::controller<controller::GraphicsController>.camera.x - _w/2; i < engine::controller<controller::GraphicsController>.camera.x + _w/2 + 5; i++)
+  for (auto i = engine::controller<controller::GraphicsController>.camera.x - _w / 2; i < engine::controller<controller::GraphicsController>.camera.x + _w / 2 + 5; i++)
   {
-    for (auto j = engine::controller<controller::GraphicsController>.camera.y - _h/2; j < engine::controller<controller::GraphicsController>.camera.y + _h/2 + 5; j++) {
+    for (auto j = engine::controller<controller::GraphicsController>.camera.y - _h / 2; j < engine::controller<controller::GraphicsController>.camera.y + _h / 2 + 5; j++)
+    {
       std::tuple<int, int, int, int> locationData = {x, y, i, j};
       f(locationData);
       y++;
@@ -2078,38 +2152,36 @@ void controller::CameraController::iterateOverTilesInView (std::function<void(st
 void controller::MovementController::processMap(int directions)
 {
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowGridDimensions();
-  SDL_Point checkCoordinates = { engine::controller<controller::GraphicsController>.camera.x, engine::controller<controller::GraphicsController>.camera.y };
+  SDL_Point checkCoordinates = {engine::controller<controller::GraphicsController>.camera.x, engine::controller<controller::GraphicsController>.camera.y};
   Rect chunkRect = {
-    engine::controller<controller::GraphicsController>.camera.x-e->configController.gameSize*2,
-    engine::controller<controller::GraphicsController>.camera.y-e->configController.gameSize*2,
-    engine::controller<controller::GraphicsController>.camera.x+e->configController.gameSize*2,
-    engine::controller<controller::GraphicsController>.camera.y+e->configController.gameSize*2
-  };
+      engine::controller<controller::GraphicsController>.camera.x - e->configController.gameSize * 2,
+      engine::controller<controller::GraphicsController>.camera.y - e->configController.gameSize * 2,
+      engine::controller<controller::GraphicsController>.camera.x + e->configController.gameSize * 2,
+      engine::controller<controller::GraphicsController>.camera.y + e->configController.gameSize * 2};
   if (directions & input::RIGHT)
     checkCoordinates.x += _w;
-    chunkRect.x1 += _w/2;
+  chunkRect.x1 += _w / 2;
   if (directions & input::LEFT)
     checkCoordinates.x -= _w;
-    chunkRect.x1 -= _w/2;
+  chunkRect.x1 -= _w / 2;
   if (directions & input::UP)
     checkCoordinates.y -= _h;
-    chunkRect.y1 += _h/2;
+  chunkRect.y1 += _h / 2;
   if (directions & input::DOWN)
     checkCoordinates.y += _h;
-    chunkRect.y1 -= _h/2;
-  auto it = e->mapController.terrainMap[e->zLevel].find({ checkCoordinates.x, checkCoordinates.y });
+  chunkRect.y1 -= _h / 2;
+  auto it = e->mapController.terrainMap[e->zLevel].find({checkCoordinates.x, checkCoordinates.y});
   if (it == e->mapController.terrainMap[e->zLevel].end())
   {
     SDL_Log("Detected ungenerated map: %d %d", checkCoordinates.x, checkCoordinates.y);
     e->mapController.generateMapChunk(&chunkRect);
   }
-
 };
 
 void controller::MovementController::scrollGameSurface(int directions)
 {
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowDimensions();
-  SDL_Rect dest {0, 0, _w, _h};
+  SDL_Rect dest{0, 0, _w, _h};
   std::pair<int, int> offset = {0, 0};
   if (directions & input::RIGHT)
     offset.first -= e->tileSize;
@@ -2132,7 +2204,8 @@ void controller::MovementController::scrollGameSurface(int directions)
       dest.y -= e->movementSpeed;
     SDL_RenderCopy(e->appRenderer, engine::graphics::controller<engine::graphics::SurfaceController>.getGameSurfaceTexture(), NULL, &dest);
     e->controller<controller::RenderController>()->renderCopyPlayer();
-    engine::controller<controller::GraphicsController>.applyUI();;
+    engine::controller<controller::GraphicsController>.applyUI();
+    ;
     engine::controller<controller::RenderController>.renderUI();
     SDL_RenderPresent(e->appRenderer);
   }
@@ -2142,9 +2215,9 @@ void controller::MovementController::scrollGameSurface(int directions)
 
 struct controller::EventsController
 {
-  GameEngine* e;
-  EventsController () {}
-  EventsController (GameEngine* e)
+  GameEngine *e;
+  EventsController() {}
+  EventsController(GameEngine *e)
   {
     this->e = e;
   }
@@ -2161,13 +2234,17 @@ void controller::EventsController::handleEvents()
       {
         e->stopRunning();
       }
-      std::thread graphicalThread([](int d) { engine::controller<controller::CameraController>.scrollCamera(d); }, directions);
-      std::thread mapProcessingThread([](int d) { engine::controller<controller::MovementController>.processMap(d); }, directions);
+      std::thread graphicalThread([](int d)
+                                  { engine::controller<controller::CameraController>.scrollCamera(d); },
+                                  directions);
+      std::thread mapProcessingThread([](int d)
+                                      { engine::controller<controller::MovementController>.processMap(d); },
+                                      directions);
       mapProcessingThread.detach();
       graphicalThread.join();
     };
     e->userInputHandler.handleKeyboardMovement(keyboardMovementHandler);
-    auto eventHandler = [this](SDL_Event* event)
+    auto eventHandler = [this](SDL_Event *event)
     {
       if (event->type == SDL_QUIT)
       {
@@ -2178,21 +2255,21 @@ void controller::EventsController::handleEvents()
       {
         auto t = &e->mapController.terrainMap[e->zLevel][{engine::controller<controller::GraphicsController>.camera.x, engine::controller<controller::GraphicsController>.camera.y}];
         std::string objs;
-        switch(event->key.keysym.sym)
+        switch (event->key.keysym.sym)
         {
-          case SDLK_ESCAPE:
-            if (e->controller<controller::UIController>()->windows.size())
-            {
-              e->controller<controller::UIController>()->windows.pop_back();
-              SDL_Delay(10);
-            }
-            // else
-            // {
-            //   e->stopRunning();
-            // }
-            break;
-          case SDLK_SPACE:
-            SDL_Log(
+        case SDLK_ESCAPE:
+          if (e->controller<controller::UIController>()->windows.size())
+          {
+            e->controller<controller::UIController>()->windows.pop_back();
+            SDL_Delay(10);
+          }
+          // else
+          // {
+          //   e->stopRunning();
+          // }
+          break;
+        case SDLK_SPACE:
+          SDL_Log(
               "\nCamera: %dx%dx%dx%d\nCurrent terrain type: %s\nCurrent biome type: %s\nCurrent terrain type sprite name: %s\nInitialized: %d",
               engine::controller<controller::GraphicsController>.camera.x,
               engine::controller<controller::GraphicsController>.camera.y,
@@ -2201,34 +2278,33 @@ void controller::EventsController::handleEvents()
               t->terrainType->name.c_str(),
               t->biomeType->name.c_str(),
               t->terrainType->getFrame(0)->name.c_str(),
-              t->initialized
-            );
-            break;
-          case SDLK_w:
-            if (e->zLevel > 0)
+              t->initialized);
+          break;
+        case SDLK_w:
+          if (e->zLevel > 0)
+          {
+            e->zLevel--;
+            SDL_Log("You are at level %d", e->zLevel);
+          }
+          break;
+        case SDLK_q:
+          if (std::abs(e->zLevel) < static_cast<int>(e->mapController.terrainMap.size()))
+          {
+            if (e->zLevel < e->zMaxLevel - 1)
             {
-              e->zLevel--;
-              SDL_Log("You are at level %d", e->zLevel);
+              e->zLevel++;
             }
-            break;
-          case SDLK_q:
-            if (std::abs(e->zLevel) < static_cast <int>(e->mapController.terrainMap.size()))
-            {
-              if (e->zLevel < e->zMaxLevel - 1)
-              {
-                e->zLevel++;
-              }
-              SDL_Log("You are at level %d", e->zLevel);
-            }
-            break;
-          case SDLK_p:
-            e->tileSize = e->tileSize / 2;
-            e->configController.tileSize = e->tileSize;
-            break;
-          case SDLK_o:
-            e->tileSize = e->tileSize * 2;
-            e->configController.tileSize = e->tileSize;
-            break;
+            SDL_Log("You are at level %d", e->zLevel);
+          }
+          break;
+        case SDLK_p:
+          e->tileSize = e->tileSize / 2;
+          e->configController.tileSize = e->tileSize;
+          break;
+        case SDLK_o:
+          e->tileSize = e->tileSize * 2;
+          e->configController.tileSize = e->tileSize;
+          break;
         }
       }
     };
@@ -2237,7 +2313,7 @@ void controller::EventsController::handleEvents()
   }
 }
 
-void TextBox::getLines (std::vector<std::string>* l)
+void TextBox::getLines(std::vector<std::string> *l)
 {
   auto process = [this, l](int r = 0)
   {
@@ -2249,12 +2325,12 @@ void TextBox::getLines (std::vector<std::string>* l)
     int lineLen = offsetString.length() / totalLines;
     int i = 0;
     int offset = 0;
-    SDL_Log("Calculations:\nString width: %d\nTextBox width: %d\nLines necessary: %d\nMax length of each line: %d",  lineWidth, this->w, totalLines, lineLen);
+    SDL_Log("Calculations:\nString width: %d\nTextBox width: %d\nLines necessary: %d\nMax length of each line: %d", lineWidth, this->w, totalLines, lineLen);
     while (i < totalLines)
     {
       int a = 0;
       int b = offset;
-      int lineIndex = (i*lineLen)+b;
+      int lineIndex = (i * lineLen) + b;
       if (lineIndex < 0)
       {
         lineIndex = 0;
@@ -2264,7 +2340,7 @@ void TextBox::getLines (std::vector<std::string>* l)
       {
         line = offsetString.substr(lineIndex, lineLen);
       }
-      catch (const std::out_of_range& err)
+      catch (const std::out_of_range &err)
       {
         line = offsetString;
       }
@@ -2273,7 +2349,7 @@ void TextBox::getLines (std::vector<std::string>* l)
         line += " ";
       }
       // Calculate word-break
-      while (line.length() && line.substr(line.length()-1) != " ")
+      while (line.length() && line.substr(line.length() - 1) != " ")
       {
         a--;
         offset--;
@@ -2299,7 +2375,7 @@ void TextBox::getLines (std::vector<std::string>* l)
       SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Processing line. remainderIndex: %d", remainderIndex);
 }
 
-void UIRect::getLines (std::vector<std::string>* l, TTF_Font* f)
+void UIRect::getLines(std::vector<std::string> *l, TTF_Font *f)
 {
   auto process = [this, l, f](int r = 0)
   {
@@ -2314,11 +2390,12 @@ void UIRect::getLines (std::vector<std::string>* l, TTF_Font* f)
     {
       int a = 0;
       int b = offset;
-      int lineIndex = (i*lineLen)+b;
-      if (lineIndex < 0) lineIndex = 0;
+      int lineIndex = (i * lineLen) + b;
+      if (lineIndex < 0)
+        lineIndex = 0;
       std::string line = offsetString.substr(lineIndex, lineLen);
       // Calculate word-break
-      while (line.substr(line.length()-1) != " ")
+      while (line.substr(line.length() - 1) != " ")
       {
         a--;
         offset--;
@@ -2340,26 +2417,26 @@ void UIRect::getLines (std::vector<std::string>* l, TTF_Font* f)
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Processing line");
 }
 
-void controller::UIController::createUIWindow (int x, int y, int w, int h, std::string title, std::string content)
+void controller::UIController::createUIWindow(int x, int y, int w, int h, std::string title, std::string content)
 {
-  SDL_Color fgColor = { 255, 255, 255 };
-  SDL_Color borderColor = { 255, 255, 255, 255 };
-  SDL_Color bgColor = { 0, 0, 255, 255 };
-  UIRect window = { { x, y, w, h }, 5, fgColor, borderColor, bgColor, borderColor, title, content };
+  SDL_Color fgColor = {255, 255, 255};
+  SDL_Color borderColor = {255, 255, 255, 255};
+  SDL_Color bgColor = {0, 0, 255, 255};
+  UIRect window = {{x, y, w, h}, 5, fgColor, borderColor, bgColor, borderColor, title, content};
   windows.push_back(window);
 }
 
-UIRect* controller::UIController::createUIWindow (int x, int y, int w, int h)
+UIRect *controller::UIController::createUIWindow(int x, int y, int w, int h)
 {
-  SDL_Color fgColor = { 255, 255, 255 };
-  SDL_Color borderColor = { 255, 255, 255, 255 };
-  SDL_Color bgColor = { 0, 0, 255, 255 };
-  UIRect window = { { x, y, w, h }, 5, fgColor, borderColor, bgColor, borderColor };
+  SDL_Color fgColor = {255, 255, 255};
+  SDL_Color borderColor = {255, 255, 255, 255};
+  SDL_Color bgColor = {0, 0, 255, 255};
+  UIRect window = {{x, y, w, h}, 5, fgColor, borderColor, bgColor, borderColor};
   windows.push_back(window);
   return &windows.back();
 }
 
-UIRect* UIRect::setDimensions(int x, int y, int w, int h)
+UIRect *UIRect::setDimensions(int x, int y, int w, int h)
 {
   this->x = x;
   this->y = y;
@@ -2376,8 +2453,8 @@ int engine::graphics::RenderController::renderCopySprite(Sprite *s, std::tuple<i
 {
   auto [x, y, o_x, o_y] = coords;
   int tS = e->getTileSize();
-  SDL_Rect src {s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
-  SDL_Rect dest {(x*tS)+o_x, (y*tS)+o_y, tS, tS};
+  SDL_Rect src{s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
+  SDL_Rect dest{(x * tS) + o_x, (y * tS) + o_y, tS, tS};
   if (SDL_RenderCopy(e->appRenderer, engine::controller<controller::GraphicsController>.tilemapTexture, &src, &dest) < -1)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
@@ -2389,8 +2466,8 @@ int engine::graphics::RenderController::renderCopySprite(Sprite *s, std::tuple<i
 int engine::graphics::RenderController::renderCopySprite(Sprite *s, int x, int y)
 {
   int tS = e->getTileSize();
-  SDL_Rect src {s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
-  SDL_Rect dest {x*tS, y*tS, tS, tS};
+  SDL_Rect src{s->tileMapX, s->tileMapY, e->getSpriteSize(), e->getSpriteSize()};
+  SDL_Rect dest{x * tS, y * tS, tS, tS};
   if (SDL_RenderCopy(e->appRenderer, engine::controller<controller::GraphicsController>.tilemapTexture, &src, &dest) < -1)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't copy sprite to renderer: %s", SDL_GetError());
@@ -2406,7 +2483,7 @@ int engine::graphics::RenderController::renderCopySprite(std::string spriteName,
     return renderCopySprite(&it->second, x, y);
   else
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not render sprite: %s", spriteName.c_str());
-    return -1;
+  return -1;
 }
 
 int engine::graphics::RenderController::renderCopyObject(std::shared_ptr<WorldObject> t, int x, int y)
@@ -2438,10 +2515,14 @@ int engine::graphics::RenderController::renderCopyMobObject(std::shared_ptr<MobO
   {
     o_x = t->relativeX;
     o_y = t->relativeY;
-    if (t->relativeX > 0) t->relativeX -= std::floor(e->getTileSize()/8);
-    if (t->relativeX < 0) t->relativeX += std::floor(e->getTileSize()/8);
-    if (t->relativeY > 0) t->relativeY -= std::floor(e->getTileSize()/8);
-    if (t->relativeY < 0) t->relativeY += std::floor(e->getTileSize()/8);
+    if (t->relativeX > 0)
+      t->relativeX -= std::floor(e->getTileSize() / 8);
+    if (t->relativeX < 0)
+      t->relativeX += std::floor(e->getTileSize() / 8);
+    if (t->relativeY > 0)
+      t->relativeY -= std::floor(e->getTileSize() / 8);
+    if (t->relativeY < 0)
+      t->relativeY += std::floor(e->getTileSize() / 8);
   }
   if (!t->isAnimated())
     return renderCopySprite(t->mobType->getFrame(0), x, y);
@@ -2457,13 +2538,14 @@ int engine::graphics::RenderController::renderCopyMobObject(std::shared_ptr<MobO
     }
     auto it = t->mobType->animationMap[t->direction].find(t->animationFrame);
     if (it == t->mobType->animationMap[t->direction].end())
-      return renderCopySprite(t->mobType->getFrame(0), { x, y, o_x, o_y });
+      return renderCopySprite(t->mobType->getFrame(0), {x, y, o_x, o_y});
     else
-      return renderCopySprite(it->second, { x, y, o_x, o_y });
+      return renderCopySprite(it->second, {x, y, o_x, o_y});
   }
 }
 
-int engine::graphics::RenderController::renderCopyTerrain(TerrainObject* t, int x, int y) {
+int engine::graphics::RenderController::renderCopyTerrain(TerrainObject *t, int x, int y)
+{
   if (!t->isAnimated())
     return renderCopySprite(t->terrainType->getFrame(0), x, y);
   else
@@ -2484,59 +2566,52 @@ int engine::graphics::RenderController::renderCopyTerrain(TerrainObject* t, int 
   }
 }
 
-int engine::graphics::RenderController::renderFillUIWindow(UIRect* window)
+int engine::graphics::RenderController::renderFillUIWindow(UIRect *window)
 {
-  SDL_Rect shadow {window->x, window->y, window->w, window->h+5};
+  SDL_Rect shadow{window->x, window->y, window->w, window->h + 5};
   SDL_SetRenderDrawColor(engine::controller<controller::GraphicsController>.appRenderer, 0, 0, 0, 128);
   SDL_RenderFillRect(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    &shadow
-  );
-  SDL_Rect border {window->x, window->y, window->w, window->h};
+      engine::controller<controller::GraphicsController>.appRenderer,
+      &shadow);
+  SDL_Rect border{window->x, window->y, window->w, window->h};
   SDL_SetRenderDrawColor(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    window->borderColor.r,
-    window->borderColor.g,
-    window->borderColor.b,
-    window->borderColor.a
-  );
+      engine::controller<controller::GraphicsController>.appRenderer,
+      window->borderColor.r,
+      window->borderColor.g,
+      window->borderColor.b,
+      window->borderColor.a);
   SDL_RenderFillRect(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    &border
-  );
-  SDL_Rect bezel {window->x+2, window->y+2,window->w-4, window->h-4};
+      engine::controller<controller::GraphicsController>.appRenderer,
+      &border);
+  SDL_Rect bezel{window->x + 2, window->y + 2, window->w - 4, window->h - 4};
   SDL_SetRenderDrawColor(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    window->backgroundColor.r,
-    window->backgroundColor.g,
-    window->backgroundColor.b,
-    std::floor(window->backgroundColor.a / 2)
-  );
+      engine::controller<controller::GraphicsController>.appRenderer,
+      window->backgroundColor.r,
+      window->backgroundColor.g,
+      window->backgroundColor.b,
+      std::floor(window->backgroundColor.a / 2));
   SDL_RenderFillRect(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    &bezel
-  );
-  SDL_Rect w {window->x+4, window->y+4,window->w-8, window->h-8};
+      engine::controller<controller::GraphicsController>.appRenderer,
+      &bezel);
+  SDL_Rect w{window->x + 4, window->y + 4, window->w - 8, window->h - 8};
   SDL_SetRenderDrawColor(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    window->backgroundColor.r,
-    window->backgroundColor.g,
-    window->backgroundColor.b,
-    window->backgroundColor.a
-  );
+      engine::controller<controller::GraphicsController>.appRenderer,
+      window->backgroundColor.r,
+      window->backgroundColor.g,
+      window->backgroundColor.b,
+      window->backgroundColor.a);
   SDL_RenderFillRect(
-    engine::controller<controller::GraphicsController>.appRenderer,
-    &w
-  );
-  SDL_Surface* title = TTF_RenderText_Solid(e->gameFont, window->title.c_str(), window->foregroundColor);
-  SDL_Texture* tex = SDL_CreateTextureFromSurface(e->appRenderer, title);
+      engine::controller<controller::GraphicsController>.appRenderer,
+      &w);
+  SDL_Surface *title = TTF_RenderText_Solid(e->gameFont, window->title.c_str(), window->foregroundColor);
+  SDL_Texture *tex = SDL_CreateTextureFromSurface(e->appRenderer, title);
   if (!title)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "TTF_RenderText_Solid error: %s", TTF_GetError());
   }
   else
   {
-    SDL_Rect titleRect {window->x+5, window->y+5, title->w, title->h};
+    SDL_Rect titleRect{window->x + 5, window->y + 5, title->w, title->h};
     SDL_RenderCopy(e->appRenderer, tex, NULL, &titleRect);
   }
 
@@ -2547,16 +2622,15 @@ int engine::graphics::RenderController::renderFillUIWindow(UIRect* window)
     int _, lineHeight;
     TTF_SizeUTF8(e->gameFont, "test", &_, &lineHeight);
     int i = 0;
-    for ( auto l : lines )
+    for (auto l : lines)
     {
-      SDL_Surface* textSurface = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
-      SDL_Texture* textTexture = SDL_CreateTextureFromSurface(e->appRenderer, textSurface);
-      SDL_Rect lineRect {
-        window->x + box.offsetX + 15,
-        window->y + box.offsetY + 15 + lineHeight * i + 5,
-        textSurface->w,
-        textSurface->h
-      };
+      SDL_Surface *textSurface = TTF_RenderText_Solid(e->gameFont, l.c_str(), window->foregroundColor);
+      SDL_Texture *textTexture = SDL_CreateTextureFromSurface(e->appRenderer, textSurface);
+      SDL_Rect lineRect{
+          window->x + box.offsetX + 15,
+          window->y + box.offsetY + 15 + lineHeight * i + 5,
+          textSurface->w,
+          textSurface->h};
       SDL_RenderCopy(e->appRenderer, textTexture, NULL, &lineRect);
       SDL_FreeSurface(textSurface);
       SDL_DestroyTexture(textTexture);
@@ -2569,23 +2643,23 @@ int engine::graphics::RenderController::renderFillUIWindow(UIRect* window)
   return 0;
 }
 
-SDL_Surface* engine::graphics::SurfaceController::getGameSurfaceFromWindow ()
+SDL_Surface *engine::graphics::SurfaceController::getGameSurfaceFromWindow()
 {
-  #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-      auto rmask = 0xff000000;
-      auto gmask = 0x00ff0000;
-      auto bmask = 0x0000ff00;
-      auto amask = 0x000000ff;
-  #else
-      auto rmask = 0x000000ff;
-      auto gmask = 0x0000ff00;
-      auto bmask = 0x00ff0000;
-      auto amask = 0xff000000;
-  #endif
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+  auto rmask = 0xff000000;
+  auto gmask = 0x00ff0000;
+  auto bmask = 0x0000ff00;
+  auto amask = 0x000000ff;
+#else
+  auto rmask = 0x000000ff;
+  auto gmask = 0x0000ff00;
+  auto bmask = 0x00ff0000;
+  auto amask = 0xff000000;
+#endif
   auto [_w, _h] = engine::graphics::controller<engine::graphics::WindowController>.getWindowDimensions();
-  //auto [_w, _h] = e->controller<controller::GraphicsController>()->controller<engine::graphics::WindowController>()->getWindowDimensions();
-  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Current window is %dx%dpx.", _w, _h );
-  SDL_Surface* s = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
+  // auto [_w, _h] = e->controller<controller::GraphicsController>()->controller<engine::graphics::WindowController>()->getWindowDimensions();
+  SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Current window is %dx%dpx.", _w, _h);
+  SDL_Surface *s = SDL_CreateRGBSurface(0, _w, _h, 32, rmask, gmask, bmask, amask);
   if (s == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not create RGB surface: %s", SDL_GetError());
@@ -2594,7 +2668,7 @@ SDL_Surface* engine::graphics::SurfaceController::getGameSurfaceFromWindow ()
   return s;
 }
 
-SDL_Texture* engine::graphics::SurfaceController::getTextureFromSurface (SDL_Surface* s)
+SDL_Texture *engine::graphics::SurfaceController::getTextureFromSurface(SDL_Surface *s)
 {
   if (SDL_MUSTLOCK(s))
   {
@@ -2609,13 +2683,13 @@ SDL_Texture* engine::graphics::SurfaceController::getTextureFromSurface (SDL_Sur
     if (SDL_RenderReadPixels(e->appRenderer, NULL, SDL_PIXELFORMAT_RGBA32, s->pixels, s->pitch) < 0)
       return NULL;
   }
-  SDL_Texture* t = SDL_CreateTextureFromSurface(e->appRenderer, s);
+  SDL_Texture *t = SDL_CreateTextureFromSurface(e->appRenderer, s);
   return t;
 }
 
-SDL_Texture* engine::graphics::SurfaceController::getGameSurfaceTexture ()
+SDL_Texture *engine::graphics::SurfaceController::getGameSurfaceTexture()
 {
-  SDL_Surface* s = getGameSurfaceFromWindow();
+  SDL_Surface *s = getGameSurfaceFromWindow();
   if (s)
     return getTextureFromSurface(s);
   else
@@ -2627,10 +2701,9 @@ std::tuple<int, int> engine::graphics::WindowController::getWindowGridDimensions
   auto gfx = e->controller<controller::GraphicsController>();
   SDL_GetWindowSize(e->appWindow, &gfx->windowWidth, &gfx->windowHeight);
   SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION,
-    "Got window size: %dx%d", gfx->windowWidth, gfx->windowHeight
-  );
-  int _w = static_cast <int> (std::floor(gfx->windowWidth/e->getTileSize()));
-  int _h = static_cast <int> (std::floor(gfx->windowHeight/e->getTileSize()));
+               "Got window size: %dx%d", gfx->windowWidth, gfx->windowHeight);
+  int _w = static_cast<int>(std::floor(gfx->windowWidth / e->getTileSize()));
+  int _h = static_cast<int>(std::floor(gfx->windowHeight / e->getTileSize()));
   return std::make_tuple(_w, _h);
 }
 
@@ -2666,8 +2739,7 @@ int GameEngine::init()
 
   // Create app window and renderer
   appWindow = SDL_CreateWindow(
-    "tile-project", 0, 0, engine::controller<controller::GraphicsController>.displayMode.w/2, engine::controller<controller::GraphicsController>.displayMode.h/2, SDL_WINDOW_RESIZABLE
-  ); // SDL_WINDOW_FULLSCREEN
+      "tile-project", 0, 0, engine::controller<controller::GraphicsController>.displayMode.w / 2, engine::controller<controller::GraphicsController>.displayMode.h / 2, SDL_WINDOW_RESIZABLE); // SDL_WINDOW_FULLSCREEN
   if (appWindow == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Could not create app window: %s", SDL_GetError());
@@ -2676,7 +2748,7 @@ int GameEngine::init()
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Window created.");
   engine::controller<controller::GraphicsController>.appWindow = appWindow;
-  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
+  appRenderer = SDL_CreateRenderer(appWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); // SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
   if (appRenderer == NULL)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Couldn't create a enderer: %s", SDL_GetError());
@@ -2699,18 +2771,17 @@ int GameEngine::init()
   else
   {
     SDL_Log("Loaded spritesheet is %dx%dpx sheet of %dx%dpx tiles.",
-      surface->w,
-      surface->h,
-      spriteSize,
-      spriteSize
-    );
+            surface->w,
+            surface->h,
+            spriteSize,
+            spriteSize);
   }
 
   gameFont = TTF_OpenFont("assets/FifteenNarrow.ttf", 16);
   if (!gameFont)
   {
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "TTF_OpenFont error: %s", TTF_GetError());
-    return 3;    
+    return 3;
   }
 
   // Create sprites from spritesheet
@@ -2722,7 +2793,7 @@ int GameEngine::init()
   }
   else
     SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Tilemap loaded.");
-  tilemapImage = { surface, texture };
+  tilemapImage = {surface, texture};
   engine::controller<controller::GraphicsController>.tilemapImage = &tilemapImage;
   engine::controller<controller::GraphicsController>.tilemapTexture = texture;
   std::map<std::string, Sprite> spriteMap;
@@ -2731,7 +2802,7 @@ int GameEngine::init()
     for (auto j = 0; j < surface->h; j += spriteSize)
     {
       std::string name = "Sprite " + std::to_string(i) + "x" + std::to_string(j);
-      Sprite s { i, j, name };
+      Sprite s{i, j, name};
       spriteMap[name] = s;
       SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "Created sprite: %s", name.c_str());
     }
@@ -2742,14 +2813,13 @@ int GameEngine::init()
   SDL_Log("Reading tilemap configuration file and creating tiles from sprites.");
   configController = config::ConfigurationController("tilemap.config.json", spriteMap);
   auto [biomeTypes, biomeTypeKeys, terrainTypes, mobTypes, objectTypes, tileTypes] = configController.getTypeMaps();
-  player = {configController.gameSize/2, configController.gameSize/2, &configController.tileTypes["water"]};
+  player = {configController.gameSize / 2, configController.gameSize / 2, &configController.tileTypes["water"]};
   mapController = map::MapController(
-    zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes, &configController
-  );
+      zMaxLevel, mobTypes, objectTypes, biomeTypes, biomeTypeKeys, terrainTypes, tileTypes, &configController);
 
   // Create default tilemap
   SDL_Log("Generating default tilemap...");
-  Rect initialChunk = { 0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize };
+  Rect initialChunk = {0 - configController.gameSize, 0 - configController.gameSize, configController.gameSize, configController.gameSize};
   mapController.generateMapChunk(&initialChunk);
   auto UI = &engine::controller<controller::UIController>;
   // UI->createUIWindow()
@@ -2761,7 +2831,7 @@ int GameEngine::init()
   return 0;
 }
 
-int GameEngine::run ()
+int GameEngine::run()
 {
   init();
   while (running)
